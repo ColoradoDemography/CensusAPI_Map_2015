@@ -105,10 +105,11 @@ console.log('15 seconds');
       $("#progressbar").html('100%');
           console.log('25 seconds');
         },25000);     
-        
+
+  
   	  $.get("do.php",newobj,function(){
 
-          window.open("http://codemogapi-166520.usw1.nitrousbox.com/dump/"+newobj.outname+"."+pictype);
+          window.open("http://"+window.location.hostname + "/CensusAPI_Map/dump/"+newobj.outname+"."+pictype);
 	  });
   
 }
@@ -191,7 +192,7 @@ function addchart() {
 
     $.ajax({
         type: "POST",
-        url: "http://54.69.15.55/api/chartpost.php",
+        url: "assets/php/chartpost.php",
         data: "db=acs0913&schema=data&table=" + table + "&geonum=" + geonums + "&numerator=" + encodeURIComponent(numerator) + "&denominator=" + encodeURIComponent(denominator),
         dataType: 'json',
         jsonpCallback: 'getJson',
@@ -403,7 +404,7 @@ function figurechart(JSONdata) {
         //ajax call to retrieve state or USA average from database
         $.ajax({
             type: "POST",
-            url: "http://54.69.15.55/api/chartpost.php",
+            url: "assets/php/chartpost.php",
             data: "db=acs0913&schema=data&table=" + table + "&geonum=" + sendgeonum + "&numerator=" + encodeURIComponent(numerator) + "&denominator=" + encodeURIComponent(denominator),
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -797,7 +798,7 @@ function querygeonums() {
   
     //send paramters found above to advsearch.php, where query will return a list of geonums that fit that qualification
     $.ajax({
-        url: "http://54.69.15.55/api/advsearch.php?advsumlev=" + sumlev + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
+        url: "assets/php/advsearch.php?advsumlev=" + sumlev + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
         dataType: 'json',
         jsonpCallback: 'getJson',
         success: selectgeonums
@@ -1962,11 +1963,11 @@ updatequerysearchstring();
         }
 
           if(params.cs!==undefined){	
-                        console.log(colorscheme);
+
 		          colorscheme=params.cs;
-                        console.log(colorscheme);
+
             $('#'+colorscheme+classes).prop('checked',true);
-                                    console.log('#'+colorscheme+classes);
+
               delete params.cs;
   updatequerysearchstring();
 	        }else{
@@ -2472,7 +2473,7 @@ updatequerysearchstring();
 
         $.ajax({
             type: "POST",
-            url: "http://54.69.15.55/api/demogpost.php",
+            url: "assets/php/demogpost.php",
             data: "db=acs0913&schema=data&table=" + table + "&geonum=" + geonums + "&moe=yes",
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -2563,7 +2564,7 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
         //we calculate a bounding box equal much larger than the actual visible map.  This preloades shapes that are off the map.  Combined with the center point query, this will allow us to not have to requery the database on every map movement.
         var newbounds = (swlng - diff2) + "," + (swlat - diff1) + "," + (nelng + diff2) + "," + (nelat + diff1);
 
-        geojsonLayer.refresh("http://54.69.15.55/api/geojson.php?db=" + db + "&schema=" + schema + "&sumlev=" + sumlev + "&limit=" + limit + "&table=" + table + "&bb=" + newbounds + "&zoom=" + map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
+        geojsonLayer.refresh("../CensusAPI/geojson.php?db=" + db + "&schema=" + schema + "&sumlev=" + sumlev + "&limit=" + limit + "&table=" + table + "&bb=" + newbounds + "&zoom=" + map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
 
     }
 
@@ -2643,7 +2644,7 @@ function redrawTable() {
 
     $.ajax({
         type: "POST",
-        url: "http://54.69.15.55/api/demogpost.php",
+        url: "assets/php/demogpost.php",
         data: "db=acs0913&schema=data&table=" + table + "&geonum=" + geonums + "&moe=yes",
         dataType: 'json',
         jsonpCallback: 'getJson',

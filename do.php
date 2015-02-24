@@ -18,6 +18,6 @@ $d='';
 if (isset($_GET['d'])){$d = '\&d='.$_GET['d'];}
 //if (isset($_GET['tr'])){$tr = '\&tr='.$_GET['tr'];}
 
-exec ('phantomjs ~/workspace/www/phantomjs/rasterize.js http://codemogapi-166520.usw1.nitrousbox.com/geo/index.html?lat='.$lat.'\&lng='.$lng.'\&z='.$z.'\&s='.$s.'\&v='.$v.'\&sn='.$sn.'\&cs='.$cs.'\&cl='.$cl.'\&print=yes'.$d.'  ~/workspace/www/dump/'.$outname.'.'.$type);
+exec ('phantomjs phantomjs/rasterize.js http://'.$_SERVER['SERVER_NAME'].'/CensusAPI_Map/index.html?lat='.$lat.'\&lng='.$lng.'\&z='.$z.'\&s='.$s.'\&v='.$v.'\&sn='.$sn.'\&cs='.$cs.'\&cl='.$cl.'\&print=yes'.$d.'  dump/'.$outname.'.'.$type);
 
 ?>
