@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>ACS 2009-2013 5 Year Estimates</title>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/leafletv08/leaflet.css">
+<link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.css' rel='stylesheet' />
+      <link rel="stylesheet" href="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.css">
+
+      <link rel="stylesheet" href="assets/css/leaflet-search.css">   
+    <link rel="stylesheet" href="assets/css/bootstrap-slider.css">
+  
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/img/favicon-76.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/img/favicon-120.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/img/favicon-152.png">
+    <link rel="icon" sizes="196x196" href="assets/img/favicon-196.png">
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico">
+  
+  
+     <link rel="stylesheet" href="assets/css/app.css"> 
+    <link rel="stylesheet" href="assets/css/bootstrap-switch.css">
+
+  <style>
+    #chartdiv {
+    font: 10px sans-serif;
+}
+    
+     #titletext {
+    font: 16px sans-serif;
+       font-weight: bold;
+}   
+    
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+.bar {
+    fill: steelblue;
+}
+.x.axis path {
+    display: none;
+}
+    
+    .line {
+  fill: none;
+  stroke: #444;
+  stroke-width: 1.5px;
+}
+    
+    path{
+    shape-rendering:crispEdges;
+}
+    
+    .no-transition {
+  -webkit-transition: height 0.01s;
+  -moz-transition: height 0.01s;
+  -ms-transition: height 0.01s;
+  -o-transition: height 0.01s;
+  transition: height 0.01s;
+}
+
+    #clipboard-container{
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: 100px;
+      height: 100px;
+
+   }
+    
+      #linkbutton{
+      position: absolute;
+      top: 15px;
+      left: 13px;
+              z-index: 5999;
+   }  
+    
+    
+.red-tooltip + .tooltip > .tooltip-inner {background-color: #800000; opacity: 1;}
+    
+  </style>
+  
+</head>
+
+<body>
+  
+  <div id="clipboard-container"></div>
+  <div id="linkbutton" class="red-tooltip spanhide" title="Press Ctrl-C at any time to copy this map URL to your Clipboard">
+<button class="btn btn-xs"><i class="fa fa-link"></i></button>
+  </div>
+  
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <div class="navbar-icon-container">
+                    <a href="#" class="navbar-icon pull-right visible-xs" id="nav-btn"><i class="fa fa-bars fa-lg white"></i></a>
+                </div>
+                <a class="navbar-brand" href="#">&nbsp;&nbsp;<span class='spanhide'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>ACS 2009 - 2013&nbsp;&nbsp;&nbsp;</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="about-btn"><i class="fa fa-question-circle white"></i>&nbsp;&nbsp;About</a>
+                    <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="advanced-btn"><i class="fa fa-cog white"></i>&nbsp;&nbsp;Advanced</a>
+                  </li>
+                </ul>
+
+          </div>
+            <!--/.navbar-collapse -->
+        </div>
+    </div>
+
+
+    <div id="map"></div>
+
+        
+
+<div id="resizediv" style="display: none;">
+     <span id="minmaxbtn" class="pull-left inline" onclick="minmaxtable();"><button type="button" class="btn btn-primary btn-xs">
+  <span id="minmaxbtn2"  class="glyphicon glyphicon-plus-sign" aria-hidden="true"  ></span>
+</button></span>     <span id="closebtn" class="pull-left inline" onclick="mintable();"><button type="button" class="btn btn-primary btn-xs">
+  <span class="glyphicon glyphicon-remove" aria-hidden="true"  ></span>
+</button></span>
+<br />
+ 
+<div class="row">  
+
+
+   
+  <div class="col-xs-4">   
+      <select id="tableoption" class="selectinline inline"></select>
+  </div>
+ 
+  <div class="col-xs-4"></div> 
+
+  <div class="col-xs-4">   
+
+
+      <form class="inline" action="assets/php/getCSV.php" method ="post" > 
+        <input class="inline"  type="hidden" name="csv_text" id="csv_text">
+        <button type="submit" class="btn btn-primary btn-xs inline" onclick="getCSVData();" download>CSV</button>
+      </form>   
+
+   </div>
+
+ 
+  <div class="col-xs-4"></div> 
+   
+
+  </div>
+
+  <br />
+  <div class="row">
+  <div class="col-md-12">   
+    
+<table id="table"  class="table table-striped table-bordered table-condensed" >
+ <thead>
+  <tr id="tableheader">
+  </tr>
+ </thead>
+    <tbody id="tablebody">
+    </tbody>
+    <tfoot>
+    <tr id="tablefooter">
+    </tr>
+  </tfoot>
+</table>
+    <br />
+    </div>
+  </div>
+
+  
+<div class="row">
+  <div class="col-md-4">   
+    
+
+  </div>
+  
+   <div class="col-md-4">    
+
+   </div>  
+
+  
+
+            
+</div>
+  
+ 
+  </div>
+
+
+    <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">American Community Survey 2009-2013 5-Year Average</h4>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="aboutTabs">
+                        <li class="active"><a href="#about" data-toggle="tab"><i class="fa fa-question-circle"></i>&nbsp;About</a>
+                        </li>
+                        <li><a href="#disclaimer" data-toggle="tab"><i class="fa fa-exclamation-circle"></i>&nbsp;Disclaimer</a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-globe"></i>&nbsp;Metadata <b class="caret"></b></a>
+                            <ul class="dropdown-menu sizeup">
+                               <p>&nbsp;&nbsp;The American Community Survey is a product of the <a href="http://www.census.gov/en.html" target="_blank">US Census Bureau</a>.
+                                 Please see the official <a href="http://www.census.gov/acs/www/data_documentation/documentation_main/" target="_blank">DOCUMENTATION</a> for more information.</p>
+                              <p>&nbsp;&nbsp;OR</p>
+                              <p>&nbsp;&nbsp;Refer to the Github Home Page for application related inqueries.</p>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="aboutTabsContent">
+                        <div class="tab-pane fade active in" id="about">
+                            <br/><p>A mapping application developed by the Colorado State Demography Office.<br /></p><br />
+                            <div class="panel panel-primary">
+                                <div class="panel-heading">Features</div>
+                                <ul class="list-group">
+                                    <li class="list-group-item">Discover information about any State, County, Place, Tract, or Block Group in the United States!</li>
+                                    <li class="list-group-item">Map a large selection of census characteristics</li>
+                                    <li class="list-group-item">Visualize the data in charts and graphs</li>
+                                    <li class="list-group-item">Download data in a variety of common formats</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div id="disclaimer" class="tab-pane fade text-danger">
+                          <br />
+                          <p><b>Disclaimer:</b>&nbsp;&nbsp;While every effort has been made to ensure that the information presented is accurate, we can not guarantee that it does not contain errors.  The creators and collaborators shall not be held liable in the event of a mistake.  Please check <a href="http://www.census.gov" target="_blank">www.census.gov</a> to confirm all information presented here.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+
+
+
+  
+    <div class="modal fade" id="attributionModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+<br /><p><b>Bootleaf</b> Template developed by <a href="http://bryanmcbride.com/" target="_blank">Bryan McBride</a>.  (<a href="http://bmcbride.github.io/bootleaf/" target="_blank">Bootleaf Github</a>). License: <a href="https://raw.githubusercontent.com/bmcbride/bootleaf/master/LICENSE.txt" target="_blank">MIT</a></p>
+            <p><b>Leaflet</b> created by <a href="http://agafonkin.com/en" target="_blank">Vladimir Agafonkin</a>.  (<a href="https://github.com/Leaflet/Leaflet/" target="_blank">Leaflet Github</a>). <a href="https://raw.githubusercontent.com/Leaflet/Leaflet/master/LICENSE" target="_blank">License</a></p>
+                          <p><b>Leaflet Easy Button</b> created by Daniel Montague.  (<a href="https://github.com/CliffCloud/Leaflet.EasyButton" target="_blank">Leaflet Easy Button Github</a>). <a href="https://raw.githubusercontent.com/CliffCloud/Leaflet.EasyButton/master/LICENSE" target="_blank">License</a></p>
+                          <p><b>Bootstrap Slider</b> created by Kyle Kemp and Rohit Kalkur, based upon the original work of Stefan Petre.  (<a href="https://github.com/seiyria/bootstrap-slider" target="_blank" >Bootstrap Slider Github</a>).  License: <a href="http://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">Apache 2.0</a></p>
+                          <p><b>Leaflet Ajax</b> created by <a href="http://calvinmetcalf.com/" target="_blank">Calvin Metcalf</a>.  (<a href="https://github.com/calvinmetcalf/leaflet-ajax" target="_blank">Leaflet Ajax Github</a>).  <a href="https://raw.githubusercontent.com/calvinmetcalf/leaflet-ajax/master/license.md" target="_blank">License</a></p>
+                          <p><b>Leaflet Spin</b> created by <a href="http://makina-corpus.com/" target="_blank">Makina Corpus</a>.  (<a href="https://github.com/makinacorpus/Leaflet.Spin" target="_blank">Leaflet-Spin Github</a>).  License: <a href="https://raw.githubusercontent.com/makinacorpus/Leaflet.Spin/master/LICENSE" target="_blank">MIT</a></p>            
+                         <p><b>Spin.js</b> created by <a href="http://fgnass.github.io/" target="_blank">Felix Gnass</a>.  (<a href="http://fgnass.github.io/spin.js/" target="_blank">Spin.js Github</a>).  License: <a href="https://github.com/fgnass/spin.js/blob/master/LICENSE.txt" target="_blank">MIT</a></p>
+            <p><b>Bootstrap Switch</b> created by <a href="http://larentis.eu/#/title" target="_blank">Mattia Larentis</a>.  (<a href="https://github.com/nostalgiaz/bootstrap-switch" target="_blank">Bootstrap Switch Github</a>).  License: <a href="https://raw.githubusercontent.com/nostalgiaz/bootstrap-switch/master/LICENSE" target="_blank">Apache</a></p>
+            <p><b>Stupid-Table-Plugin</b> created by <a href="http://joequery.me/" target="_blank">Joseph McCullough</a>.  (<a href="https://github.com/joequery/Stupid-Table-Plugin" target="_blank">Github</a>).  License: <a href="https://github.com/joequery/Stupid-Table-Plugin/blob/master/LICENSE" target="_blank">MIT</a></p>            
+            <p><b>Table2CSV</b> created by <a href="http://www.kunalbabre.com/" target="_blank">Kunal Babre</a>.  (<a href="http://www.kunalbabre.com/projects/table2CSV.php" target="_blank">Project Homepage</a>).</p>
+            
+            <p><b>Leaflet Control Search</b> created by <a href="http://labs.easyblog.it/stefano-cudini/" target="_blank">Stephano Cudini</a>.  (<a href="https://github.com/stefanocudini/leaflet-search" target="_blank">Leaflet-Search Github)</a>.  License: <a href="https://raw.githubusercontent.com/stefanocudini/leaflet-search/master/LICENSE.txt" target="_blank">MIT</a></p>
+            <p><b>PhantomJS</b> created by <a href="http://ariya.ofilabs.com/about" target="_blank">Ariya Hidayat</a>.  (<a href="https://github.com/ariya/phantomjs/" target="_blank">PhantomJS Github)</a>.  License: <a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">BSD</a></p>
+             <p><b>HistoryJS</b> created by <a href="http://balupton.com/" target="_blank">Benjamin Arthur Lupton</a>.  (<a href="https://github.com/browserstate/history.js" target="_blank">HistoryJS Github)</a>.  License: <a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">New BSD License</a></p>           
+             <p><b>LZ-String</b> created by <a href="http://pieroxy.net/blog/" target="_blank">Pieroxy (2013)</a>.  (<a href="https://github.com/pieroxy/lz-string/" target="_blank">LZ-String Github)</a>.  License: <a href="http://en.wikipedia.org/wiki/WTFPL" target="_blank">WTFPL</a></p>              
+            <br />
+            <p>This product includes color specifications and designs developed by Cynthia Brewer (<a href="http://colorbrewer.org/" target="_blank">http://colorbrewer.org/</a>).  License: <a href="http://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">Apache 2.0</a></p>
+          </div>
+          <div class="modal-body">
+            <div id="attribution"></div>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+  
+  
+  
+  <div class="modal fade" id="homeModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Data Theme</h4>
+      </div>
+      <div class="modal-body firstdiv">
+
+              <br />
+              
+
+        <div class="row">
+  <div class="col-md-6"><div class="panel-group" id="accordion1" role="tablist" aria-multiselectable="false"></div></div>
+  <div class="col-md-6"><div class="panel-group" id="accordion2" role="tablist" aria-multiselectable="false"></div></div>
+</div>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+  
+  
+  <div class="modal fade" id="geoModal">
+  <div class="modal-dialog geodialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Geography</h4>
+      </div>
+      <div class="modal-body firstdiv">
+            <div class="sidebar-pane" id="geo">
+                <div class="radio"  id="rbstate">
+                    <label>
+                        <input type="radio" name="geoRadios" value="40"> State
+                    </label>
+                </div>
+                <div class="radio" id="rbcounty" >
+                    <label>
+                        <input type="radio" name="geoRadios" value="50" checked> County
+                    </label>
+                </div>
+                <div class="radio" id="rbplace">
+                    <label>
+                        <input type="radio" name="geoRadios" value="160" > Place
+                    </label>
+                </div>
+                <div class="radio"  id="rbtract">
+                    <label>
+                        <input type="radio" name="geoRadios" value="140"> Tract
+                    </label>
+                </div>
+                <div class="radio"  id="rbbg">
+                    <label>
+                        <input type="radio" name="geoRadios" value="150"> Block Group
+                    </label>
+                </div>
+
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+  
+
+  
+    <div class="modal fade" id="symbologyModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Advanced Options</h4>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="aboutTabs">
+                        <li class="active"><a href="#symbology" data-toggle="tab"><i class="fa fa-paint-brush"></i>&nbsp;Symbology</a>
+                        </li>
+                        <li><a href="#advsearch" data-toggle="tab"><i class="fa fa-mortar-board"></i>&nbsp;Advanced Search</a>
+                        </li>
+                        <li><a href="#settings" data-toggle="tab"><i class="fa fa-check-square-o"></i>&nbsp;Settings</a>
+                        </li>
+                      </ul>
+                    <div class="tab-content" id="aboutTabsContent">
+                        <div class="tab-pane fade active in" id="symbology">
+                 <div class="row">
+            <div class="col-md-6">
+ <label>Classification Scheme:</label><br />
+              <select id="classification">
+    <option value="jenks" selected>Jenks</option>
+  <option value="quantile" >Quantile</option>
+  <option value="stddev">Standard Deviation</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+                 <label>Number of Classes:</label>     <br />        
+                            <select id="classes">
+              </select>
+            </div>
+          </div>
+
+<br />
+               <label>Colorscheme:</label>      <br />         
+              <div id="colorschemes" class="form-group" ></div>
+              <label>Transparency Slider</label><br />
+              <input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>
+       
+
+                        </div>
+                      
+                      
+                      
+                        <div id="advsearch" class="tab-pane fade">
+                          <br />
+                          <p>Select all <span id="advgeo">counties</span> where:</p>
+                          <p>State&nbsp;=&nbsp;&nbsp;
+                            <select id="advstate">
+                              <option value='ALL' selected>All</option>
+                              <option value='1' >Alabama</option>
+                              <option value='2' >Alaska</option>
+                              <option value='4' >Arizona</option>
+                              <option value='5' >Arkansas</option>
+                              <option value='6' >California</option>
+                              <option value='8' >Colorado</option>
+                              <option value='9' >Connecticut</option>
+                              <option value='10' >Delaware</option>
+                              <option value='11' >District of Columbia</option>
+                              <option value='12' >Florida</option>
+                              <option value='13' >Georgia</option>
+                              <option value='15' >Hawaii</option>
+                              <option value='16' >Idaho</option>
+                              <option value='17' >Illinois</option>
+                              <option value='18' >Indiana</option>
+                              <option value='19' >Iowa</option>
+                              <option value='20' >Kansas</option>
+                              <option value='21' >Kentucky</option>
+                              <option value='22' >Louisiana</option>
+                              <option value='23' >Maine</option>
+                              <option value='24' >Maryland</option>
+                              <option value='25' >Massachusetts</option>
+                              <option value='26' >Michigan</option>
+                              <option value='27' >Minnesota</option>
+                              <option value='28' >Mississippi</option>
+                              <option value='29' >Missouri</option>
+                              <option value='30' >Montana</option>
+                              <option value='31' >Nebraska</option>
+                              <option value='32' >Nevada</option>
+                              <option value='33' >New Hampshire</option>
+                              <option value='34' >New Jersey</option>
+                              <option value='35' >New Mexico</option>
+                              <option value='36' >New York</option>
+                              <option value='37' >North Carolina</option>
+                              <option value='38' >North Dakota</option>
+                              <option value='39' >Ohio</option>
+                              <option value='40' >Oklahoma</option>
+                              <option value='41' >Oregon</option>
+                              <option value='42' >Pennsylvania</option>
+                              <option value='44' >Rhode Island</option>
+                              <option value='45' >South Carolina</option>
+                              <option value='46' >South Dakota</option>
+                              <option value='47' >Tennessee</option>
+                              <option value='48' >Texas</option>
+                              <option value='49' >Utah</option>
+                              <option value='50' >Vermont</option>
+                              <option value='51' >Virginia</option>
+                              <option value='53' >Washington</option>
+                              <option value='54' >West Virginia</option>
+                              <option value='55' >Wisconsin</option>
+                              <option value='56' >Wyoming</option>
+                            </select>
+                            
+                            &nbsp;&nbsp;AND</p>
+                          <!--<p>County&nbsp;=&nbsp;&nbsp;<select><option value='ALL' selected>All</option></select>&nbsp;&nbsp;AND</p>-->
+                          <p>Attribute:&nbsp;
+                            <select id="advattribute" onchange="advenable(this.value);">
+                              <option value='none' selected>None</option>
+                            </select>
+                            &nbsp;&nbsp;is&nbsp;&nbsp;
+                            <select id="advsign" disabled>
+                              <option value='gt'>&gt;</option>
+                              <option value='lt'>&lt;</option>
+                              <option value='gte'>&ge;</option>
+                              <option value='lte'>&le;</option>
+                              <option value='e'>=</option>                              
+                            </select>
+                            &nbsp;&nbsp;<input type="text" id="advtext" disabled /></p>
+                    <button type="button" class="btn btn-default inline" onclick="querygeonums();">Select</button>                            
+                        </div>
+                      
+                      
+         <div id="settings" class="tab-pane fade">
+                          <br />
+                          <p>
+                               <span class="inline"><b>MOE:</b>&nbsp;&nbsp;<input id="moecheck" type="checkbox" name="my-checkbox" data-size="mini" checked/></span><br /><br />
+                             <label for="cselected">Selection Color:&nbsp;</label><select id="cselected" onchange="cselectedchg(this.value);">
+                              <option value='purple'>Purple</option>
+                              <option value='blue'>Blue</option>
+                              <option value='cyan'>Cyan</option>
+                              <option value='green'>Green</option>          
+                              <option value='yellow'>Yellow</option>  
+                              <option value='orange'>Orange</option>  
+                              <option value='red' selected>Red</option>  
+                            </select>           <br /><br />
+                                <label for="cmouseover">Mouseover Color:&nbsp;</label><select id="cmouseover" onchange="cmouseoverchg(this.value);">
+                              <option value='off'>Off</option>                            
+                              <option value='rgb(128,0,127)' selected>Purple</option>
+                              <option value='rgb(0,0,254)'>Blue</option>
+                              <option value='rgb(0,255,254)'>Cyan</option>
+                              <option value='rgb(0,127,0)'>Green</option>          
+                              <option value='rgb(255,254,0)'>Yellow</option>  
+                              <option value='rgb(255,164,0)'>Orange</option>  
+                              <option value='rgb(254,0,0)'>Red</option>  
+                            </select>     
+                        </div>
+                      
+                      
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+  
+
+  
+  <div class="modal fade"  id="chartModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Chart</h4>
+      </div>
+      <div id="chartdiv" class="modal-body firstdiv">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" onclick="setTimeout(function(){updatequerysearchstring();},1000);" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+  
+  <div class="modal fade"  id="dataModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Download</h4>
+      </div>
+      <div class="modal-body firstdiv">
+            <div class="sidebar-pane" id="data">
+<button type="button" class="btn btn-default inline" onclick="download('png');">Download PNG</button>         
+            </div><br />
+<div class="progress">
+  <div  id="progressbar" class="progress-bar progress-bar-success no-transition" role="progressbar" aria-valuenow="0"
+  aria-valuemin="0" aria-valuemax="100" style="width:0%">
+    0%
+  </div>
+</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetslider();">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+  
+  
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  
+    <script src="assets/js/datatree.js"></script>
+    <script src="assets/js/colortree.js"></script>  
+    <script src="assets/js/tableflavor.js"></script>  
+    <script src="assets/js/breaks.js"></script>   
+  
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script src="assets/leafletv08/leaflet.js"></script>
+<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.js'></script>
+    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.js"></script>
+   <script src="https://maps.googleapis.com/maps/api/js?v=3&sensor=false"></script> 
+
+    <script src="assets/leafletajax/la.test.js"></script>
+
+    <script src="assets/js/bootstrap-slider.js"></script>
+
+      <script src="assets/js/leaflet-search.js"></script>
+  
+        <script src="assets/js/spin.min.js"></script>
+      <script src="assets/js/leaflet-spin.js"></script>
+  
+       <script src="assets/js/easy-button.js"></script> 
+
+  
+    <script src="assets/js/stupidtable.js"></script>
+    <script src="assets/js/table2CSV.js"></script>  
+  
+  <script src="assets/js/bootstrap-switch.js"></script>
+    <script src="assets/js/jquery.history.js"></script>
+  
+  <script src="assets/js/lz-string.js"></script>
+
+  <script src="assets/js/app.js"></script>
+
+  
+  
+</body>
+
+</html>

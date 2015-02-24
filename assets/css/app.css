@@ -1,0 +1,344 @@
+html, body, #container {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+body {
+  padding-top: 50px;
+}
+input[type="radio"], input[type="checkbox"] {
+  margin: 0;
+}
+
+#map {
+  width: auto;
+  height: 100%;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+#loading {
+  position: absolute;
+  width: 220px;
+  height: 19px;
+  top: 50%;
+  left: 50%;
+  margin: -10px 0 0 -110px;
+  z-index: 20001;
+}
+#features {
+  margin: 0px;
+  border: none;
+  border-radius: 0px;
+  -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+#aboutTabsContent {
+  padding-top: 10px;
+}
+.progress-bar-full {
+  width: 100%;
+}
+.white {
+  color: #FFFFFF;
+}
+.feature-row {
+  cursor: pointer;
+}
+
+.leaflet-control-layers label {
+  font-weight: normal;
+  margin-bottom: 0px;
+}
+.leaflet-control-layers-list input[type="radio"], input[type="checkbox"] {
+  margin: 2px;
+}
+.table {
+  margin-bottom: 0px;
+}
+.navbar .navbar-brand {
+  font-weight: bold;
+  font-size: 25px;
+  color: #FFFFFF;
+}
+.navbar-collapse.in {
+  overflow-y: hidden;
+}
+.navbar-header .navbar-icon-container {
+  margin-right: 15px;
+}
+.navbar-header .navbar-icon {
+  line-height: 50px;
+  height: 50px;
+}
+.navbar-header a.navbar-icon {
+  margin-left: 25px;
+}
+
+
+.has-feedback .form-control-feedback {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: block;
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  text-align: center;
+}
+@media (max-width: 992px) {
+  .navbar .navbar-brand {
+    font-size: 18px;
+  }
+}
+
+
+    
+    .info {
+    padding: 6px 12px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+      z-index: 10;
+}
+
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+
+}
+    
+    .legend {
+    line-height: 18px;
+    color: #555;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+
+}
+
+
+input.allradio{
+  
+  height: 12px !important;
+  width: 12px !important;
+  margin-left: 0px;
+  
+}
+      
+      .radio-inline input[type=radio]{
+        
+        margin-left: -13px !important;
+        margin-top: 4px !important;
+      }
+      
+      .radio label{
+        
+        font-size: 10px;
+      }
+      
+      
+      .search-input {
+	font-family:Courier
+}
+
+     
+      .panel-heading{
+        
+        padding: 5px;
+
+      }
+      
+      .panel-title{
+                font-size: 12px;
+        
+      }
+      
+      .panel-body{
+        padding: 5px;
+      }
+      
+      div.radio{
+        margin: 0px;
+      }
+      
+      .leaflet-top-pane{
+       pointer-events: none; 
+        
+      }
+      
+      
+      
+      
+      
+      .modal-body { /* customized styles. this way you can have N dialogs, each one with its own size styles */
+
+    height: 50%;
+
+}
+
+/* media query for mobile devices */
+@media ( max-width: 480px ) {
+    .modal-body {
+        height: 90%;
+        width: 90%;
+    }
+}
+
+
+/* split the modal in two divs (header and body) with defined heights */
+.modal .modal-header {
+    height: 10%;
+}
+
+.modal .modal-body {
+    height: 90%;
+      overflow-y: auto;
+  overflow-x: auto;
+}
+
+/* The div inside modal-body is the key; there's where we put the content (which may need the vertical scrollbar) */
+.modal .modal-body .firstdiv {
+    height: 100%;
+    overflow-y: auto;
+  overflow-x: auto;
+    width: 100%;
+}
+      
+      .slider{
+        z-index: 5000;
+        height: 20px !important;
+        width: 210px !important;
+      }
+      
+      
+      .topselect{
+        
+        color: black;
+        stroke: 5px;
+      }
+      
+      table{
+        
+        border: 2px solid grey;
+       
+      }
+      
+
+      
+th{
+  text-align: center;
+  
+}
+      
+      tfoot td{
+        
+        background: #ededed;
+      }
+
+
+    .sizeup{width: 200px;padding: 10px;}
+    @media (min-width: 555px){.sizeup{width: 300px;}}
+    @media (min-width: 700px){.sizeup{width: 350px;}}
+
+
+
+    @media (min-width: 768px){.tabledialog.modal-dialog {width: 650px;}}
+    @media (min-width: 868px){.tabledialog.modal-dialog {width: 750px;}}
+    @media (min-width: 968px){.tabledialog.modal-dialog {width: 825px;}}
+    @media (min-width: 1068px){.tabledialog.modal-dialog {width: 900px;}}
+    @media (min-width: 1168px){.tabledialog.modal-dialog {width: 975px;}}
+    @media (min-width: 1268px){.tabledialog.modal-dialog {width: 1050px;}}
+    @media (min-width: 1368px){.tabledialog.modal-dialog {width: 1125px;}}
+
+.geodialog.modal-dialog {width: 200px;}
+
+
+#resizediv{
+  padding: 0px;
+  border: 1px solid black;
+  background-color:white;
+  z-index: 1000;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  min-height: 50px;
+  max-height: 40%;
+  overflow: auto;
+  width: 100%;
+}
+
+#resizediv select{
+  color: black;
+}
+
+#resizediv .row{
+  margin-right:0px;
+  margin-left:0px;
+}
+
+#wrapheader{
+padding-top:7px;
+  width: 100%;
+  height: 40px;
+  background-color: rgb(51, 51, 51);
+  border: 1px solid black;
+  color: white;
+  
+}
+
+#wrapperheader button{
+  
+  vertical-align: middle;
+}
+
+/* "Winter Blues" CSS theme for CSS Table Gallery (http://icant.co.uk/csstablegallery/) by Gunta Klavina (http://www.klavina.com) */
+
+table {font: 85% "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", sans-serif;padding: 0; margin: 0; border-collapse: collapse; color: #333; background: #F3F5F7;}
+
+table a {color: #3A4856; text-decoration: none; border-bottom: 1px solid #C6C8CB;}  
+
+table a:visited {color: #777;}
+
+table a:hover {color: #000;}  
+
+table caption {text-align: center; text-transform: uppercase;  padding-bottom: 10px; font: 200% "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", sans-serif;}
+
+table thead th {background: #3A4856; padding: 15px 10px; color: #fff; text-align: center; font-weight: normal;}
+
+table tbody, table thead {border-left: 1px solid #EAECEE; border-right: 1px solid #EAECEE;}
+
+table tbody {border-bottom: 1px solid #EAECEE;}
+                      
+table tbody td, table tbody th {padding: 10px; text-align: center;}
+
+table tbody tr {background: #F3F5F7;}
+
+table tbody tr.odd {background: #F0F2F4;}
+
+table tbody  tr:hover {background: #EAECEE; color: #111;}
+
+table tfoot td, table tfoot th, table tfoot tr {text-align: center; font: 120%  "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", sans-serif; text-transform: uppercase; background: #fff; padding: 10px;}
+
+#closebtn{
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  
+}
+
+#minmaxbtn{
+  position: absolute;
+  top: 3px;
+  right: 35px;
+  
+}
+
+#svgchart{
+  display: block;
+  margin-left: auto ;
+  margin-right: auto ;
+  }
