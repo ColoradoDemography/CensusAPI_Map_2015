@@ -1,7 +1,7 @@
 # CensusAPI_Map
 The Colorado State Demography Office's US Census Map<br /><br />
 <img src="image/censusmap.png" /><br /><br />
-A responsive census map with a database backend.  Full-featured yet simple.
+A responsive census map with a database backend.  Full-featured yet simple.  Covers the entire USA.
 <h2>Features</h2>
 <h4>Themes</h4>
 <p>Map by over 65 characteristics (with more still being added)</p>
