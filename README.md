@@ -8,7 +8,7 @@ The Colorado State Demography Office's US Census Map
 A responsive census map with a database backend.  Full-featured yet simple.  Covers the entire USA.
 ##Features
 ####Themes
-> Map by over 65 characteristics (with more still being added)
+> Map by over 65 characteristics (with more still being added) <
 ####Data Tables
 > Display attributes in a data table of all selected areas.  Sort by column.  Export to CSV.
 ####Charts
