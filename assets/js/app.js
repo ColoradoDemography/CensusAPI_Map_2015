@@ -1805,7 +1805,7 @@ updatequerysearchstring();
 
       //disable geo options at inappropriate zoom levels
             var curzoom=map.getZoom();
-      if(curzoom<10){
+      if(curzoom<9){
         $("#rbplace").hide();
         $("#rbtract").hide();
         $("#rbbg").hide();
@@ -2427,7 +2427,7 @@ updatequerysearchstring();
       
       //grey radio buttons for geography levels if zoomed out too far
       var curzoom=map.getZoom();
-      if(curzoom<10){
+      if(curzoom<9){
         $("#rbplace").hide();
         $("#rbtract").hide();
         $("#rbbg").hide();
