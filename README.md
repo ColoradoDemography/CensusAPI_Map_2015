@@ -22,7 +22,7 @@ A responsive census map with a database backend.  Full-featured yet simple.  Cov
 ####Save / Print Map
  Save a map image (minus the control buttons).  Map image is a high quality PNG format at 1024x768 resolution - perfect for PowerPoint presentations.
 ####Advanced Link Support
->You can send a link of any map view to a friend.  They will see the map EXACTLY how you saw it, even if you had a chart open, the datatable maximized, custom classes and symbology, etc
+You can send a link of any map view to a friend.  They will see the map EXACTLY how you saw it, even if you had a chart open, the datatable maximized, custom classes and symbology, etc
 ***
 ##Contributing
->There are a lot of technical details that need to be explained about how this program is organized.  See [Technical Notes](TechnicalNotes.md) for more information.
+There are a lot of technical details that need to be explained about how this program is organized.  See [Technical Notes](TechnicalNotes.md) for more information.

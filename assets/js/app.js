@@ -954,7 +954,7 @@ var Stamen_Terrain = L.tileLayer('http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}
 
 	var latcoord=39;
 	var lngcoord=-104.8;
-	var zoomlev=8;
+	var zoomlev=9;
 
 	if(params.lat!==undefined){	
 		latcoord=params.lat;
@@ -993,15 +993,15 @@ map = L.map("map", {
             $('#advgeo').text('states');
         }
         if (sumlev == '140') {
-                    map.options.minZoom = 10;
+                    map.options.minZoom = 9;
             $('#advgeo').text('tracts');
         }
         if (sumlev == '150') {
-                    map.options.minZoom = 10;
+                    map.options.minZoom = 9;
             $('#advgeo').text('block groups');
         }
         if (sumlev == '160') {
-                    map.options.minZoom = 10;
+                    map.options.minZoom = 9;
             $('#advgeo').text('places');
         }
 
@@ -2054,15 +2054,15 @@ updatequerysearchstring();
             $('#advgeo').text('states');
         }
         if (sumlev == '140') {
-                    map.options.minZoom = 10;
+                    map.options.minZoom = 9;
             $('#advgeo').text('tracts');
         }
         if (sumlev == '150') {
-                    map.options.minZoom = 10;
+                    map.options.minZoom = 9;
             $('#advgeo').text('block groups');
         }
         if (sumlev == '160') {
-                    map.options.minZoom = 10;
+                    map.options.minZoom = 9;
             $('#advgeo').text('places');
         }
 
