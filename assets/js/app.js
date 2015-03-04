@@ -1340,7 +1340,6 @@ $(document).ready(function() {
 	}
 
   
-  //PROBLEM HERE ON STARTUP NUMBER OF CLASSES IS NOT SET IN DROPDOWN
       //change classification
     $('#classification').change(
         function() {
@@ -1386,7 +1385,7 @@ $('#classification').change();
         }
         $('.' + classname).remove();
         //recalc footer
-        writeFooter();
+       // writeFooter();  //do add this back in later
       updatequerysearchstring();
         //change color back to black //insane
         geojsonLayer.setStyle(feat1);
@@ -2018,7 +2017,7 @@ updatequerysearchstring();
         changeall('no', '0');
     });
 
-    //change geo
+    //change geo //change advanced dialog text, change minZoom level
     $('input[name=geoRadios]:radio').change(function() {
 
         sumlev = $('input:radio[name ="geoRadios"]:checked').val();
@@ -2058,9 +2057,9 @@ updatequerysearchstring();
     });
 
 
-    //get all datatheme data from datatree.js and colortree.js for breaks and sybolizing
+    //get all datatheme data from datatree.js , breaks from breakstree.js and colortree.js for sybolizing
     function changeall(redraw, override) {
-
+    //override??
 
         var i, j, k;
 
@@ -2077,14 +2076,11 @@ updatequerysearchstring();
                 mininc = datatree.data[i].mininc;
                 minval = Number(datatree.data[i].minval);
                 numerator = datatree.data[i].numerator;
-                //console.log(numerator);
                 denominator = datatree.data[i].denominator;
                 moenumerator = datatree.data[i].moenumerator;
                 moedenominator = datatree.data[i].moedenominator;
                 moeformula = "(" + moenumerator + ")" + "/" + "(" + moedenominator + ")";
-                //console.log(denominator);
                 formula = "(" + numerator + ")" + "/" + "(" + denominator + ")";
-                //console.log('result: '+formula);
                 summable = false;
                 favtable = datatree.data[i].favtable;
                 varcode = datatree.data[i].varcode;
@@ -2113,11 +2109,18 @@ updatequerysearchstring();
             }
         }
 
+      
+          var tempcheck;
+          if(sumlev=='40'){tempcheck='state';}
+          if(sumlev=='50'){tempcheck='county';}
+          if(sumlev=='140'){tempcheck='tract';}
+          if(sumlev=='150'){tempcheck='bg';}
+          if(sumlev=='160'){tempcheck='place';}      
+      
         for (j = 0; j < breakstree.data[breakstreeindex].symbol.length; j++) {
-
-
+          
             //if statement below for each type of geography
-            if (breakstree.data[breakstreeindex].symbol[j].geo == "state" && sumlev == '40') {
+            if (breakstree.data[breakstreeindex].symbol[j].geo == tempcheck) {
 
                 if (schemename == "jenks") {
                     if (classes == 5) {
@@ -2152,171 +2155,8 @@ updatequerysearchstring();
                         breaks = breakstree.data[breakstreeindex].symbol[j].standard8;
                     }
                 }
-
             }
-
-            //if statement below for each type of geography
-            if (breakstree.data[breakstreeindex].symbol[j].geo == "county" && sumlev == '50') {
-
-                if (schemename == "jenks") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks9;
-                    }
-                }
-                if (schemename == "quantile") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile9;
-                    }
-                    if (classes == 11) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile11;
-                    }
-                }
-                if (schemename == "stddev") {
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard7;
-                    }
-                    if (classes == 8) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard8;
-                    }
-                }
-
-            }
-
-            //if statement below for each type of geography
-            if (breakstree.data[breakstreeindex].symbol[j].geo == "place" && sumlev == '160') {
-
-                if (schemename == "jenks") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks9;
-                    }
-                }
-                if (schemename == "quantile") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile9;
-                    }
-                    if (classes == 11) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile11;
-                    }
-                }
-                if (schemename == "stddev") {
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard7;
-                    }
-                    if (classes == 8) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard8;
-                    }
-                }
-
-            }
-
-
-            //if statement below for each type of geography
-            if (breakstree.data[breakstreeindex].symbol[j].geo == "tract" && sumlev == '140') {
-
-                if (schemename == "jenks") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks9;
-                    }
-                }
-                if (schemename == "quantile") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile9;
-                    }
-                    if (classes == 11) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile11;
-                    }
-                }
-                if (schemename == "stddev") {
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard7;
-                    }
-                    if (classes == 8) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard8;
-                    }
-                }
-
-            }
-
-
-            //if statement below for each type of geography
-            if (breakstree.data[breakstreeindex].symbol[j].geo == "bg" && sumlev == '150') {
-
-                if (schemename == "jenks") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks9;
-                    }
-                }
-                if (schemename == "quantile") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile9;
-                    }
-                    if (classes == 11) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile11;
-                    }
-                }
-                if (schemename == "stddev") {
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard7;
-                    }
-                    if (classes == 8) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard8;
-                    }
-                }
-
-            }
-
         }
-
-
-
 
         //loop through colorschemes only - we have breaks info and colorscheme    
         for (k = 0; k < colortree.colorschemes.length; k++) {
@@ -2338,6 +2178,8 @@ updatequerysearchstring();
 
     }
 
+  
+  //keep track of time.  when stopped moving for two seconds, redraw
       map.on('movestart', function() {
       var d = new Date();
       globalbusy = d.getTime(); 
@@ -2465,18 +2307,16 @@ updatequerysearchstring();
     //after successfull ajax call, data is sent here
     function getJson(data) {
         $("#popup").remove();
-        // createnewtable=0;
 
-        geojsonLayer.clearLayers(); //eliminates double-draw
+        geojsonLayer.clearLayers(); //(mostly) eliminates double-draw (should be technically unneccessary if you look at the code of leaflet-ajax...but still seems to help)
         geojsonLayer.addData(data);
 
-        geojsonLayer.setStyle(feat1); //WOULD THIS BE FASTER IF WE USE ONEACHFEATURE???!!!!      
+        geojsonLayer.setStyle(feat1);   
         map.addLayer(geojsonLayer);
         map.spin(false);
 
         //OMG OMG, I Figured out how to bring selected features to the front
         map.eachLayer(function(layer) {
-            //console.log(layer.options);
             if (layer.options) {
                 if (layer.options.color) {
                     if (layer.options.linecap == 'butt') {
@@ -2562,9 +2402,6 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
 }); //end document on ready
 
 function redrawTable() {
-
-    //will need to move this code somewhere else - otherwise tableflavor will always be 0
-    //not necessarily
 
     var str = '';
     var parsehtml;
@@ -2753,7 +2590,6 @@ function addRows(data) {
 
                 var fp;
 
-                // console.log(data);
                 //Table Flavor
                 for (i = 0; i < (data.data).length; i++) {
                     //console.log(i);
@@ -2825,7 +2661,7 @@ function addRows(data) {
 
 
 function writeFooter() {
-
+//needs so much work...not included  work on and add later
 
     //write table to an array
     var array = [];
