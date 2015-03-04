@@ -1,5 +1,5 @@
 var TrelloClipboard;
-
+//Trello Clipboard allows the map user to Ctrl-C at any time to add a map link to their clipboard
 TrelloClipboard = new ((function () {
     function _Class() {
       this.value = function(){return window.location.href;};
@@ -41,6 +41,7 @@ TrelloClipboard = new ((function () {
 
 })());
 
+//creates a random alphanumeric string for use in uniquely naming exported map
 function makeid(){
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -51,6 +52,7 @@ function makeid(){
     return text;
 }
 
+//export  map function called from button.  Needs work.  No notice when fails.
 function download(pictype){
   
 var newobj={};
@@ -74,7 +76,7 @@ var newobj={};
   
 map.spin(true);
  
-  
+  //see below... the progress bar is not based on anything having to do with real progress... just time
            setTimeout(function(){
 console.log('5 seconds');
       $("#progressbar").css('width','20%').stop();
@@ -114,18 +116,21 @@ console.log('15 seconds');
   
 }
 
+//kinda a hacky slider. Revisit.
 function resetslider(){
   
                   $("#progressbar").css('width','0%').stop();
       $("#progressbar").html('0%');
 }
 
+//for jquery history plugin
 History.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
         var State = History.getState(); // Note: We are using History.getState() instead of event.state
 
   
     });
 
+//after a major map action, the query search string (address) is updated with the new state of the application
 function updatequerysearchstring(){
   
   var ch=''; //chart
@@ -167,6 +172,7 @@ function updatequerysearchstring(){
   
 }
 
+//gets parameters from the address query string
 parseQueryString = function () {
 
                     newstr = String(window.location.search);
@@ -833,7 +839,7 @@ Number.prototype.formatMoney = function(c, d, t) {
     return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
 };
 
-////LEFT OFF HERE
+//table2CSV plugin - from button
 function getCSVData() {
     var csv_value = $('#table').table2CSV({
         delivery: 'value'
@@ -902,21 +908,23 @@ var nelat, nelng, swlat, swlng;
 var lastzoom=8;
 
 
-
+//if varcode (v) stated in parameter string, use it (override default)
     if(params.v!==undefined){	
 		varcode=params.v;
 	};
 
+//change selection color
 function cselectedchg(newcolor){
   cselected=newcolor;
 }
 
+//change mouseover color
 function cmouseoverchg(newcolor){
   cmouseover=newcolor;
 }
 
 
-
+//bootleaf navbar controls
 $("#about-btn").click(function() {
     $("#aboutModal").modal("show");
     $(".navbar-collapse.in").collapse("hide");
@@ -934,7 +942,7 @@ $("#nav-btn").click(function() {
 
 
 
-/* Basemap Layers */
+/* Basemap Layers */  //not ideal because of double - labels
 var mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
     'zIndex': 1
 });
@@ -952,18 +960,22 @@ var Stamen_Terrain = L.tileLayer('http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}
     maxZoom: 18
 });
 
+//default lat and lng and zoomlevel
 	var latcoord=39;
 	var lngcoord=-104.8;
 	var zoomlev=9;
 
+//if lat in querystring
 	if(params.lat!==undefined){	
 		latcoord=params.lat;
 	};
 
+//if lng in querystring
 	if(params.lng!==undefined){	
 		lngcoord=params.lng;
 	};
 
+//if zoomlevel (z) in querystring
 	if(params.z!==undefined){	
 		zoomlev=params.z;
 	};
@@ -978,11 +990,14 @@ map = L.map("map", {
     attributionControl: false
 });
 
-
+//if sumlev (s) in querystring
   	if(params.s!==undefined){	
 		sumlev=params.s;
       $("input[name=geoRadios][value=" + sumlev + "]").prop('checked', true);
 	};
+
+
+//depending on sumlev, changes minZoom, adds the correct string to the advanced query tool i.e (select all 'tracts')
 
         if (sumlev == '50') {
           map.options.minZoom = 4;
@@ -1005,6 +1020,7 @@ map = L.map("map", {
             $('#advgeo').text('places');
         }
 
+//define labels layer
 var mblabels = L.mapbox.tileLayer('statecodemog.798453f5', {
     'clickable': 'false',
     'zIndex': 1000
@@ -1024,14 +1040,14 @@ var baseLayers = {
     "Stamen Terrain": Stamen_Terrain
 };
 
-
+//in the future ill figure out how to toggle labels on and off (and still have it appear on top)
 var groupedOverlays = {
 //  "Labels and Borders": mblabels
 };
 
 
 
-/* Attribution control */
+/* Attribution control */  //bootleaf
 var attributionControl = L.control({
     position: "bottomright"
 });
@@ -1053,14 +1069,17 @@ attributionControl2.onAdd = function(map) {
 };
 map.addControl(attributionControl2);
 
+//geocoder is from Google.
 var geocoder = new google.maps.Geocoder();
 
+//google geocoder
 function googleGeocoding(text, callResponse) {
     geocoder.geocode({
         address: text
     }, callResponse);
 }
 
+//google geocoder function
 function filterJSONCall(rawjson) {
     var json = {},
         key, loc, disp = [];
@@ -1072,6 +1091,7 @@ function filterJSONCall(rawjson) {
     return json;
 }
 
+//google geocoder
 var searchControl = map.addControl(new L.Control.Search({
     callData: googleGeocoding,
     filterJSON: filterJSONCall,
@@ -1126,11 +1146,12 @@ if (document.body.clientWidth <= 767) {
     var isCollapsed = false;
 }
 
+//add layer control
 L.control.layers(baseLayers, groupedOverlays, {
     'autoZIndex': false
 }).addTo(map);
 
-
+//legend control
 var legend = L.control({
     position: 'bottomright'
 });
@@ -1141,6 +1162,7 @@ legend.onAdd = function(map) {
     var labels = [];
     var color = [];
 
+  //retrieve individual colors depending on colorscheme and number of classes - puts those colors into color array
     for (j = 0; j < colortree.colorschemes.length; j++) {
 
         if (colortree.colorschemes[j].schemename == colorscheme) {
@@ -1150,25 +1172,22 @@ legend.onAdd = function(map) {
         }
     }
 
+  //legend title
     var div = L.DomUtil.create('div', 'info legend');
-
     div.innerHTML = "<h4 style='color: black;'><b>" + current_desc + "</b></h4>";
 
-
+//retrieve breaks
     for (i = (breaks.length - 1); i > -1; i--) {
         labels.push(breaks[i]);
     }
 
-    var lowlabel, toplabel;
-
+  //format depending on number type: currency, number, regular, percent
+  var lowlabel, toplabel;
     if (schemename !== "stddev") {
         for (i = 0; i < labels.length; i++) {
-
-
             if (i === 0) {
                 lowlabel = minval;
             }
-
             if (type == 'currency') {
                 lowlabel = labels[i];
                 toplabel = labels[i + 1] - mininc;
@@ -1178,29 +1197,23 @@ legend.onAdd = function(map) {
                 } else {
                     toplabel = ' to $' + toplabel.formatMoney(0);
                 }
-
             }
-
             if (type == 'number') {
                 lowlabel = labels[i];
                 toplabel = labels[i + 1] - mininc;
-
                 var resprec = (mininc + "").split(".")[1];
                 if (!resprec) {
                     resprec = 0;
                 } else {
                     resprec = resprec.length;
                 }
-
                 lowlabel = lowlabel.formatMoney(resprec); //still not correct
                 if (!toplabel) {
                     toplabel = " +";
                 } else {
                     toplabel = ' to ' + toplabel.formatMoney(resprec);
                 }
-
             }
-
             if (type == 'percent') {
                 lowlabel = labels[i];
                 toplabel = labels[i + 1] - (mininc / 100);
@@ -1210,9 +1223,7 @@ legend.onAdd = function(map) {
                 } else {
                     toplabel = ' to ' + (toplabel * 100).formatMoney(2) + ' %';
                 }
-
             }
-
             if (type == 'regular') {
                 lowlabel = labels[i];
                 toplabel = labels[i + 1] - mininc;
@@ -1224,7 +1235,7 @@ legend.onAdd = function(map) {
 
             }
 
-            //if there is a negative anywhere in 'toplabel' dont display
+            //if there is a negative anywhere in 'toplabel' dont display (causes havoc with quantile )
             if (toplabel.search('-') == -1) {
                 div.innerHTML += '<i style="background:' + color[i] + ';opacity: ' + fillOpacity + ';"></i> ' + '&nbsp;&nbsp;&nbsp;' + lowlabel + toplabel + '<br />';
             }
@@ -1232,7 +1243,7 @@ legend.onAdd = function(map) {
 
         }
     } else {
-
+//labels for standard deviation are treated differently and dont depend on number type
         var labels2 = [];
 
         if (classes == 7) {
@@ -1278,13 +1289,16 @@ function clearsel() {
 
 }
 
+//hide table - from button
 function mintable() {
     $('#resizediv').hide();
   updatequerysearchstring();
 }
 
+//min or max table - from button
 function minmaxtable() {
   
+  //check the top attribute of the closebtn to figure if table needs to be minimized or maximized
   var btnstate=$('#closebtn').css('top');
   
   if(btnstate=='3px'){
@@ -1293,14 +1307,14 @@ function minmaxtable() {
     $('#resizediv').css('padding-top','50px');  
   $('#closebtn').css('top','53px');
   $('#minmaxbtn').css('top','53px');
-$( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-minus-sign" );
+$( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-minus-sign" ); //change icon
   }else{
     $('#resizediv').css('max-height','40%');  
     $('#resizediv').css('height','auto');
     $('#resizediv').css('padding-top','0px');  
   $('#closebtn').css('top','3px');
   $('#minmaxbtn').css('top','3px');  
-    $( "#minmaxbtn2" ).removeClass( "glyphicon-minus-sign" ).addClass( "glyphicon-plus-sign" );
+    $( "#minmaxbtn2" ).removeClass( "glyphicon-minus-sign" ).addClass( "glyphicon-plus-sign" ); //change icon
   }
 
   updatequerysearchstring();
@@ -1308,22 +1322,31 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
 
 
 
-
+//on dom loaded
 $(document).ready(function() {
 //begin
   
   $('#linkbutton').tooltip({placement : 'right'});
 
-    	if(params.d!==undefined){	
+  //get list of selected geographies (d) - store them in global variable (dataset)
+    	if(params.d!==undefined){
 		dataset=LZString.decompressFromEncodedURIComponent(params.d).split(',');
 	};
   
+      //set classification scheme if in querystring
+  if(params.sn!==undefined){	
+		schemename=params.sn;
+    $("#classification").val(schemename).change();
+	}
+
   
+  //PROBLEM HERE ON STARTUP NUMBER OF CLASSES IS NOT SET IN DROPDOWN
       //change classification
     $('#classification').change(
         function() {
-          classes = 7;
+          classes = 7; //default number of classes
           
+          //if classes (cl) is in querystring, override default number of classes
              if(params.cl!==undefined){	
 		           classes=params.cl;
                delete params.cl;
@@ -1349,15 +1372,11 @@ $(document).ready(function() {
         }
     );
 
-    
-  if(params.sn!==undefined){	
-		schemename=params.sn;
-    $("#classification").val(schemename).change();
-	}
-
+  //trigger the function
+$('#classification').change();
   
 
-  
+  //when doubleclicking on row, remove item from selection (and table)
     $(document).on('dblclick', 'tr', function() {
         var classname = this.className;
         for (var i = 0; i < dataset.length; i++) {
@@ -1368,13 +1387,13 @@ $(document).ready(function() {
         $('.' + classname).remove();
         //recalc footer
         writeFooter();
-updatequerysearchstring();
+      updatequerysearchstring();
         //change color back to black //insane
         geojsonLayer.setStyle(feat1);
 
     });
 
-
+    //initialize bootstrap switch for MOE
     $("[name='my-checkbox']").bootstrapSwitch({
         animate: false
     });
@@ -1392,26 +1411,32 @@ updatequerysearchstring();
       updatequerysearchstring();
     });
   
-    
+    //default is for MOE to be on (yes) - if querystring says 'no' turn it off
       	if(params.moe!==undefined){	
           if(params.moe=='no'){
   $('input[name="my-checkbox"]').bootstrapSwitch('state', false);
           }
         }
   
-
+    //looks for table dropdown change - changes table flavor
     $('#tableoption').on('change', function() {
         chgtblfl();
     });
+  
+    //initialize stupid table plugin on our data table
     $("#table").stupidtable();
 
     //Create Easy Buttons (Top-Left)
+  
+  //theme modal & button
     $('#homeModal').modal({
         show: false
     });
     L.easyButton('fa fa-bars', function() {
         $('#homeModal').modal('toggle');
     }, 'Change Data Theme');
+  
+    //geo modal & button
     $('#geoModal').modal({
         show: false
     });
@@ -1419,35 +1444,34 @@ updatequerysearchstring();
         $('#geoModal').modal('toggle');
     }, 'Change Geography Level');
 
+  //table button
     L.easyButton('fa fa-table', function() {
         $('#resizediv').toggle();
       updatequerysearchstring();
     }, 'View Table');
 
-
+    //chart modal & button
     $('#chartModal').modal({
         show: false
     });
     L.easyButton('fa fa-line-chart', function() {
-
         $('#chartModal').modal('toggle');
         $('#chartdiv').empty();
         addchart();
       setTimeout(function(){updatequerysearchstring();},1000);
-
     }, 'View Chart');
 
-
+    //print modal & button
     $('#dataModal').modal({show: false});  
     L.easyButton('fa fa-floppy-o', function (){$('#dataModal').modal('toggle');},'Print Map'); 
 
-
+  //clear selected (eraser) button
     L.easyButton('fa fa-eraser', function() {
         clearsel();
       updatequerysearchstring();
     }, 'Clear Selection');
 
-    
+    //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
   if(params.print=='yes'){
     console.log('printing');
     $('.leaflet-control-search').hide();
@@ -1458,7 +1482,6 @@ updatequerysearchstring();
     $('.navbar-nav').hide();
     $('#popup').hide();
     $('.spanhide').hide();
-    
   }
   
 
@@ -1469,7 +1492,7 @@ updatequerysearchstring();
         }
     });
 
-  
+  //if a transparency value is set in the querystring, change the slider to that value
     	if(params.tr!==undefined){	
 		fillOpacity=params.tr;
         trslider.slider('setValue', parseInt(fillOpacity*100));
@@ -1490,15 +1513,14 @@ updatequerysearchstring();
       updatequerysearchstring();
     });
 
+  
+  //every geojson feature will have a mouseover, mouseout, and click event.
     function onEachFeature(feature, layer) {
-        //console.log(feature.properties);
-
         layer.on({
             mouseover: highlightFeature,
             mouseout: mouseout,
             click: featureSelect
         });
-
     }
 
 
@@ -1520,10 +1542,7 @@ updatequerysearchstring();
                 color: linecolor
             });
         }
-
         $("#popup").remove();
-
-
     }
 
 
@@ -1534,11 +1553,12 @@ updatequerysearchstring();
       },
         middleware: function(data) {
             getJson(data);
-        }, //run tests to see if this is the best setup
+        }, 
         onEachFeature: onEachFeature
     });
 
   
+  //mouseover highlight
     function highlightFeature(e) {
         var layer = e.target;
       
@@ -1610,7 +1630,7 @@ updatequerysearchstring();
     }
 
 
-
+//on geojson click
     function featureSelect(e) {
 
         var layer = e.target;
@@ -1790,20 +1810,7 @@ updatequerysearchstring();
 
 
 
-
-  
-  
-    populate();
-    drawcolorschemes();
-    legend.addTo(map);
-    changeall('yes', '0');
-  
-  
-
-
-    function populate() {
-
-      //disable geo options at inappropriate zoom levels
+      //disable geo options at inappropriate zoom levels //should this be here??
             var curzoom=map.getZoom();
       if(curzoom<9){
         $("#rbplace").hide();
@@ -1814,7 +1821,18 @@ updatequerysearchstring();
         $("#rbtract").show();
         $("#rbbg").show();
       }
-      
+  
+  
+    populate(); //populate them modal from datatree
+    drawcolorschemes(); //populate symbology portion of advanced dialog
+    legend.addTo(map); 
+    changeall('yes', '0');  //draw 
+  
+  
+
+
+    function populate() {
+
       
         //count different categories
         var sectionsarray = [];
@@ -1915,61 +1933,20 @@ updatequerysearchstring();
 
             appendstring = appendstring + '</label>';
 
+          //add all colorscheme dom elements to dialog
             $('#colorschemes').append(appendstring);
 
-     
-
-          
-
-            if (classes == 5) {
-                $('.c7').hide();
-                $('.c8').hide();
-                $('.c9').hide();
-                $('.c11').hide();
-            }
-            if (classes == 7) {
-                $('.c5').hide();
-                $('.c8').hide();
-                $('.c9').hide();
-                $('.c11').hide();
-            }
-            if (classes == 8) {
-                $('.c5').hide();
-                $('.c7').hide();
-                $('.c9').hide();
-                $('.c11').hide();
-            }
-            if (classes == 9) {
-                $('.c5').hide();
-                $('.c7').hide();
-                $('.c8').hide();
-                $('.c11').hide();
-            }
-            if (classes == 11) {
-                $('.c5').hide();
-                $('.c7').hide();
-                $('.c8').hide();
-                $('.c9').hide();
-            }
-
-          
-          
-            if (schemename == "jenks") {
-                $('.quantile').hide();
-            }
-            if (schemename == "quantile" || schemename == "stddev") {
-                $('.jenks').hide();
-            }
         }
+      
+      filtercolorschemes();
+      
 
+      //if colorscheme info is in querystring, use it.  otherwise, use default
           if(params.cs!==undefined){	
-
 		          colorscheme=params.cs;
-
             $('#'+colorscheme+classes).prop('checked',true);
-
               delete params.cs;
-  updatequerysearchstring();
+            updatequerysearchstring();
 	        }else{
                     //set default
         $('#mh17').prop('checked', true);
@@ -1978,6 +1955,7 @@ updatequerysearchstring();
 
     }
 
+  //calling this function means its time to refilter colorschems based on classification scheme and number of classes
     function filtercolorschemes() {
 
         $('.allradio').show();
@@ -2066,7 +2044,6 @@ updatequerysearchstring();
             $('#advgeo').text('places');
         }
 
-        //dataset = [];
         updatequerysearchstring();
         changeall('yes', '0');
     });
