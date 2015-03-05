@@ -736,8 +736,8 @@ function feat1(feature) {
         };
     }
 
-    //trickiness with 0==false;  if the mapvariable is equal to null (but not zero) and the usenull flag is set, symbolize the geography with the null symbology
-    if (!mapvar && mapvar !== 0 && usenull == 'yes') {
+    //trickiness with 0==false;  if the mapvariable is equal to null (but not zero), symbolize the geography with the null symbology
+    if (!mapvar && mapvar !== 0) {
         return {
             fillColor: ifnulljson,
             color: newlinecolor,
@@ -875,7 +875,6 @@ var schema = 'data';
 var demogdatalayer;
 var table = 'b19013';
 var formula = 'fp.b19013001';
-var usenull = 'yes';
 var usezeroasnull = 'yes';
 var breaks = [];
 var varcode = 'mhi';
@@ -2084,7 +2083,6 @@ updatequerysearchstring();
                 summable = false;
                 favtable = datatree.data[i].favtable;
                 varcode = datatree.data[i].varcode;
-                usenull = datatree.data[i].usenull;
                 usezeroasnull = datatree.data[i].usezeroasnull;
                 var symbarray = (datatree.data[i].favstyle).split(',');
                 if (override == '1') {
