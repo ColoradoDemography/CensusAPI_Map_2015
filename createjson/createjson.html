@@ -6,7 +6,7 @@
 
     <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-    <script src="simple_statistics.js"></script>
+    <script src="../assets/js/simple_statistics.js"></script>
               
       <style>
       </style>
@@ -16,17 +16,17 @@
     <tr><td><b>verbose </b></td><td>(ex: Median Household Income):&nbsp;&nbsp;</td><td><input id="verbose" type="text"/></td></tr>
     <tr><td><b>section </b></td><td>(ex: income):&nbsp;&nbsp;</td><td><input id="section" type="text"/></td></tr>
     <tr><td><b>table </b></td><td>(ex: b19013):&nbsp;&nbsp;</td><td><input id="table" type="text"/></td></tr>
-    <tr><td><b>numerator </b></td><td>(ex: fp.b19013001):&nbsp;&nbsp;</td><td><input id="numerator" type="text"/></td></tr>
+    <tr><td><b>numerator </b></td><td>(ex: b19013001):&nbsp;&nbsp;</td><td><input id="numerator" type="text"/></td></tr>
     <tr><td><b>denominator </b></td><td>(ex: 1):&nbsp;&nbsp;</td><td><input id="denominator" value="1" type="text"/></td></tr>
-    <!--<tr><td><b>colorscheme </b></td><td>(ex: default):&nbsp;&nbsp;</td><td><input id="colorscheme" type="text"/></td></tr>  -->
     <tr><td><b>type </b></td><td>(ex: currency, number, percent, regular):&nbsp;&nbsp;</td><td><input id="type" value="number" type="text"/></td></tr>  
     <tr><td><b>minval </b></td><td>(ex: 1939):&nbsp;&nbsp;</td><td><input id="minval" value="0" type="text"/></td></tr>
     <tr><td><b>mininc </b></td><td>(ex: .0001):&nbsp;&nbsp;</td><td><input id="mininc" value="1" type="text"/></td></tr>
-    <tr><td><b>usenull </b></td><td>(ex: yes):&nbsp;&nbsp;</td><td><input id="usenull" value="yes" type="text"/></td></tr>  
     <tr><td><b>use zero as null </b></td><td>(ex: no):&nbsp;&nbsp;</td><td><input id="usezeroasnull" value="no" type="text"/></td></tr>
-    <tr><td><b>discard zeros</b></td><td>(ex: no):&nbsp;&nbsp;</td><td><input id="discard" value="no" type="text"/></td></tr> 
-    <tr><td><b>skipbg</b></td><td>(ex: no):&nbsp;&nbsp;</td><td><input id="skipbg" value="no" type="text"/></td></tr>       
-    </table><br />
+    <tr><td><b>favtable</b></td><td>(Median Household Income)*:&nbsp;&nbsp;</td><td><input id="favtable" value="" type="text"/></td></tr>
+    <tr><td><b>favstyle</b></td><td>(jenks,7,mh1):&nbsp;&nbsp;</td><td><input id="favstyle" value="jenks,7,mh1" type="text"/></td></tr>      
+    </table>
+    <p>*See table alias in tableflavor.js</p><br />
+    <p>See console for output</p>
     <input type="button" value="submit" onclick="btnclick();"/>
       
     <script>
@@ -39,90 +39,16 @@
           var displaynum=$("#numerator").val().replace(/\+/g,')+Number(fp.');
           var displaydenom=$("#denominator").val().replace(/\+/g,')+Number(fp.');   
           
-          displaynum = 'Number(fp.' + displaynum + ')';
-          displaydenom = 'Number(fp.' + displaydenom + ')';
+          displaynum = 'fp.' + displaynum;
+          displaydenom = 'fp.' + displaydenom;
           
-          if(displaydenom=='Number(fp.1)'){displaydenom='1';}
+          if(displaydenom=='fp.1'){displaydenom='1';}
           
-          outputtext='{ "varcode": "' + $("#varcode").val() + '", "verbose": "' + $("#verbose").val() + '", "section": "' + $("#section").val() + '", "table": "' + $("#table").val() + '", "numerator": "' + displaynum + '",  "denominator": "' + displaydenom + '", "type": "' + $("#type").val() + '",  "minval": "' + $("#minval").val() + '",  "mininc": "' + $("#mininc").val() + '",  "usezeroasnull": "' + $("#usezeroasnull").val() + '", "usenull": "' + $("#usenull").val() + '", "skipbg": "' + $("#skipbg").val() + '",  "symbol": [';
+          outputtext='{ "varcode": "' + $("#varcode").val() + '", "verbose": "' + $("#verbose").val() + '", "section": "' + $("#section").val() + '", "table": "' + $("#table").val() + '", "numerator": "' + displaynum + '",  "denominator": "' + displaydenom + '", "type": "' + $("#type").val() + '",  "minval": "' + $("#minval").val() + '",  "mininc": "' + $("#mininc").val() + '",  "usezeroasnull": "' + $("#usezeroasnull").val() + '",  "favtable": "' + $("#favtable").val() + '",  "favstyle": "' + $("#favstyle").val() + '"}';
           
-callajax(geo);
-          
+          console.log(outputtext);
         }
       
-      function callajax(geo){
-        
-        //replace + with ,
-        var newnum = $("#numerator").val().replace(/\+/g,',');
-        var newdenom=$("#denominator").val().replace(/\+/g,',');
-
-        
-      $.ajax({
-          url: "http://codemogapi-166520.usw1.nitrousbox.com/createjson.php?geo="+geo+"&num="+newnum+"&denom="+newdenom+"&discard="+$('#discard').val(),
-          dataType: 'json',
-          jsonpCallback: 'getJson',
-          success: getJson
-      });  
-          
-                    
-        }
-      
-        
-    function getJson(jdata) {  //after successfull ajax call, data is sent here
-
-      outputtext=outputtext+'{ "geo": "'+ geo + '", ';
-      
-      var thedata =jdata;
-      
-      var mean=ss.mean(jdata);
-      var median=ss.median(jdata);
-      var stddev=ss.standard_deviation(jdata);
-
-      var jenks5=ss.jenks(thedata,5);
-      jenks5[0]=Number($("#minval").val());
-      jenks5.pop();      
-      var jenks7=ss.jenks(thedata,7);
-      jenks7[0]=Number($("#minval").val()); 
-      jenks7.pop();          
-      var jenks9=ss.jenks(thedata,9);
-      jenks9[0]=Number($("#minval").val());
-      jenks9.pop();    
-      
-      var quantile5=[ss.quantile(thedata,0.8),ss.quantile(thedata,0.6),ss.quantile(thedata,0.4),ss.quantile(thedata,0.2),Number($("#minval").val())];
-      var quantile7=[ss.quantile(thedata,0.857143),ss.quantile(thedata,0.714286),ss.quantile(thedata,0.57143),ss.quantile(thedata,0.42857),ss.quantile(thedata,0.28571),ss.quantile(thedata,0.14286),Number($("#minval").val())];
-      var quantile9=[ss.quantile(thedata,0.88888),ss.quantile(thedata,0.77777),ss.quantile(thedata,0.66666),ss.quantile(thedata,0.55555),ss.quantile(thedata,0.44444),ss.quantile(thedata,0.33333),ss.quantile(thedata,0.22222),ss.quantile(thedata,0.11111),Number($("#minval").val())];
-      var quantile11=[ss.quantile(thedata,0.90909),ss.quantile(thedata,0.81818),ss.quantile(thedata,0.72727),ss.quantile(thedata,0.63636),ss.quantile(thedata,0.54545),ss.quantile(thedata,0.45454),ss.quantile(thedata,0.36364),ss.quantile(thedata,0.27273),ss.quantile(thedata,0.18182),ss.quantile(thedata,0.09091),Number($("#minval").val())];      
-      
-      
-      outputtext=outputtext+' "jenks5": ['+ jenks5.reverse() + '], ';
-      outputtext=outputtext+' "jenks7": ['+ jenks7.reverse() + '], ';
-      outputtext=outputtext+' "jenks9": ['+ jenks9.reverse() + '], ';
-
-      outputtext=outputtext+' "quantile5": ['+ quantile5 + '], ';
-      outputtext=outputtext+' "quantile7": ['+ quantile7 + '], ';
-      outputtext=outputtext+' "quantile9": ['+ quantile9 + '], ';
-      outputtext=outputtext+' "quantile11": ['+ quantile11 + '], ';
-      
-
-      //half stddev breaks (8)
-      var standard8=[median+(stddev*1.5),median+(stddev*1),median+(stddev*0.5),median,median-(stddev*0.5),median-(stddev*1),median-(stddev*1.5),Number($("#minval").val())];
-      //wide stddev breaks (7)
-      var standard7=[median+(stddev*2.5),median+(stddev*1.5),median+(stddev*0.5),median-(stddev*0.5),median-(stddev*1.5),median-(stddev*2.5),Number($("#minval").val())];   
-      
-      
-      outputtext=outputtext+' "standard8": ['+ standard8 + '], ';
-      outputtext=outputtext+' "standard7": ['+ standard7 + '] }';      
-      
-      
-
-      if(geo=="bg"){outputtext=outputtext+']}'; console.log(outputtext);}
-      if(geo=="tract"){geo="bg"; outputtext=outputtext+','; if($('#skipbg').val()=='no'){callajax(geo);}else{outputtext=outputtext+']}'; console.log(outputtext);}}        
-      if(geo=="place"){geo="tract"; outputtext=outputtext+','; callajax(geo);}       
-      if(geo=="county"){geo="place"; outputtext=outputtext+','; callajax(geo);}        
-      if(geo=="state"){geo="county"; outputtext=outputtext+','; callajax(geo);}
-
-      
-    } 
 
      
 

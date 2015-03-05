@@ -13,8 +13,6 @@ charttree.js
 
 colortree.js
 
-breaks.js
-
 datatree.js
 
 
@@ -27,9 +25,35 @@ datatree.js
 
 **colortree.js**:  This defines all of the color schemes used in the map.  It is based upon the widely known [Color Brewer](http://colorbrewer2.org/) specifications.  Colorschemes are divided into 3 main categories, sh (single-hue), mh (multi-hue), and ds (diverging scheme).  This is important as certain classification methods (like Jenks) should not be used with diverging schemes.
 
-**datatree.js**:  Defines all of the data themes. "varcode": is a unique name identifying the theme, "verbose": Is a title that describes the theme, "section": defines what broad category the theme should be listed under, "table": is the census table that the theme is derived from, "numerator": defines the numerator of the theme,  "denominator": defines the denominator of the theme (necessary for data themes that are percent-of-total values),  "type": the data type of the theme, can be percent, regular (unformatted), number (for numeric),  "minval": the lowest possible value in the dataset, "mininc": the smallest significant value increment of the data,  "usezeroasnull": defines whether zero should be treated as a null value, "usenull": defines whether null values should be mapped, "skipbg": defines whether block group data is not available, "favtable": defines the table flavor, "favstyle": defines the default colorscheme of the data (classification scheme, number of classes, colorscheme).
+**datatree.js**:  Defines all of the data themes. 
 
-**breaks.js**:  This was separated from datatree.js for clarity, but is really an additional attribute.  This defines the value breaks for every combination of geography and number of classes and classification scheme.  These are all precalculated for each theme.  In the future, this may be handled differently.  (Possibly, it will be calculated on demand and stored in a database).
+"varcode": is a unique name identifying the theme, 
+
+"verbose": Is a title that describes the theme, 
+
+"section": defines what broad category the theme should be listed under, 
+
+"table": is the census table that the theme is derived from, 
+
+"numerator": defines the numerator of the theme,  
+
+"denominator": defines the denominator of the theme (necessary for data themes that are percent-of-total values),  
+
+"type": the data type of the theme, can be percent, regular (unformatted), number (for numeric),  
+
+"minval": the lowest possible value in the dataset, 
+
+"mininc": the smallest significant value increment of the data,  
+
+"usezeroasnull": defines whether zero should be treated as a null value.  Necessary because of the numerator/denominator setup.  Ex: Median Household Income is num/den = b19013001/1.  In this case there is never a null value.  On themes where the denominator is 1, a null value for the numerator equates to 0. null / 1 = 0; In these cases we can assume 0=null, and set the usezeroasnull flag accordingly.  However, we can't blindly set this to yes.  Consider the case where we're looking at the theme 'Percent Hawaiian & Pacific Islander'.  This theme has a non-zero denominator (total population), but often a zero for the numerator.  In this case, a 0 is most certainly not a null value, it just means 0%, or no Hawaiian & Pacific Islander population.  Luckily, where the denominator is 0 (no population at all in tract), the equation will result in null, so null still works correctly in this situation.
+
+"favtable": defines the table flavor,  (in the future a default will be set at the raw table, and defining this will be optional)
+
+"favstyle": defines the default colorscheme of the data (classification scheme, number of classes, colorscheme). (in the future a default will be set and defining this will be optional)
+
+####Tools:
+
+**createjson.html** will provide an easy interface to create data themes
 
 ***
 
@@ -37,11 +61,7 @@ datatree.js
 
 The code is in bad need of restructuring into a more logical ordering.  The first order of business will be to organize assigning default values vs values received in the query (address) string.
 
-The second order of business will probably be to do away entirely with the breaks.js structure.  This will allow contributors to more easily add data themes.
-
-The third order of business will be to take a serious look at how null and zero values are treated, and to possibly do away with everything associated with that aspect. (Again, allowing contributors to add data themes easily.)
-
-The fourth order of business will probably be to start some sort of chart template structure (for charttree.js) similar to what was done for tableflavor.js.
+The second order of business will probably be to start some sort of chart template structure (for charttree.js) similar to what was done for tableflavor.js.
 
 
 ###Stuff I'm really bad at

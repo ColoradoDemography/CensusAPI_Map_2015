@@ -1,4 +1,7 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+//in the future this will go somewhere else (and may differ)
+
 header('Content-Type: application/json');
 
 //num and denom can be comma delimited
@@ -30,7 +33,7 @@ if($geo=='place'){$geopossible=29257;}
 if($geo=='state'){$geopossible=51;}
 
 
-require 'connect.php';
+require '../../../CensusAPI/connect.php';
 
 $darray=[];
 
@@ -44,7 +47,7 @@ if (!$dbh) {
 
 
 
-$sql="select * from carto.".$geo." natural join data.".$table." where gid in ( select round(random() * 72859)::integer as gid from generate_series(1, 3000) group by gid) limit 2500;";
+$sql="select * from carto.".$geo." natural join data.".$table." where gid in ( select round(random() * ".$geopossible.")::integer as gid from generate_series(1, 3000) group by gid) limit 2500;";
 
 if($geo=="state"){
 $sql="select * from carto.state natural join data.".$table.";";

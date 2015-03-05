@@ -2097,66 +2097,8 @@ updatequerysearchstring();
                 }
             }
         }
-
-        var dd;
-        var breakstreeindex;
-
-        for (dd = 0; dd < breakstree.data.length; dd++) {
-            if (breakstree.data[dd].varcode == varcode) {
-                breakstreeindex = dd;
-            }
-        }
-
       
-          var tempcheck;
-          if(sumlev=='40'){tempcheck='state';}
-          if(sumlev=='50'){tempcheck='county';}
-          if(sumlev=='140'){tempcheck='tract';}
-          if(sumlev=='150'){tempcheck='bg';}
-          if(sumlev=='160'){tempcheck='place';}      
-      
-        for (j = 0; j < breakstree.data[breakstreeindex].symbol.length; j++) {
-          
-            //if statement below for each type of geography
-            if (breakstree.data[breakstreeindex].symbol[j].geo == tempcheck) {
-
-                if (schemename == "jenks") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].jenks9;
-                    }
-                }
-                if (schemename == "quantile") {
-                    if (classes == 5) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile5;
-                    }
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile7;
-                    }
-                    if (classes == 9) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile9;
-                    }
-                    if (classes == 11) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].quantile11;
-                    }
-                }
-                if (schemename == "stddev") {
-                    if (classes == 7) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard7;
-                    }
-                    if (classes == 8) {
-                        breaks = breakstree.data[breakstreeindex].symbol[j].standard8;
-                    }
-                }
-            }
-        }
-
-        //loop through colorschemes only - we have breaks info and colorscheme    
+              //loop through colorschemes only - we have breaks info and colorscheme    
         for (k = 0; k < colortree.colorschemes.length; k++) {
 
             if (colortree.colorschemes[k].schemename == colorscheme && colortree.colorschemes[k].count == classes) {
@@ -2165,7 +2107,22 @@ updatequerysearchstring();
                 symbolcolors = colortree.colorschemes[k].colors;
             }
         }
+      
+      //localStorage.setItem("mhi_county_jenks_7", JSON.stringify([79183,64205,54206,46817,40204,33445,1]));
+        var geo;
+        
+        if(sumlev==40){geo='state';}
+        if(sumlev==50){geo='county';}
+        if(sumlev==140){geo='tract';}
+        if(sumlev==150){geo='bg';}
+        if(sumlev==160){geo='place';}    
 
+
+      
+if(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes)){
+breaks=JSON.parse(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes));
+
+  
         legend.addTo(map);
 
         if (redraw == "yes") {
@@ -2174,6 +2131,102 @@ updatequerysearchstring();
             geojsonLayer.setStyle(feat1);
         }
 
+  
+}else{
+
+        var stripnum=numerator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g,',');
+        var stripdenom=denominator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g,',');
+
+        
+        //double check discard = maybe related to usezeroasnull
+      $.ajax({
+          url: "assets/php/getranges.php?geo="+geo+"&num="+stripnum+"&denom="+stripdenom+"&discard="+usezeroasnull,
+          dataType: 'json',
+          jsonpCallback: 'getJson',
+          success: jsonstring
+      });  
+        
+
+
+}
+      
+
+        
+
+        
+    function jsonstring(thedata) {  //after successfull ajax call, data is sent here
+
+     
+  
+      var max=ss.max(thedata);
+
+      if(max===0){thedata=[1,2,3,4,5,6,7,8,9,10,11,12,13,14];}  //all values in array are 0. (presumably no bg data)  Add a '1' to the array so simplestatistics library doesnt fail computing jenks.
+      
+      
+      var mean=ss.mean(thedata);
+
+      var median=ss.median(thedata);
+
+      var stddev=ss.standard_deviation(thedata);
+
+      
+      var jenks5=ss.jenks(thedata,5);
+      jenks5[0]=minval;
+      jenks5.pop();      
+      var jenks7=ss.jenks(thedata,7);
+      jenks7[0]=minval; 
+      jenks7.pop();          
+      var jenks9=ss.jenks(thedata,9);
+      jenks9[0]=minval;
+      jenks9.pop();    
+      
+      var quantile5=[ss.quantile(thedata,0.8),ss.quantile(thedata,0.6),ss.quantile(thedata,0.4),ss.quantile(thedata,0.2),minval];
+      var quantile7=[ss.quantile(thedata,0.857143),ss.quantile(thedata,0.714286),ss.quantile(thedata,0.57143),ss.quantile(thedata,0.42857),ss.quantile(thedata,0.28571),ss.quantile(thedata,0.14286),minval];
+      var quantile9=[ss.quantile(thedata,0.88888),ss.quantile(thedata,0.77777),ss.quantile(thedata,0.66666),ss.quantile(thedata,0.55555),ss.quantile(thedata,0.44444),ss.quantile(thedata,0.33333),ss.quantile(thedata,0.22222),ss.quantile(thedata,0.11111),minval];
+      var quantile11=[ss.quantile(thedata,0.90909),ss.quantile(thedata,0.81818),ss.quantile(thedata,0.72727),ss.quantile(thedata,0.63636),ss.quantile(thedata,0.54545),ss.quantile(thedata,0.45454),ss.quantile(thedata,0.36364),ss.quantile(thedata,0.27273),ss.quantile(thedata,0.18182),ss.quantile(thedata,0.09091),minval];      
+
+ 
+      //half stddev breaks (8)
+      var standard8=[median+(stddev*1.5),median+(stddev*1),median+(stddev*0.5),median,median-(stddev*0.5),median-(stddev*1),median-(stddev*1.5),minval];
+      //wide stddev breaks (7)
+      var standard7=[median+(stddev*2.5),median+(stddev*1.5),median+(stddev*0.5),median-(stddev*0.5),median-(stddev*1.5),median-(stddev*2.5),minval];   
+      
+        
+      
+      
+      eval("localStorage." + varcode+"_" + geo + "_jenks_5 = '" + JSON.stringify(jenks5.reverse()) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_jenks_7 = '" + JSON.stringify(jenks7.reverse()) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_jenks_9 = '" + JSON.stringify(jenks9.reverse()) + "'");
+
+      eval("localStorage." + varcode+"_" + geo + "_quantile_5 = '" + JSON.stringify(quantile5) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_quantile_7 = '" + JSON.stringify(quantile7) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_quantile_9 = '" + JSON.stringify(quantile9) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_quantile_11 = '" + JSON.stringify(quantile11) + "'");      
+
+      eval("localStorage." + varcode+"_" + geo + "_standard_7 = '" + JSON.stringify(standard7) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_standard_8 = '" + JSON.stringify(standard8) + "'");        
+
+
+      breaks=JSON.parse(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes));
+      
+      
+        legend.addTo(map);
+
+        if (redraw == "yes") {
+            ajaxcall();
+        } else {
+            geojsonLayer.setStyle(feat1);
+        }
+
+      
+    } 
+
+     
+
+
+
+
+      
     }
 
   

@@ -132,33 +132,24 @@
   <span class="glyphicon glyphicon-remove" aria-hidden="true"  ></span>
 </button></span>
 <br />
- 
-<div class="row">  
+ <div class="row">  
 
 
    
   <div class="col-xs-4">   
       <select id="tableoption" class="selectinline inline"></select>
   </div>
- 
-  <div class="col-xs-4"></div> 
-
+   <div class="col-xs-4"></div> 
   <div class="col-xs-4">   
-
-
       <form class="inline" action="assets/php/getCSV.php" method ="post" > 
         <input class="inline"  type="hidden" name="csv_text" id="csv_text">
         <button type="submit" class="btn btn-primary btn-xs inline" onclick="getCSVData();" download>CSV</button>
       </form>   
-
    </div>
 
  
   <div class="col-xs-4"></div> 
-   
-
-  </div>
-
+     </div>
   <br />
   <div class="row">
   <div class="col-md-12">   
@@ -182,20 +173,10 @@
   
 <div class="row">
   <div class="col-md-4">   
-    
-
-  </div>
-  
-   <div class="col-md-4">    
-
+      </div>
+     <div class="col-md-4">    
    </div>  
-
-  
-
-            
 </div>
-  
- 
   </div>
 
 
@@ -217,8 +198,6 @@
                             <ul class="dropdown-menu sizeup">
                                <p>&nbsp;&nbsp;The American Community Survey is a product of the <a href="http://www.census.gov/en.html" target="_blank">US Census Bureau</a>.
                                  Please see the official <a href="http://www.census.gov/acs/www/data_documentation/documentation_main/" target="_blank">DOCUMENTATION</a> for more information.</p>
-                              <p>&nbsp;&nbsp;OR</p>
-                              <p>&nbsp;&nbsp;Refer to the Github Home Page for application related inqueries.</p>
                             </ul>
                         </li>
                     </ul>
@@ -255,8 +234,6 @@
     </div>
     <!-- /.modal -->
 
-
-
   
     <div class="modal fade" id="attributionModal" tabindex="-1" role="dialog">
       <div class="modal-dialog">
@@ -277,7 +254,9 @@
             <p><b>Leaflet Control Search</b> created by <a href="http://labs.easyblog.it/stefano-cudini/" target="_blank">Stephano Cudini</a>.  (<a href="https://github.com/stefanocudini/leaflet-search" target="_blank">Leaflet-Search Github)</a>.  License: <a href="https://raw.githubusercontent.com/stefanocudini/leaflet-search/master/LICENSE.txt" target="_blank">MIT</a></p>
             <p><b>PhantomJS</b> created by <a href="http://ariya.ofilabs.com/about" target="_blank">Ariya Hidayat</a>.  (<a href="https://github.com/ariya/phantomjs/" target="_blank">PhantomJS Github)</a>.  License: <a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">BSD</a></p>
              <p><b>HistoryJS</b> created by <a href="http://balupton.com/" target="_blank">Benjamin Arthur Lupton</a>.  (<a href="https://github.com/browserstate/history.js" target="_blank">HistoryJS Github)</a>.  License: <a href="http://opensource.org/licenses/BSD-3-Clause" target="_blank">New BSD License</a></p>           
-             <p><b>LZ-String</b> created by <a href="http://pieroxy.net/blog/" target="_blank">Pieroxy (2013)</a>.  (<a href="https://github.com/pieroxy/lz-string/" target="_blank">LZ-String Github)</a>.  License: <a href="http://en.wikipedia.org/wiki/WTFPL" target="_blank">WTFPL</a></p>              
+             <p><b>LZ-String</b> created by <a href="http://pieroxy.net/blog/" target="_blank">Pieroxy (2013)</a>.  (<a href="https://github.com/pieroxy/lz-string/" target="_blank">LZ-String Github)</a>.  License: <a href="http://en.wikipedia.org/wiki/WTFPL" target="_blank">WTFPL</a></p>          
+             <p><b>Simple-Statistics</b> created by <a href="http://macwright.org/" target="_blank">Tom MacWright</a>.  (<a href="https://github.com/tmcw/simple-statistics" target="_blank">Simple-Statistics Github)</a>. <a href="https://github.com/tmcw/simple-statistics/blob/master/LICENSE" target="_blank">License</a></p>  
+             <p><b>Trello Clipboard Capability</b> created by <a href="http://danlec.com/" target="_blank">Daniel LeCheminant</a>.  (<a href="http://stackoverflow.com/questions/17527870/how-does-trello-access-the-users-clipboard" target="_blank">StackOverflow Reference)</a></p>              
             <br />
             <p>This product includes color specifications and designs developed by Cynthia Brewer (<a href="http://colorbrewer.org/" target="_blank">http://colorbrewer.org/</a>).  License: <a href="http://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">Apache 2.0</a></p>
           </div>
@@ -287,9 +266,7 @@
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
-  
-  
-  
+    
   <div class="modal fade" id="homeModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -298,7 +275,6 @@
         <h4 class="modal-title">Data Theme</h4>
       </div>
       <div class="modal-body firstdiv">
-
               <br />
               
 
@@ -360,7 +336,6 @@
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
   
-
   
     <div class="modal fade" id="symbologyModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg">
@@ -390,23 +365,18 @@
               </select>
             </div>
             <div class="col-md-6">
-                 <label>Number of Classes:</label>     <br />        
-                            <select id="classes">
+                 <label>Number of Classes:</label><br />        
+                 <select id="classes">
               </select>
             </div>
           </div>
-
 <br />
                <label>Colorscheme:</label>      <br />         
               <div id="colorschemes" class="form-group" ></div>
               <label>Transparency Slider</label><br />
               <input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>
-       
-
-                        </div>
-                      
-                      
-                      
+              </div>
+                     
                         <div id="advsearch" class="tab-pane fade">
                           <br />
                           <p>Select all <span id="advgeo">counties</span> where:</p>
@@ -509,8 +479,6 @@
                               <option value='rgb(254,0,0)'>Red</option>  
                             </select>     
                         </div>
-                      
-                      
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -567,42 +535,32 @@
 </div><!-- /.modal -->
   
   
-  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   
     <script src="assets/js/datatree.js"></script>
     <script src="assets/js/colortree.js"></script>  
     <script src="assets/js/tableflavor.js"></script>  
-    <script src="assets/js/breaks.js"></script>   
+    <script src="assets/js/charttree.js"></script>  
   
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script src="assets/leafletv08/leaflet.js"></script>
-<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.js'></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.js'></script>
     <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.js"></script>
-   <script src="https://maps.googleapis.com/maps/api/js?v=3&sensor=false"></script> 
-
+    <script src="https://maps.googleapis.com/maps/api/js?v=3&sensor=false"></script> 
     <script src="assets/leafletajax/la.test.js"></script>
-
     <script src="assets/js/bootstrap-slider.js"></script>
-
-      <script src="assets/js/leaflet-search.js"></script>
-  
-        <script src="assets/js/spin.min.js"></script>
-      <script src="assets/js/leaflet-spin.js"></script>
-  
-       <script src="assets/js/easy-button.js"></script> 
-
-  
+    <script src="assets/js/leaflet-search.js"></script>
+    <script src="assets/js/spin.min.js"></script>
+    <script src="assets/js/leaflet-spin.js"></script>
+    <script src="assets/js/easy-button.js"></script> 
     <script src="assets/js/stupidtable.js"></script>
     <script src="assets/js/table2CSV.js"></script>  
-  
-  <script src="assets/js/bootstrap-switch.js"></script>
+    <script src="assets/js/bootstrap-switch.js"></script>
     <script src="assets/js/jquery.history.js"></script>
-  
-  <script src="assets/js/lz-string.js"></script>
-
-  <script src="assets/js/app.js"></script>
-
+    <script src="assets/js/lz-string.js"></script>
+    <script src="assets/js/simple_statistics.js"></script>  
+    <script src="assets/js/app.js"></script>
   
   
 </body>
