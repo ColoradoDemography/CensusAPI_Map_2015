@@ -1,45 +1,2111 @@
-var TrelloClipboard;
-//Trello Clipboard allows the map user to Ctrl-C at any time to add a map link to their clipboard
-TrelloClipboard = new ((function () {
-    function _Class() {
-      this.value = function(){return window.location.href;};
-        $(document).keydown((function (_this) {
-            return function (e) {
-                var _ref, _ref1;
-                if (!_this.value || !(e.ctrlKey || e.metaKey)) {
-                    return;
-                }
-                if ($(e.target).is("input:visible,textarea:visible")) {
-                    return;
-                }
-                if (typeof window.getSelection === "function" ? (_ref = window.getSelection()) != null ? _ref.toString() : void 0 : void 0) {
-                    return;
-                }
-                if ((_ref1 = document.selection) != null ? _ref1.createRange().text : void 0) {
-                    return;
-                }
-                return $.Deferred(function () {
-                    var $clipboardContainer;
-                    $clipboardContainer = $("#clipboard-container");
-                    $clipboardContainer.empty().show();
-                    return $("<textarea id='clipboard'></textarea>").val(_this.value).appendTo($clipboardContainer).focus().select();
-                });
-            };
-        })(this));
-        $(document).keyup(function (e) {
-            if ($(e.target).is("#clipboard")) {
-                return $("#clipboard-container").empty().hide();
+
+
+//globals
+//comment all of these
+//varlist
+L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
+
+var params = parseQueryString();
+
+var stopafterheader = 0;
+var createnewtable = 0;
+var summable;
+var favtable = 'Median Household Income';
+
+var globalbusy=0;
+var tblfl = '-1'; //tableflavor default to plain
+var map;
+var current_desc = ""; //name of the current census variable being mapped
+var numerator = []; //[]needed?
+var denominator = [];
+var moenumerator;
+var moedenominator;
+var moeformula;
+var data;
+var sumlev = '50';
+var limit = '10000';
+var db = 'acs0913';
+var schema = 'data';
+var demogdatalayer;
+var table = 'b19013';
+var formula = 'fp.b19013001';
+var usezeroasnull = 'yes';
+var breaks = [];
+var varcode = 'mhi';
+var ifnulljson = {};
+var ifzerojson = {};
+var symbolcolors = [];
+var type = "";
+var mininc = 0;
+var minval = 0;
+var geojsonLayer;
+var cselected='red';
+var cmouseover='rgb(128,0,127)';
+
+//universal
+var linecolor = "Gray";
+var lineweight = 0;
+var lineopacity = 0.2; //transparency control
+var fillOpacity = 0.5; //transparency control
+
+//symbology
+var colorscheme = "mh1";
+var classes = 7;
+var schemename = "jenks";
+
+//data table ??empty??
+var dataset = [];
+
+//map bounds the last time the data was loaded
+var nelat, nelng, swlat, swlng;
+var lastzoom=8;
+
+
+//if varcode (v) stated in parameter string, use it (override default)
+    if(params.v!==undefined){	
+		varcode=params.v;
+	};
+
+//change selection color
+function cselectedchg(newcolor){
+  cselected=newcolor;
+}
+
+//change mouseover color
+function cmouseoverchg(newcolor){
+  cmouseover=newcolor;
+}
+
+
+//bootleaf navbar controls
+$("#about-btn").click(function() {
+    $("#aboutModal").modal("show");
+    $(".navbar-collapse.in").collapse("hide");
+    return false;
+});
+$("#advanced-btn").click(function() {
+    $("#symbologyModal").modal("show");
+    $(".navbar-collapse.in").collapse("hide");
+    return false;
+});
+$("#nav-btn").click(function() {
+    $(".navbar-collapse").collapse("toggle");
+    return false;
+});
+
+
+
+/* Basemap Layers */  //not ideal because of double - labels
+var mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
+    'zIndex': 1
+});
+
+var mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
+
+var mapboxST = L.tileLayer('http://{s}.tiles.mapbox.com/v3/statecodemog.map-392qgzze/{z}/{x}/{y}.png', {
+    attribution: '<a href="http://www.mapbox.com/about/maps/">&copy; Map Box and OpenStreetMap</a>',
+    maxZoom: 18
+});
+var Stamen_Terrain = L.tileLayer('http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png', {
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    subdomains: 'abcd',
+    minZoom: 4,
+    maxZoom: 18
+});
+
+//default lat and lng and zoomlevel
+	var latcoord=39;
+	var lngcoord=-104.8;
+	var zoomlev=9;
+
+//if lat in querystring
+	if(params.lat!==undefined){	
+		latcoord=params.lat;
+	};
+
+//if lng in querystring
+	if(params.lng!==undefined){	
+		lngcoord=params.lng;
+	};
+
+//if zoomlevel (z) in querystring
+	if(params.z!==undefined){	
+		zoomlev=params.z;
+	};
+
+
+map = L.map("map", {
+    zoom: zoomlev,
+    center: [latcoord, lngcoord],
+    minZoom: 4,
+    layers: [mbstyle],
+    zoomControl: false,
+    attributionControl: false
+});
+
+//if sumlev (s) in querystring
+  	if(params.s!==undefined){	
+		sumlev=params.s;
+      $("input[name=geoRadios][value=" + sumlev + "]").prop('checked', true);
+	};
+
+
+//depending on sumlev, changes minZoom, adds the correct string to the advanced query tool i.e (select all 'tracts')
+
+        if (sumlev == '50') {
+          map.options.minZoom = 4;
+            $('#advgeo').text('counties');
+        }
+        if (sumlev == '40') {
+          map.options.minZoom = 4;
+            $('#advgeo').text('states');
+        }
+        if (sumlev == '140') {
+                    map.options.minZoom = 9;
+            $('#advgeo').text('tracts');
+        }
+        if (sumlev == '150') {
+                    map.options.minZoom = 9;
+            $('#advgeo').text('block groups');
+        }
+        if (sumlev == '160') {
+                    map.options.minZoom = 9;
+            $('#advgeo').text('places');
+        }
+
+//define labels layer
+var mblabels = L.mapbox.tileLayer('statecodemog.798453f5', {
+    'clickable': 'false',
+    'zIndex': 1000
+});
+
+
+//create map sandwich
+var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
+var topLayer = mblabels.addTo(map);
+topPane.appendChild(topLayer.getContainer());
+
+
+var baseLayers = {
+    "Mapbox: Satellite": mbsat,
+    "Mapbox: Contrast Base": mbstyle,
+    "Mapbox: Streets": mapboxST,
+    "Stamen Terrain": Stamen_Terrain
+};
+
+//in the future ill figure out how to toggle labels on and off (and still have it appear on top)
+var groupedOverlays = {
+//  "Labels and Borders": mblabels
+};
+
+
+
+/* Attribution control */  //bootleaf
+var attributionControl = L.control({
+    position: "bottomright"
+});
+attributionControl.onAdd = function(map) {
+    var div = L.DomUtil.create("div", "leaflet-control-attribution");
+  div.innerHTML = "<span class='hidden-xs'>Developed by: <a href='http://www.colorado.gov/demography'>Colorado State Demography Office</a></span><span class='spanhide'> | <a href='#' onclick='$(\"#attributionModal\").modal(\"show\"); return false;'>Sources</a></span>";
+    return div;
+};
+map.addControl(attributionControl);
+
+//MapBox and OpenStreet Map Required Attribution
+var attributionControl2 = L.control({
+    position: "bottomright"
+});
+attributionControl2.onAdd = function(map) {
+    var div = L.DomUtil.create("div", "leaflet-control-attribution");
+    div.innerHTML = "<a href='https://www.mapbox.com/about/maps/' target='_blank'>Maps &copy; Mapbox &copy; OpenStreetMap</a><span class='spanhide'>&nbsp;&nbsp;&nbsp;<a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve This Map</a></span>";
+    return div;
+};
+map.addControl(attributionControl2);
+
+//geocoder is from Google.
+var geocoder = new google.maps.Geocoder();
+
+//google geocoder
+function googleGeocoding(text, callResponse) {
+    geocoder.geocode({
+        address: text
+    }, callResponse);
+}
+
+//google geocoder function
+function filterJSONCall(rawjson) {
+    var json = {},
+        key, loc, disp = [];
+    for (var i in rawjson) {
+        key = rawjson[i].formatted_address;
+        loc = L.latLng(rawjson[i].geometry.location.lat(), rawjson[i].geometry.location.lng());
+        json[key] = loc; //key,value format
+    }
+    return json;
+}
+
+//google geocoder
+var searchControl = map.addControl(new L.Control.Search({
+    callData: googleGeocoding,
+    filterJSON: filterJSONCall,
+    markerLocation: false,
+    autoType: true,
+    autoCollapse: false,
+    minLength: 4,
+    position: 'topright'
+}));
+
+
+var zoomControl = L.control.zoom({
+    position: "topright"
+}).addTo(map);
+
+/* GPS enabled geolocation control set to follow the user's location */
+var locateControl = L.control.locate({
+    position: "topright",
+    drawCircle: true,
+    follow: true,
+    setView: true,
+    keepCurrentZoomLevel: true,
+    markerStyle: {
+        weight: 1,
+        opacity: 0.8,
+        fillOpacity: 0.8
+    },
+    circleStyle: {
+        weight: 1,
+        clickable: false
+    },
+    icon: "icon-direction",
+    metric: false,
+    strings: {
+        title: "My location",
+        popup: "You are within {distance} {unit} from this point",
+        outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
+    },
+    locateOptions: {
+        maxZoom: 18,
+        watch: true,
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 10000
+    }
+}).addTo(map);
+
+/* Larger screens get expanded layer control and visible sidebar */
+if (document.body.clientWidth <= 767) {
+    var isCollapsed = true;
+} else {
+    var isCollapsed = false;
+}
+
+//add layer control
+L.control.layers(baseLayers, groupedOverlays, {
+    'autoZIndex': false
+}).addTo(map);
+
+//legend control
+var legend = L.control({
+    position: 'bottomright'
+});
+
+//create or recreate legend
+legend.onAdd = function(map) {
+
+    var labels = [];
+    var color = [];
+
+  //retrieve individual colors depending on colorscheme and number of classes - puts those colors into color array
+    for (j = 0; j < colortree.colorschemes.length; j++) {
+
+        if (colortree.colorschemes[j].schemename == colorscheme) {
+            if (colortree.colorschemes[j].count == classes) {
+                color = colortree.colorschemes[j].colors;
             }
+        }
+    }
+
+  //legend title
+    var div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML = "<h4 style='color: black;'><b>" + current_desc + "</b></h4>";
+
+//retrieve breaks
+    for (i = (breaks.length - 1); i > -1; i--) {
+        labels.push(breaks[i]);
+    }
+
+  //format depending on number type: currency, number, regular, percent
+  var lowlabel, toplabel;
+    if (schemename !== "stddev") {
+        for (i = 0; i < labels.length; i++) {
+            if (i === 0) {
+                lowlabel = minval;
+            }
+            if (type == 'currency') {
+                lowlabel = labels[i];
+                toplabel = labels[i + 1] - mininc;
+                lowlabel = '$' + lowlabel.formatMoney(0);
+                if (!toplabel) {
+                    toplabel = " +";
+                } else {
+                    toplabel = ' to $' + toplabel.formatMoney(0);
+                }
+            }
+            if (type == 'number') {
+                lowlabel = labels[i];
+                toplabel = labels[i + 1] - mininc;
+                var resprec = (mininc + "").split(".")[1];
+                if (!resprec) {
+                    resprec = 0;
+                } else {
+                    resprec = resprec.length;
+                }
+                lowlabel = lowlabel.formatMoney(resprec); //still not correct
+                if (!toplabel) {
+                    toplabel = " +";
+                } else {
+                    toplabel = ' to ' + toplabel.formatMoney(resprec);
+                }
+            }
+            if (type == 'percent') {
+                lowlabel = labels[i];
+                toplabel = labels[i + 1] - (mininc / 100);
+                lowlabel = (lowlabel * 100).formatMoney(2) + ' %';
+                if (!toplabel) {
+                    toplabel = " +";
+                } else {
+                    toplabel = ' to ' + (toplabel * 100).formatMoney(2) + ' %';
+                }
+            }
+            if (type == 'regular') {
+                lowlabel = labels[i];
+                toplabel = labels[i + 1] - mininc;
+                if (!toplabel) {
+                    toplabel = " +";
+                } else {
+                    toplabel = ' to ' + toplabel;
+                }
+
+            }
+
+            //if there is a negative anywhere in 'toplabel' dont display (causes havoc with quantile )
+            if (toplabel.search('-') == -1) {
+                div.innerHTML += '<i style="background:' + color[i] + ';opacity: ' + fillOpacity + ';"></i> ' + '&nbsp;&nbsp;&nbsp;' + lowlabel + toplabel + '<br />';
+            }
+
+
+        }
+    } else {
+//labels for standard deviation are treated differently and dont depend on number type
+        var labels2 = [];
+
+        if (classes == 7) {
+            labels = ['< -2.5 Std. Dev.', '-1.5 to -2.5 Std. Dev', '-0.5 to -1.5 Std. Dev.', '0.5 to -0.5 Std. Dev.', '0.5 to 1.5 Std. Dev.', '1.5 to 2.5 Std. Dev.', '> 2.5 Std. Dev.'];
+        }
+        if (classes == 8) {
+            labels = ['< -1.5 Std. Dev.', '-1 to -1.5 Std. Dev', '-0.5 to -1 Std. Dev.', '0 to -0.5 Std. Dev.', '0 to 0.5 Std. Dev.', '0.5 to 1 Std. Dev.', '1 to 1.5 Std. Dev.', '> 1.5 Std. Dev.'];
+        }
+
+        for (i = 0; i < labels.length; i++) {
+
+            div.innerHTML += '<i style="background:' + color[i] + ';opacity: ' + fillOpacity + ';"></i> ' + '&nbsp;&nbsp;&nbsp;' + labels[i] + '<br />';
+
+        }
+
+
+    }
+    return div;
+};
+
+
+//on dom loaded
+$(document).ready(function() {
+//begin
+  
+  $('#linkbutton').tooltip({placement : 'right'});
+
+  //get list of selected geographies (d) - store them in global variable (dataset)
+    	if(params.d!==undefined){
+		dataset=LZString.decompressFromEncodedURIComponent(params.d).split(',');
+	};
+  
+      //set classification scheme if in querystring
+  if(params.sn!==undefined){	
+		schemename=params.sn;
+    $("#classification").val(schemename).change();
+	}
+
+  
+      //change classification
+    $('#classification').change( function() {
+          classes = 7; //default number of classes
+          
+          //if classes (cl) is in querystring, override default number of classes
+             if(params.cl!==undefined){	
+		           classes=params.cl;
+               delete params.cl;
+	          }
+          
+            schemename = this.value;
+          updatequerysearchstring();
+            if (schemename == 'jenks') {
+                $('#classes').html('<option value="5">5</option><option value="7" >7</option><option value="9">9</option>');
+            }
+            if (schemename == 'quantile') {
+                $('#classes').html('<option value="5">5</option><option value="7" >7</option><option value="9">9</option><option value="11">11</option>');
+            }
+            if (schemename == 'stddev') {
+                $('#classes').html('<option value="7" >7</option><option value="8">8</option>');
+            }
+          
+          $('#classes').val(classes);
+
+            filtercolorschemes();
+            
+
+        } );
+
+  //trigger the function
+$('#classification').change();
+  
+
+  //when doubleclicking on row, remove item from selection (and table)
+    $(document).on('dblclick', 'tr', function() {
+        var classname = this.className;
+        for (var i = 0; i < dataset.length; i++) {
+            if (dataset[i] == Number(classname)) {
+                dataset.splice(i, 1);
+            }
+        }
+        $('.' + classname).remove();
+        //recalc footer
+       // writeFooter();  //do add this back in later
+      updatequerysearchstring();
+        //change color back to black //insane
+        geojsonLayer.setStyle(feat1);
+
+    });
+
+    //initialize bootstrap switch for MOE
+    $("[name='my-checkbox']").bootstrapSwitch({
+        animate: false
+    });
+
+
+    //moe toggle - bootstrap switch
+    $('input[name="my-checkbox"]').on('switchChange.bootstrapSwitch', function(event, state) {
+        //console.log(this); // DOM element
+        //console.log(event); // jQuery event
+        if (state) {
+            $('.moe').show();
+        } else {
+            $('.moe').hide();
+        }
+      updatequerysearchstring();
+    });
+  
+    //default is for MOE to be on (yes) - if querystring says 'no' turn it off
+      	if(params.moe!==undefined){	
+          if(params.moe=='no'){
+  $('input[name="my-checkbox"]').bootstrapSwitch('state', false);
+          }
+        }
+  
+    //looks for table dropdown change - changes table flavor
+    $('#tableoption').on('change', function() {
+        chgtblfl();
+    });
+  
+    //initialize stupid table plugin on our data table
+    $("#table").stupidtable();
+
+    //Create Easy Buttons (Top-Left)
+  
+  //theme modal & button
+    $('#homeModal').modal({
+        show: false
+    });
+    L.easyButton('fa fa-bars', function() {
+        $('#homeModal').modal('toggle');
+    }, 'Change Data Theme');
+  
+    //geo modal & button
+    $('#geoModal').modal({
+        show: false
+    });
+    L.easyButton('fa fa-compass', function() {
+        $('#geoModal').modal('toggle');
+    }, 'Change Geography Level');
+
+  //table button
+    L.easyButton('fa fa-table', function() {
+        $('#resizediv').toggle();
+      updatequerysearchstring();
+    }, 'View Table');
+
+    //chart modal & button
+    $('#chartModal').modal({
+        show: false
+    });
+    L.easyButton('fa fa-line-chart', function() {
+        $('#chartModal').modal('toggle');
+        $('#chartdiv').empty();
+        addchart();
+      setTimeout(function(){updatequerysearchstring();},1000);
+    }, 'View Chart');
+
+    //print modal & button
+    $('#dataModal').modal({show: false});  
+    L.easyButton('fa fa-floppy-o', function (){$('#dataModal').modal('toggle');},'Print Map'); 
+
+  //clear selected (eraser) button
+    L.easyButton('fa fa-eraser', function() {
+        clearsel();
+      updatequerysearchstring();
+    }, 'Clear Selection');
+
+    //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
+  if(params.print=='yes'){
+    console.log('printing');
+    $('.leaflet-control-search').hide();
+    $('.leaflet-control-zoom').hide();
+    $('.leaflet-control-locate').hide();
+    $('.leaflet-control-layers').hide();
+    $('.leaflet-bar').hide();
+    $('.navbar-nav').hide();
+    $('#popup').hide();
+    $('.spanhide').hide();
+  }
+  
+
+    //Initialize transparency slider
+    var trslider = $('#ex1').slider({
+        formatter: function(value) {
+            return value + '%';
+        }
+    });
+
+  //if a transparency value is set in the querystring, change the slider to that value
+    	if(params.tr!==undefined){	
+		fillOpacity=params.tr;
+        trslider.slider('setValue', parseInt(fillOpacity*100));
+	};
+
+    //when user stops moving transparency slider, change transparency of geojson layer
+    $("#ex1").on("slideStop", function(slideEvt) {
+        //lineopacity = slideEvt.value / 100; //transparency control as pct
+        fillOpacity = slideEvt.value / 100;
+
+        //transparency needs to be reflected in the legend
+        legend.removeFrom(map);
+        geojsonLayer.setStyle({
+            //opacity: lineopacity,
+            fillOpacity: fillOpacity
+        });
+        legend.addTo(map);
+      updatequerysearchstring();
+    });
+
+  
+
+
+    //initialize geojsonLayer
+    geojsonLayer = L.geoJson.ajax("", {
+      loading: function(){
+        map.spin(true);
+      },
+        middleware: function(data) {
+            getJson(data);
+        }, 
+        onEachFeature: onEachFeature
+    });
+
+
+
+      //disable geo options at inappropriate zoom levels //should this be here??
+      var curzoom=map.getZoom();
+  
+      if(curzoom<9){
+        $("#rbplace").hide();
+        $("#rbtract").hide();
+        $("#rbbg").hide();
+      }else{
+        $("#rbplace").show();
+        $("#rbtract").show();
+        $("#rbbg").show();
+      }
+  
+  
+    populate(); //populate them modal from datatree
+    drawcolorschemes(); //populate symbology portion of advanced dialog
+    legend.addTo(map); 
+    changeall('yes', '0');  //draw 
+  
+  
+
+    //START ALL FUNCTIONS- DO THEY NEED TO BE WITHIN DOCUMENT READY?
+
+    //change data theme
+    $('input[name=optionsRadios]:radio').change(function() {
+      varcode=this.value;
+      updatequerysearchstring();
+        createnewtable = 0;
+        changeall('yes', '1');
+    });
+
+    //change colorscheme
+    $('input[name=schemeRadios]:radio').change(function() {
+        colorscheme = this.value;
+      updatequerysearchstring();
+        changeall('no', '0');
+    });
+
+    //change geo //change advanced dialog text, change minZoom level
+    $('input[name=geoRadios]:radio').change(function() {
+
+        sumlev = $('input:radio[name ="geoRadios"]:checked').val();
+
+        if (sumlev == '50') {
+          map.options.minZoom = 4;
+            $('#advgeo').text('counties');
+        }
+        if (sumlev == '40') {
+          map.options.minZoom = 4;
+            $('#advgeo').text('states');
+        }
+        if (sumlev == '140') {
+                    map.options.minZoom = 9;
+            $('#advgeo').text('tracts');
+        }
+        if (sumlev == '150') {
+                    map.options.minZoom = 9;
+            $('#advgeo').text('block groups');
+        }
+        if (sumlev == '160') {
+                    map.options.minZoom = 9;
+            $('#advgeo').text('places');
+        }
+
+        updatequerysearchstring();
+        changeall('yes', '0');
+    });
+
+
+
+    //change in classes dropdown
+    $('#classes').change(function() {
+        classes = this.value;
+      updatequerysearchstring();
+        filtercolorschemes();
+    });
+
+
+  //keep track of time.  when stopped moving for two seconds, redraw
+      map.on('movestart', function() {
+      var d = new Date();
+      globalbusy = d.getTime(); 
+      });
+ 
+    map.on('moveend', function() {
+
+      updatequerysearchstring();
+
+      var d = new Date();
+      globalbusy = d.getTime(); 
+
+      
+      setTimeout(function(){ 
+        var e=new Date();
+        var curtime = e.getTime();
+              if(curtime>= (globalbusy+1000)){
+                
+        //get center of map point
+        var c = map.getCenter();
+        var clat = c.lat;
+        var clng = c.lng;
+
+        //if center point is still within the current map bounds, then dont do anything.  otherwise, run query again
+        if (clat < nelat && clat > swlat && clng < nelng && clng > swlng) {
+          
+          if(map.getZoom()!==lastzoom){ ajaxcall(); }
+          
+        } else {
+            ajaxcall();
+        }
+                
+                
+                
+              }
+        }, 1000);
+      
+      
+    }); // end 'on moveend'
+
+    map.on('zoomstart', function() {
+      var d = new Date();
+      globalbusy = d.getTime(); 
+    });
+  
+    //when map is zoomed in or out
+    map.on('zoomend', function() {
+
+      updatequerysearchstring();
+
+      var d = new Date();
+      globalbusy = d.getTime(); 
+      
+      setTimeout(function(){ 
+        var e=new Date();
+        var curtime = e.getTime();
+        
+              if(curtime>= (globalbusy+1000)){
+
+          if(map.getZoom()!==lastzoom){ ajaxcall(); }
+
+              }
+        }, 1000);
+      
+      //grey radio buttons for geography levels if zoomed out too far
+      var curzoom=map.getZoom();
+      if(curzoom<9){
+        $("#rbplace").hide();
+        $("#rbtract").hide();
+        $("#rbbg").hide();
+      }else{
+        $("#rbplace").show();
+        $("#rbtract").show();
+        $("#rbbg").show();
+      }
+      //rbplace
+      
+    });
+
+
+
+}); //end document on ready
+
+
+
+  //every geojson feature will have a mouseover, mouseout, and click event.
+    function onEachFeature(feature, layer) {
+        layer.on({
+            mouseover: highlightFeature,
+            mouseout: mouseout,
+            click: featureSelect
         });
     }
 
-    _Class.prototype.set = function (value) {
-        this.value = value;
-    };
 
-    return _Class;
+    // Create a mouseout event that undoes the mouseover changes
+    function mouseout(e) {
+        var rsstyle = e.layer.options.linecap;
+        var layer = e.target;
 
-})());
+        if (rsstyle == "butt") {
+            layer.setStyle({
+                opacity: 1,
+                weight: 2,
+                color: cselected
+            });
+        } else {
+            layer.setStyle({
+                opacity: lineopacity,
+                weight: lineweight,
+                color: linecolor
+            });
+        }
+        $("#popup").remove();
+    }
+
+  
+  //mouseover highlight
+    function highlightFeature(e) {
+        var layer = e.target;
+      
+      //can turn to off for no mouseover
+      if(cmouseover!=='off'){
+        layer.setStyle({
+            opacity: 1,
+            weight: 2,
+            color: cmouseover
+        });
+
+            //bring feature to front
+            if (!L.Browser.ie && !L.Browser.opera) {
+                layer.bringToFront();
+            }
+      }
+      
+        var fp = e.target.feature.properties;
+        var popupresult = eval(formula);
+
+        if (type == 'currency') {
+            popupresult = '$ ' + popupresult.formatMoney(0);
+        }
+
+        if (type == 'number') {
+            var resprec = (mininc + "").split(".")[1];
+            if (!resprec) {
+                resprec = 0;
+            } else {
+                resprec = resprec.length;
+            }
+            popupresult = popupresult.formatMoney(resprec);
+        }
+
+        if (type == 'percent') {
+            popupresult = (popupresult * 100).formatMoney(2) + ' %';
+        }
+        if (type == 'regular') {
+            popupresult = popupresult;
+        } //no formatting - think: median year housing unit built (only one)
+
+        // Create a popup
+        var popup = $("<div></div>", {
+            id: "popup",
+            css: {
+                position: "absolute",
+                top: "45px",
+                right: "100px",
+                zIndex: 1002,
+                backgroundColor: "white",
+                padding: "8px",
+                border: "1px solid #ccc"
+            }
+        });
+
+        // Insert a headline into that popup
+        var hed = $("<div></div>", {
+            text: fp.geoname + ": " + popupresult,
+            css: {
+                fontSize: "16px",
+                marginBottom: "3px"
+            }
+        }).appendTo(popup);
+
+        // Add the popup to the map
+        popup.appendTo("#map");
+      
+
+    }
+
+
+//on geojson click
+    function featureSelect(e) {
+
+        var layer = e.target;
+        var curcolor = (e.layer.options.linecap);
+
+        //convert json object to array
+        var arr = $.map(e.target.feature.properties, function(el) {
+            return el;
+        });
+
+        //if currently selected - remove it
+        if (curcolor == 'butt') {
+            layer.setStyle({
+                weight: lineweight,
+                color: linecolor,
+                lineopacity: lineopacity,
+                linecap: 'round'
+            });
+
+            //search dataset (geonum) array for item to remove
+            for (var i = 0; i < dataset.length; i++) {
+                if (dataset[i] == arr[1]) {
+                    dataset.splice(i, 1);
+                }
+            }
+            // Delete table row which has matching geonum class
+            $('.' + e.target.feature.properties.geonum).remove();
+            //send feature to back
+            if (!L.Browser.ie && !L.Browser.opera) {
+                layer.bringToBack();
+            }
+
+        } else { //else add it
+            layer.setStyle({
+                weight: 2,
+                color: cselected,
+                lineopacity: 1,
+                linecap: 'butt'
+            });
+
+            //bring feature to front
+            if (!L.Browser.ie && !L.Browser.opera) {
+                layer.bringToFront();
+            }
+
+            tblfl = $('#tableoption').val();
+            var rowstr = '';
+
+            var classadd = ''; //add moe class
+            var plusminus = '';
+
+            //add row to table
+            if (tblfl == '-1') {
+                //plain
+                rowstr = '<tr class="' + e.target.feature.properties.geonum + '">';
+                rowstr = rowstr + '<td>' + e.target.feature.properties.geoname + '</td>';
+                rowstr = rowstr + '<td>' + e.target.feature.properties.geonum + '</td>';
+                for (var k in e.target.feature.properties) {
+                    if (k != 'geoname' && k != 'geonum') {
+
+                        var resprec;
+
+                        if (k.search("moe") != -1) {
+                            classadd = "moe";
+                            plusminus = '&plusmn; ';
+                        } else {
+                            classadd = "";
+                            plusminus = '';
+                        }
+
+                        if (type == 'number' || type == 'percent') {
+                            resprec = ((e.target.feature.properties[k]) + "").split(".")[1];
+                            if (!resprec) {
+                                resprec = 0;
+                            } else {
+                                resprec = resprec.length;
+                            }
+                            rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + parseFloat(e.target.feature.properties[k]).formatMoney(resprec) + '</td>';
+                        }
+
+                        if (type == 'currency') {
+                            resprec = ((e.target.feature.properties[k]) + "").split(".")[1];
+                            if (!resprec) {
+                                resprec = 0;
+                            } else {
+                                resprec = resprec.length;
+                            }
+                            rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + '$' + parseFloat(e.target.feature.properties[k]).formatMoney(resprec) + '</td>';
+                        }
+
+                        /* if(type=='percent'){
+                          resprec= ((e.target.feature.properties[k])+"").split(".")[1];
+                          if(!resprec){resprec=0;}else{resprec = resprec.length;}
+                          rowstr=rowstr+'<td class="'+classadd+'">'+plusminus+parseFloat(e.target.feature.properties[k]).formatMoney(resprec)+'%</td>'; 
+                        } */ //percent cant happen
+
+                        if (type == 'regular') {
+                            rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + e.target.feature.properties[k] + '</td>';
+                        }
+
+                    }
+                }
+                rowstr = rowstr + '</tr>';
+
+            } else {
+
+                //descriptive      //Table Flavor
+                var j = 0;
+                rowstr = '';
+                var fp = e.target.feature.properties;
+
+                //add matched records to table
+                rowstr = '<tr class="' + e.target.feature.properties.geonum + '">';
+                rowstr = rowstr + '<td>' + e.target.feature.properties.geoname + '</td>';
+                rowstr = rowstr + '<td>' + e.target.feature.properties.geonum + '</td>';
+
+
+
+                $.each(tabletree.data[tblfl].Data, function(k, v) {
+
+                    if ((tabletree.data[tblfl].Data[k].Formula).search("moe") != -1) {
+                        classadd = "moe";
+                        plusminus = '&plusmn; ';
+                    } else {
+                        classadd = "";
+                        plusminus = '';
+                    }
+                    if ((tabletree.data[tblfl].Data[k].FieldName) == "CV") {
+                        plusminus = '';
+                    } //no plusmn on coefficient of variance
+
+                    if (tabletree.data[tblfl].Data[k].type == "currency") {
+                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(eval(v.Formula)).formatMoney(0) + '</td>';
+                    }
+                    if (tabletree.data[tblfl].Data[k].type == "percent") {
+                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)).toFixed(2) + '" class="' + classadd + '">' + plusminus + Number(eval(v.Formula)).toFixed(2) + '%</td>';
+                    }
+                    if (tabletree.data[tblfl].Data[k].type == "regular") {
+                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + eval(v.Formula) + '</td>';
+                    }
+                    if (tabletree.data[tblfl].Data[k].type == "number") {
+                        var resprec = (eval(v.Formula) + "").split(".")[1];
+                        if (!resprec) {
+                            resprec = 0;
+                        } else {
+                            resprec = resprec.length;
+                        }
+                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).formatMoney(resprec) + '</td>';
+                    }
+
+                });
+
+                rowstr = rowstr + '</tr>';
+
+            }
+
+            $('#tablebody').append(rowstr);
+
+            //hide (or not) if class=moe
+            var checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
+            if (checkstate) {
+                $('.moe').show();
+            } else {
+                $('.moe').hide();
+            }
+
+            //add item to array
+            dataset.push(arr[1]);
+        }
+
+updatequerysearchstring();
+      
+        writeFooter();
+
+
+    }
+
+
+
+
+//symbolize everything right here!!!  Every geography feature in the view is iterated over
+function feat1(feature) {
+
+  //createnewtable is the flag to redraw the data table.  Set to 0 means redraw, set to 1 means don't redraw
+    if (createnewtable === 0) {
+       redrawTable();
+    }
+    createnewtable = 1;
+
+  
+    var fp = feature.properties; //shorthand way to refer to feature.properties
+    var mapvar = eval(formula);  //the actual computed value of the theme variable
+    var geonum = fp.geonum; //the id of the geography
+    var newlinecolor = linecolor; //get default lincolor, lineweight, and lineopacity values
+
+  
+  if(sumlev==40){lineweight=0;}
+  if(sumlev==50){lineweight=0;}
+  if(sumlev==140){lineweight=1;}
+  if(sumlev==150){lineweight=1;}
+  if(sumlev==160){lineweight=1;}
+  
+      var newlineweight = lineweight;
+    var newlineopacity = lineopacity;
+    var newlinecap = 'round';  //here's the wrinkle - we dont really care about the linecap property.  However, we need a way to differentiate between a selected features properties, and a non-selected features properties.  We cant just go by color=red, because when you mouseover a selected geography, the color will no longer be red.  So we  set the linecap property to either 'butt' (selected) or 'round' - or anything else (not selected)
+
+    //when drawing feature, if in selected set, override default linecolor and lineweight with selected values 'red'
+    for (i = 0; i < dataset.length; i++) {
+        if (dataset[i] == geonum) {
+            newlinecolor = cselected;
+            newlineweight = 2;
+            newlineopacity = 1;
+            newlinecap = 'butt';
+        }
+    }
+    
+    //if the mapvariable = 0 for a paricular variable, and the usezeroasnull flag is set, symbolize the geography with the null symbology
+    if (mapvar === 0 && usezeroasnull == 'yes') {
+        return {
+            fillColor: ifzerojson,
+            color: newlinecolor,
+            weight: newlineweight,
+            opacity: newlineopacity,
+            fillOpacity: fillOpacity,
+            linecap: newlinecap
+        };
+    }
+
+    //trickiness with 0==false;  if the mapvariable is equal to null (but not zero), symbolize the geography with the null symbology
+    if (!mapvar && mapvar !== 0) {
+        return {
+            fillColor: ifnulljson,
+            color: newlinecolor,
+            weight: newlineweight,
+            opacity: newlineopacity,
+            fillOpacity: fillOpacity,
+            linecap: newlinecap
+        };
+    }
+
+    //get number of colors in color ramp
+    var getreverse = symbolcolors.length;
+
+    //loop through color set
+    for (j = 0; j < getreverse; j++) {
+          //loop through breaks; symbolize features accordingly
+        if (mapvar >= breaks[j]) {
+            return {
+                fillColor: symbolcolors[(getreverse - 1) - j],
+                color: newlinecolor,
+                weight: newlineweight,
+                opacity: newlineopacity,
+                fillOpacity: fillOpacity,
+                linecap: newlinecap
+            };
+        }
+    }
+}  //end feat1
+
+
+//clear selection button in table modal
+function clearsel() {
+    dataset = [];
+    redrawTable();
+
+    //change selected symbology back to unselected
+    map.eachLayer(function(layer) {
+        //console.log(layer.options);
+        if (layer.options) {
+            if (layer.options.color) {
+                if (layer.options.linecap == 'butt') {
+                    layer.setStyle({
+                        weight: lineweight,
+                        color: linecolor,
+                        lineopacity: lineopacity,
+                        linecap: 'round'
+                    });
+                }
+            }
+
+        }
+    });
+
+}
+
+//hide table - from button
+function mintable() {
+    $('#resizediv').hide();
+  updatequerysearchstring();
+}
+
+//min or max table - from button
+function minmaxtable() {
+  
+  //check the top attribute of the closebtn to figure if table needs to be minimized or maximized
+  var btnstate=$('#closebtn').css('top');
+  
+  if(btnstate=='3px'){
+    $('#resizediv').css('max-height','100%');  
+    $('#resizediv').css('height','100%');
+    $('#resizediv').css('padding-top','50px');  
+  $('#closebtn').css('top','53px');
+  $('#minmaxbtn').css('top','53px');
+$( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-minus-sign" ); //change icon
+  }else{
+    $('#resizediv').css('max-height','40%');  
+    $('#resizediv').css('height','auto');
+    $('#resizediv').css('padding-top','0px');  
+  $('#closebtn').css('top','3px');
+  $('#minmaxbtn').css('top','3px');  
+    $( "#minmaxbtn2" ).removeClass( "glyphicon-minus-sign" ).addClass( "glyphicon-plus-sign" ); //change icon
+  }
+
+  updatequerysearchstring();
+}
+
+
+
+  //called from index.html.  Determines whether to show or hide form controls based on whether the value of the select by attribute dropdown is equal to 'None'
+function advenable(curval) {
+    if (curval == 'none') {
+        $("#advsign").prop("disabled", true);
+        $("#advtext").prop("disabled", true);
+    } else {
+        $("#advsign").prop("disabled", false);
+        $("#advtext").prop("disabled", false);
+    }
+} //end advenable
+
+//called from index.html when select button is pressed in advanced tools
+function querygeonums() {
+
+    var advstate = $("#advstate").val();  //state selected
+    var advattribute = $("#advattribute").val();  //criteria (median household income, etc)
+    var advsign = $("#advsign").val(); //sign; greater than, less than, etc
+    var advtext = $("#advtext").val(); //value (as in: median household income is greater than VALUE)
+
+    advtext = advtext.replace(/[^0-9\.]+/g, ''); //strip non numeric from VALUE text
+
+    var advtable;
+    var advnumerator;
+    var advdenominator;
+
+    //loop through datatree (where data themes are defined), find varcode that matches the CRITERIA and assigns table, numerator, and denominator variables
+    for (i = 0; i < datatree.data.length; i++) {
+        if (advattribute == datatree.data[i].varcode) {
+            advtable = datatree.data[i].table;
+            advnumerator = datatree.data[i].numerator;
+            advdenominator = datatree.data[i].denominator;
+        }
+    }
+  
+    //send paramters found above to advsearch.php, where query will return a list of geonums that fit that qualification
+    $.ajax({
+        url: "assets/php/advsearch.php?advsumlev=" + sumlev + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
+        dataType: 'json',
+        jsonpCallback: 'getJson',
+        success: selectgeonums
+    });
+
+}
+
+//function selects all matching geographies, highlights them, puts them into/draws table
+function selectgeonums(data) {
+
+    dataset = [];  //clear existing selection (may want to think about option to add to existing selection set)
+    for (i = 0; i < data.length; i++) {
+        dataset.push(data[i]); //add each new geonum into dataset[]
+    }
+  
+    createnewtable = 0; //set flag to redraw table - which will be called in the styling function
+    geojsonLayer.setStyle(feat1); //restyle entire layer (restyle function includes highlighting selected features)
+  updatequerysearchstring();
+
+}
+
+
+
+
+    //get all datatheme data from datatree.js , breaks from breakstree.js and colortree.js for sybolizing
+    function changeall(redraw, override) {
+    //override??
+
+        var i, j, k;
+
+        legend.removeFrom(map);
+
+        var manageradio = $('input:radio[name ="optionsRadios"]:checked').val();
+
+        for (i = 0; i < datatree.data.length; i++) {
+
+            if (manageradio == datatree.data[i].varcode) {
+                current_desc = datatree.data[i].verbose;
+                table = datatree.data[i].table;
+                type = datatree.data[i].type;
+                mininc = datatree.data[i].mininc;
+                minval = Number(datatree.data[i].minval);
+                numerator = datatree.data[i].numerator;
+                denominator = datatree.data[i].denominator;
+                moenumerator = datatree.data[i].moenumerator;
+                moedenominator = datatree.data[i].moedenominator;
+                moeformula = "(" + moenumerator + ")" + "/" + "(" + moedenominator + ")";
+                formula = "(" + numerator + ")" + "/" + "(" + denominator + ")";
+                summable = false;
+                favtable = datatree.data[i].favtable;
+                varcode = datatree.data[i].varcode;
+                usezeroasnull = datatree.data[i].usezeroasnull;
+                var symbarray = (datatree.data[i].favstyle).split(',');
+                if (override == '1') {
+                    schemename = symbarray[0];
+                    classes = symbarray[1];
+                    colorscheme = symbarray[2];
+                    //change value in dropdowns
+                    $('#classification').val(schemename);
+                    $('#classes').val(classes);
+                    $('#' + colorscheme + classes).prop('checked', true);
+                    filtercolorschemes();
+                }
+            }
+        }
+      
+              //loop through colorschemes only - we have breaks info and colorscheme    
+        for (k = 0; k < colortree.colorschemes.length; k++) {
+
+            if (colortree.colorschemes[k].schemename == colorscheme && colortree.colorschemes[k].count == classes) {
+                ifnulljson = colortree.colorschemes[k].ifnull;
+                ifzerojson = colortree.colorschemes[k].ifzero;
+                symbolcolors = colortree.colorschemes[k].colors;
+            }
+        }
+      
+      //localStorage.setItem("mhi_county_jenks_7", JSON.stringify([79183,64205,54206,46817,40204,33445,1]));
+        var geo;
+        
+        if(sumlev==40){geo='state';}
+        if(sumlev==50){geo='county';}
+        if(sumlev==140){geo='tract';}
+        if(sumlev==150){geo='bg';}
+        if(sumlev==160){geo='place';}    
+
+
+      
+if(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes)){
+breaks=JSON.parse(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes));
+
+  
+        legend.addTo(map);
+
+        if (redraw == "yes") {
+            ajaxcall();
+        } else {
+            geojsonLayer.setStyle(feat1);
+        }
+
+  
+}else{
+
+        var stripnum=numerator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g,',');
+        var stripdenom=denominator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g,',');
+
+        
+        //double check discard = maybe related to usezeroasnull
+      $.ajax({
+          url: "assets/php/getranges.php?geo="+geo+"&num="+stripnum+"&denom="+stripdenom+"&discard="+usezeroasnull,
+          dataType: 'json',
+          jsonpCallback: 'getJson',
+          success: jsonstring
+      });  
+        
+
+
+}
+      
+
+        
+
+        
+    function jsonstring(thedata) {  //after successfull ajax call, data is sent here
+
+     
+  
+      var max=ss.max(thedata);
+
+      if(max===0){thedata=[1,2,3,4,5,6,7,8,9,10,11,12,13,14];}  //all values in array are 0. (presumably no bg data)  Add a '1' to the array so simplestatistics library doesnt fail computing jenks.
+      
+      
+      var mean=ss.mean(thedata);
+
+      var median=ss.median(thedata);
+
+      var stddev=ss.standard_deviation(thedata);
+
+      
+      var jenks5=ss.jenks(thedata,5);
+      jenks5[0]=minval;
+      jenks5.pop();      
+      var jenks7=ss.jenks(thedata,7);
+      jenks7[0]=minval; 
+      jenks7.pop();          
+      var jenks9=ss.jenks(thedata,9);
+      jenks9[0]=minval;
+      jenks9.pop();    
+      
+      var quantile5=[ss.quantile(thedata,0.8),ss.quantile(thedata,0.6),ss.quantile(thedata,0.4),ss.quantile(thedata,0.2),minval];
+      var quantile7=[ss.quantile(thedata,0.857143),ss.quantile(thedata,0.714286),ss.quantile(thedata,0.57143),ss.quantile(thedata,0.42857),ss.quantile(thedata,0.28571),ss.quantile(thedata,0.14286),minval];
+      var quantile9=[ss.quantile(thedata,0.88888),ss.quantile(thedata,0.77777),ss.quantile(thedata,0.66666),ss.quantile(thedata,0.55555),ss.quantile(thedata,0.44444),ss.quantile(thedata,0.33333),ss.quantile(thedata,0.22222),ss.quantile(thedata,0.11111),minval];
+      var quantile11=[ss.quantile(thedata,0.90909),ss.quantile(thedata,0.81818),ss.quantile(thedata,0.72727),ss.quantile(thedata,0.63636),ss.quantile(thedata,0.54545),ss.quantile(thedata,0.45454),ss.quantile(thedata,0.36364),ss.quantile(thedata,0.27273),ss.quantile(thedata,0.18182),ss.quantile(thedata,0.09091),minval];      
+
+ 
+      //half stddev breaks (8)
+      var standard8=[median+(stddev*1.5),median+(stddev*1),median+(stddev*0.5),median,median-(stddev*0.5),median-(stddev*1),median-(stddev*1.5),minval];
+      //wide stddev breaks (7)
+      var standard7=[median+(stddev*2.5),median+(stddev*1.5),median+(stddev*0.5),median-(stddev*0.5),median-(stddev*1.5),median-(stddev*2.5),minval];   
+      
+        
+      
+      
+      eval("localStorage." + varcode+"_" + geo + "_jenks_5 = '" + JSON.stringify(jenks5.reverse()) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_jenks_7 = '" + JSON.stringify(jenks7.reverse()) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_jenks_9 = '" + JSON.stringify(jenks9.reverse()) + "'");
+
+      eval("localStorage." + varcode+"_" + geo + "_quantile_5 = '" + JSON.stringify(quantile5) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_quantile_7 = '" + JSON.stringify(quantile7) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_quantile_9 = '" + JSON.stringify(quantile9) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_quantile_11 = '" + JSON.stringify(quantile11) + "'");      
+
+      eval("localStorage." + varcode+"_" + geo + "_standard_7 = '" + JSON.stringify(standard7) + "'");
+      eval("localStorage." + varcode+"_" + geo + "_standard_8 = '" + JSON.stringify(standard8) + "'");        
+
+
+      breaks=JSON.parse(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes));
+      
+      
+        legend.addTo(map);
+
+        if (redraw == "yes") {
+            ajaxcall();
+        } else {
+            geojsonLayer.setStyle(feat1);
+        }
+
+      
+    } 
+
+     
+
+
+
+
+      
+    }
+
+  
+
+    //change table flavor
+    function chgtblfl() {
+
+        tblfl = $('#tableoption').val();
+
+        if (tblfl == -1) {
+            favtable = "Plain";
+        } else {
+            favtable = tabletree.data[tblfl].TableAlias;
+        }
+
+        stopafterheader = 0;
+        var geonums = '';
+
+        //turn dataset into a comma delimited string and call it geoids
+        geonums = dataset.join(",");
+
+        $('#tablebody').empty();
+        $('#tableheader').empty();
+        $('#tablefooter').empty();
+
+        //ajax call to load selected features
+
+        if (dataset.length === 0) {
+            stopafterheader = 1;
+            geonums = '108079';
+        } //if nothing selected, we still need to query database to get header info.  We give the query a dummy goenum to chew on.  It won't add that row due to the stopafterhearder variable.
+
+
+        $.ajax({
+            type: "POST",
+            url: "assets/php/demogpost.php",
+            data: "db=acs0913&schema=data&table=" + table + "&geonum=" + geonums + "&moe=yes",
+            dataType: 'json',
+            jsonpCallback: 'getJson',
+            success: addRows
+        });
+
+
+    }
+
+
+    //after successfull ajax call, data is sent here
+    function getJson(data) {
+        $("#popup").remove();
+
+        geojsonLayer.clearLayers(); //(mostly) eliminates double-draw (should be technically unneccessary if you look at the code of leaflet-ajax...but still seems to help)
+        geojsonLayer.addData(data);
+
+        geojsonLayer.setStyle(feat1);   
+        map.addLayer(geojsonLayer);
+        map.spin(false);
+
+        //OMG OMG, I Figured out how to bring selected features to the front
+        map.eachLayer(function(layer) {
+            if (layer.options) {
+                if (layer.options.color) {
+                    if (layer.options.linecap == 'butt') {
+                        //bring feature to front
+                        if (!L.Browser.ie && !L.Browser.opera) {
+                            layer.bringToFront();
+                        }
+                    }
+                }
+
+            }
+        });
+      
+        if(params.dt!==undefined){
+          
+          if(params.dt=='yes'){
+            $('#resizediv').toggle();
+          }
+          
+          if(params.dt=='max'){
+            $('#resizediv').toggle();
+                $('#resizediv').css('max-height','100%');  
+    $('#resizediv').css('height','100%');
+    $('#resizediv').css('padding-top','50px');  
+  $('#closebtn').css('top','53px');
+  $('#minmaxbtn').css('top','53px');
+$( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-minus-sign" );
+          }
+          
+          delete params.dt;
+        }
+
+              if(params.ch!==undefined){
+          
+          if(params.ch=='yes'){
+        $('#chartModal').modal('toggle');
+        $('#chartdiv').empty();
+        addchart();
+      setTimeout(function(){updatequerysearchstring();},1000);
+          }
+          
+          delete params.ch;
+        }
+      
+      
+    }
+
+    function ajaxcall() {
+
+        geojsonLayer.clearLayers();
+
+        lastzoom = map.getZoom();
+        var r = map.getBounds();
+        nelat = (r._northEast.lat);
+        nelng = (r._northEast.lng);
+        swlat = (r._southWest.lat);
+        swlng = (r._southWest.lng);
+
+        var diff1 = (nelat - swlat) / 2;
+        var diff2 = (nelng - swlng) / 2;
+
+        //we calculate a bounding box equal much larger than the actual visible map.  This preloades shapes that are off the map.  Combined with the center point query, this will allow us to not have to requery the database on every map movement.
+        var newbounds = (swlng - diff2) + "," + (swlat - diff1) + "," + (nelng + diff2) + "," + (nelat + diff1);
+
+        geojsonLayer.refresh("../CensusAPI/geojson.php?db=" + db + "&schema=" + schema + "&sumlev=" + sumlev + "&limit=" + limit + "&table=" + table + "&bb=" + newbounds + "&zoom=" + map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
+
+    }
+
+
+    function populate() {
+
+      
+        //count different categories
+        var sectionsarray = [];
+        for (i = 0; i < datatree.data.length; i++) {
+            sectionsarray.push(datatree.data[i].section);
+        }
+        //whittle down sectionsarray to only unique items
+        var uniqueNames = [];
+        $.each(sectionsarray, function(i, el) {
+            if ($.inArray(el, uniqueNames) === -1) uniqueNames.push(el);
+        });
+
+        //sort array alphabetically
+        uniqueNames.sort();
+
+        //populate accordion1
+        for (i = 0; i < (parseInt((uniqueNames.length) / 2) + 1); i++) {
+            $('#accordion1').append('<div class="panel panel-default"><div class="panel-heading" role="tab" id="heading1' + i + '"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion1" href="#collapse' + i + '" aria-expanded="false" aria-controls="collapse1">' + uniqueNames[i] + '</a></h4></div><div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div id="id' + uniqueNames[i] + '" class="panel-body"></div></div></div>');
+        }
+
+        //populate accordion2 instead
+        for (i = (parseInt((uniqueNames.length) / 2) + 1); i < uniqueNames.length; i++) {
+            $('#accordion2').append('<div class="panel panel-default"><div class="panel-heading" role="tab" id="heading2' + i + '"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion2" href="#collapse' + i + '" aria-expanded="false" aria-controls="collapse1">' + uniqueNames[i] + '</a></h4></div><div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div id="id' + uniqueNames[i] + '" class="panel-body"></div></div></div>');
+        }
+
+        var vchecked = "";
+
+        //loop through - add all themes
+        for (i = 0; i < datatree.data.length; i++) {
+          if(params.v===undefined){
+            if (i === 0) {
+                vchecked = "checked";
+            } else {
+                vchecked = "";
+            }
+          }
+          if(params.v!==undefined){          
+            if (params.v==datatree.data[i].varcode) {
+                vchecked = "checked";
+            } else {
+                vchecked = "";
+            }
+          }
+            $('#id' + datatree.data[i].section).append('<div class="radio"><label><input type="radio" name="optionsRadios" value="' + datatree.data[i].varcode + '" ' + vchecked + '> ' + datatree.data[i].verbose + '</label></div>'); //to accordion
+            $('#advattribute').append('<option value="' + datatree.data[i].varcode + '" > ' + datatree.data[i].verbose + '</option>'); //to advanced selection tool
+        }
+
+    }
+
+    function drawcolorschemes() {
+        $('#colorschemes').html('');
+        var schemecount = 0;
+
+        //populate colorschemes
+        for (i = 0; i < colortree.colorschemes.length; i++) {
+
+
+
+            var cclasses = colortree.colorschemes[i].count; //check for correct number of classes
+            var prefix = colortree.colorschemes[i].schemename.substring(0, 2);
+
+            //classes to be added
+            var pt1 = "";
+            var pt2 = "";
+
+            if (prefix == 'mh') {
+                pt1 = "jenks";
+            }
+            if (prefix == 'sh') {
+                pt1 = "jenks";
+            }
+            if (prefix == 'ds') {
+                pt1 = "quantile";
+            }
+
+            if (cclasses == 5) {
+                pt2 = "c5";
+            }
+            if (cclasses == 7) {
+                pt2 = "c7";
+            }
+            if (cclasses == 8) {
+                pt2 = "c8";
+            }
+            if (cclasses == 9) {
+                pt2 = "c9";
+            }
+            if (cclasses == 11) {
+                pt2 = "c11";
+            }
+
+
+            var appendstring = '<label class="allradio radio-inline ' + pt1 + ' ' + pt2 + '"><input id="' + colortree.colorschemes[i].schemename + cclasses + '" type="radio" name="schemeRadios" class="allradio form-control ' + pt1 + ' ' + pt2 + '" value="' + colortree.colorschemes[i].schemename + '">';
+
+            for (j = 0; j < colortree.colorschemes[i].count; j++) {
+                appendstring = appendstring + '<span style="background-color:' + colortree.colorschemes[i].colors[j] + ';">&nbsp;&nbsp;</span>';
+            }
+
+            appendstring = appendstring + '</label>';
+
+          //add all colorscheme dom elements to dialog
+            $('#colorschemes').append(appendstring);
+
+        }
+      
+      filtercolorschemes();
+      
+
+      //if colorscheme info is in querystring, use it.  otherwise, use default
+          if(params.cs!==undefined){	
+		          colorscheme=params.cs;
+            $('#'+colorscheme+classes).prop('checked',true);
+              delete params.cs;
+            updatequerysearchstring();
+	        }else{
+                    //set default
+        $('#mh17').prop('checked', true);
+              updatequerysearchstring();
+          }
+
+    }
+
+  //calling this function means its time to refilter colorschemes based on classification scheme and number of classes
+    function filtercolorschemes() {
+
+        $('.allradio').show();
+
+        if (classes == 5) {
+            $('.c7').hide();
+            $('.c8').hide();
+            $('.c9').hide();
+            $('.c11').hide();
+        }
+        if (classes == 7) {
+            $('.c5').hide();
+            $('.c8').hide();
+            $('.c9').hide();
+            $('.c11').hide();
+        }
+        if (classes == 8) {
+            $('.c5').hide();
+            $('.c7').hide();
+            $('.c9').hide();
+            $('.c11').hide();
+        }
+        if (classes == 9) {
+            $('.c5').hide();
+            $('.c7').hide();
+            $('.c8').hide();
+            $('.c11').hide();
+        }
+        if (classes == 11) {
+            $('.c5').hide();
+            $('.c7').hide();
+            $('.c8').hide();
+            $('.c9').hide();
+        }
+
+        if (schemename == "jenks") {
+            $('.quantile').hide();
+        }
+        if (schemename == "quantile" || schemename == "stddev") {
+            $('.jenks').hide();
+        }
+
+    }
+
+
+function redrawTable() {
+
+    var str = '';
+    var parsehtml;
+    var seltext = '';
+
+    if (tblfl == '-1') {
+        seltext = 'selected';
+    } else {
+        seltext = '';
+    }
+
+    $('#tableoption').empty();
+    $('#tableoption').append($.parseHTML("<option value='-1' " + seltext + ">Plain Table</option>"));
+
+    //get table id, search for table id in tabletree (tableflavor.js) to populate select box 'tableoption'
+
+    for (i = 0; i < tabletree.data.length; i++) {
+
+        //setting value=array index for tabletree
+        if (tabletree.data[i].ActualTable == table) {
+            if (tabletree.data[i].TableAlias == favtable) {
+                tblfl = String(i);
+            }
+            if (String(i) == tblfl) {
+                seltext = 'selected';
+            } else {
+                seltext = '';
+            }
+            str = "<option value='" + i + "' " + seltext + ">" + tabletree.data[i].TableAlias + "</option>";
+            parsehtml = $.parseHTML(str);
+            $('#tableoption').append(parsehtml);
+        }
+    }
+
+    stopafterheader = 0;
+    var geonums = '';
+
+
+    //turn dataset into a comma delimited string and call it geoids
+    geonums = dataset.join(",");
+
+
+    $('#tablebody').empty();
+    $('#tableheader').empty();
+    $('#tablefooter').empty();
+    $('#tablefooter').hide();
+    //ajax call to load selected features
+
+    if (dataset.length === 0) {
+        stopafterheader = 1;
+        geonums = '108079';
+    } //if nothing selected, we still need to query database to get header info.  We give the query a dummy goenum to chew on.  It won't add that row due to the stopafterhearder variable.
+
+
+    $.ajax({
+        type: "POST",
+        url: "assets/php/demogpost.php",
+        data: "db=acs0913&schema=data&table=" + table + "&geonum=" + geonums + "&moe=yes",
+        dataType: 'json',
+        jsonpCallback: 'getJson',
+        success: addRows
+    });
+
+
+
+}
+
+
+function addRows(data) {
+
+        //create column headers
+        var tblstr = '';
+        var datatype = 'float';
+        var tableclassadd = '';
+
+
+        tblfl = $('#tableoption').val();
+
+        //Plain Table
+        //if select value is 0, it means plain table is selected
+        if (tblfl == '-1') {
+            $.each(data.data[0], function(k, v) {
+
+                if (k.search("moe") != -1) {
+                    tableclassadd = "moe";
+                } else {
+                    tableclassadd = "";
+                }
+                if (k != 'state' && k != 'county' && k != 'place' && k != 'tract' && k != 'bg') {
+
+                    if (k == 'geoname') {
+                        datatype = "string";
+                    } else {
+                        datatype = "float";
+                    }
+                    tblstr = tblstr + '<th data-sort="' + datatype + '" class="' + tableclassadd + '">' + k + '</th>';
+                }
+            });
+        } else {
+
+            //Table Flavor
+            //if select value >0 that means a table flavor is selected        
+
+            //First Two Columns Are Always Geoname and Geonum
+            tblstr = tblstr + '<th data-sort="string">Name</th>';
+            tblstr = tblstr + '<th data-sort="int">ID</th>';
+
+            for (i = 0; i < tabletree.data[tblfl].Data.length; i++) {
+
+                //console.log(tabletree.data[tblfl].Data[i].Formula);
+                if ((tabletree.data[tblfl].Data[i].Formula).search("moe") != -1) {
+                    tableclassadd = "moe";
+                } else {
+                    tableclassadd = "";
+                }
+
+                tblstr = tblstr + '<th data-sort="' + datatype + '" class="' + tableclassadd + '">' + tabletree.data[tblfl].Data[i].FieldName + '</th>';
+
+            }
+
+
+        }
+
+
+        //Both Plain and Table Favor Append tblstr
+        $('#tableheader').append(tblstr);
+
+
+
+        if (stopafterheader === 0) {
+            //add rows
+            var rowstr = '';
+            var classadd = '';
+            var plusminus = '';
+
+            if (tblfl == '-1') {
+                //Plain
+                for (i = 0; i < (data.data).length; i++) {
+
+                    //add matched records to table
+                    rowstr = '<tr class="' + data.data[i].geonum + '">';
+
+                    $.each(data.data[i], function(k, v) {
+                        if (k == 'geoname' || k == 'geonum') {
+                            rowstr = rowstr + '<td>' + v + '</td>';
+                        }
+                        if (k != 'state' && k != 'county' && k != 'place' && k != 'tract' && k != 'bg' && k != 'geoname' && k != 'geonum') {
+
+                            if (k.search("moe") != -1) {
+                                classadd = "moe";
+                                plusminus = '&plusmn; ';
+                            } else {
+                                classadd = "";
+                                plusminus = '';
+                            }
+
+                            if (type == "currency") {
+                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(v).formatMoney(0) + '</td>';
+                            }
+                            if (type == "number" || type == "percent") {
+                                var resprec = (v + "").split(".")[1];
+                                if (!resprec) {
+                                    resprec = 0;
+                                } else {
+                                    resprec = resprec.length;
+                                }
+                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + parseFloat(v).formatMoney(resprec) + '</td>';
+                            }
+                            if (type == "regular") {
+                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + v + '</td>';
+                            }
+
+
+                        }
+                    });
+
+                    rowstr = rowstr + '</tr>';
+
+                    //Both Plain and Table Flavor Append Rows Here
+                    $('#tablebody').append(rowstr);
+                }
+
+
+            } else {
+
+                var fp;
+
+                //Table Flavor
+                for (i = 0; i < (data.data).length; i++) {
+                    //console.log(i);
+                    //add matched records to table
+                    rowstr = '<tr class="' + data.data[i].geonum + '">';
+                    rowstr = rowstr + '<td>' + data.data[i].geoname + '</td>';
+                    rowstr = rowstr + '<td>' + data.data[i].geonum + '</td>';
+
+
+                    $.each(tabletree.data[tblfl].Data, function(k, v) {
+                        fp = data.data[i];
+
+                        if ((tabletree.data[tblfl].Data[k].Formula).search("moe") != -1) {
+                            classadd = "moe";
+                            plusminus = '&plusmn; ';
+                        } else {
+                            classadd = "";
+                            plusminus = '';
+                        }
+                        if ((tabletree.data[tblfl].Data[k].FieldName) == "CV") {
+                            plusminus = '';
+                        } //no plusmn on coefficient of variance
+
+                        if (tabletree.data[tblfl].Data[k].type == "currency") {
+                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(eval(v.Formula)).formatMoney(0) + '</td>';
+                        }
+                        if (tabletree.data[tblfl].Data[k].type == "regular") {
+                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + eval(v.Formula) + '</td>';
+                        }
+                        if (tabletree.data[tblfl].Data[k].type == "number") {
+                            var resprec = (eval(v.Formula) + "").split(".")[1];
+                            if (!resprec) {
+                                resprec = 0;
+                            } else {
+                                resprec = resprec.length;
+                            }
+                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).formatMoney(resprec) + '</td>';
+                        }
+                        if (tabletree.data[tblfl].Data[k].type == "percent") {
+                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)).toFixed(2) + '" class="' + classadd + '">' + plusminus + Number(eval(v.Formula)).toFixed(2) + '%</td>';
+                        }
+                        //rowstr=rowstr+'<td>'+eval(v.Formula)+'</td>';        
+
+                    });
+                    rowstr = rowstr + '</tr>';
+
+                    //Both Plain and Table Flavor Append Rows Here
+                    $('#tablebody').append(rowstr);
+                }
+
+            }
+
+
+            //hide (or not) if class=moe
+            var checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
+            if (checkstate) {
+                $('.moe').show();
+            } else {
+                $('.moe').hide();
+            }
+
+
+            writeFooter();
+
+
+        } //stop after header
+    } //end addRows
+
+
+function writeFooter() {
+//needs so much work...not included  work on and add later
+
+    //write table to an array
+    var array = [];
+    var headers = [];
+
+    $('#table th').each(function(index, item) {
+        headers[index] = $(item).html();
+    });
+
+    $('#tablebody tr').has('td').each(function() {
+        var arrayItem = {};
+        $('td', $(this)).each(function(index, item) {
+            arrayItem[headers[index]] = $(item).html();
+        });
+        array.push(arrayItem);
+    });
+
+    //console.log(headers);  
+    //console.log(array);
+
+
+    //console.log(array.length);
+
+    if (array.length === 0) {
+        $('#tablefooter').hide();
+    } else {
+        $('#tablefooter').show();
+    }
+
+    //clear whatever was in the sum row previously
+    $('#tablefooter').empty();
+
+    //check to make sure summable is possible
+    if (summable) {
+
+        //first two cells will always look like this
+        var footstr = '<td>Totals</td>';
+        footstr = footstr + '<td></td>';
+
+
+        //plain
+        var runningval = 0;
+        var runningmoe = 0;
+        var n = '';
+        var o = '';
+        var p;
+        var addmoeclass = '';
+        var plusminus = '';
+
+        for (var l = 2; l < headers.length; l++) {
+
+            runningval = 0;
+            runningmoe = 0;
+
+            if ((headers[l]).search("moe") !== -1) {
+                addmoeclass = 'moe';
+            } else {
+                addmoeclass = '';
+            }
+
+            for (var m = 0; m < array.length; m++) {
+
+                runningval = runningval + Number((array[m][headers[l]]).replace(/[^a-zA-Z0-9]/g, '')); //replace all charcters not numbers and ???letters
+                runningmoe = runningmoe + Math.pow(runningval, 2); //revisit this.  This isn't right
+                if (array[m][headers[l]].search(/\$/g) !== -1) {
+                    n = '$';
+                } //dollar flag
+                if (array[m][headers[l]].search(/%/g) !== -1) {
+                    o = '%';
+                } //pct flag
+                if (array[m][headers[l]].search(",") !== -1) {
+                    p = 1;
+                } //comma flag
+
+            }
+
+            runningmoe = Math.sqrt(runningmoe);
+
+            //if we're in an moe field, switch to give the moe calculation
+            if (addmoeclass == "moe") {
+                runningval = runningmoe;
+                plusminus = '&plusmn; ';
+            } else {
+                plusminus = '';
+            }
+
+            footstr = footstr + '<td class="' + addmoeclass + '">' + plusminus + n + runningval.formatMoney(0) + o + '</td>';
+        }
+
+        //write new footer
+        $('#tablefooter').html(footstr);
+
+        //hide (or not) if class=moe
+        var checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
+        if (checkstate) {
+            $('.moe').show();
+        } else {
+            $('.moe').hide();
+        }
+
+    } else {
+
+        $('#tablefooter').hide();
+
+    } // end if summable
+
+}
+
 
 //creates a random alphanumeric string for use in uniquely naming exported map
 function makeid(){
@@ -173,7 +2239,7 @@ function updatequerysearchstring(){
 }
 
 //gets parameters from the address query string
-parseQueryString = function () {
+function parseQueryString(){
 
                     newstr = String(window.location.search);
                    // var n = newstr.replace(/qq/g, "&");
@@ -187,7 +2253,7 @@ parseQueryString = function () {
                     });
                     return objURL;
 
-                };
+                }
 
 //called from pressing chart button (only)
 //the addchart() function gets data from the database, then funnels it to figurechart()
@@ -686,146 +2752,6 @@ function dochart(JSONdata, xwidth, xheight, stateorusavg) {
 
     } //end dochart
 
-
-
-//symbolize everything right here!!!  Every geography feature in the view is iterated over
-function feat1(feature) {
-
-  //createnewtable is the flag to redraw the data table.  Set to 0 means redraw, set to 1 means don't redraw
-    if (createnewtable === 0) {
-       redrawTable();
-    }
-    createnewtable = 1;
-
-  
-    var fp = feature.properties; //shorthand way to refer to feature.properties
-    var mapvar = eval(formula);  //the actual computed value of the theme variable
-    var geonum = fp.geonum; //the id of the geography
-    var newlinecolor = linecolor; //get default lincolor, lineweight, and lineopacity values
-
-  
-  if(sumlev==40){lineweight=0;}
-  if(sumlev==50){lineweight=0;}
-  if(sumlev==140){lineweight=1;}
-  if(sumlev==150){lineweight=1;}
-  if(sumlev==160){lineweight=1;}
-  
-      var newlineweight = lineweight;
-    var newlineopacity = lineopacity;
-    var newlinecap = 'round';  //here's the wrinkle - we dont really care about the linecap property.  However, we need a way to differentiate between a selected features properties, and a non-selected features properties.  We cant just go by color=red, because when you mouseover a selected geography, the color will no longer be red.  So we  set the linecap property to either 'butt' (selected) or 'round' - or anything else (not selected)
-
-    //when drawing feature, if in selected set, override default linecolor and lineweight with selected values 'red'
-    for (i = 0; i < dataset.length; i++) {
-        if (dataset[i] == geonum) {
-            newlinecolor = cselected;
-            newlineweight = 2;
-            newlineopacity = 1;
-            newlinecap = 'butt';
-        }
-    }
-    
-    //if the mapvariable = 0 for a paricular variable, and the usezeroasnull flag is set, symbolize the geography with the null symbology
-    if (mapvar === 0 && usezeroasnull == 'yes') {
-        return {
-            fillColor: ifzerojson,
-            color: newlinecolor,
-            weight: newlineweight,
-            opacity: newlineopacity,
-            fillOpacity: fillOpacity,
-            linecap: newlinecap
-        };
-    }
-
-    //trickiness with 0==false;  if the mapvariable is equal to null (but not zero), symbolize the geography with the null symbology
-    if (!mapvar && mapvar !== 0) {
-        return {
-            fillColor: ifnulljson,
-            color: newlinecolor,
-            weight: newlineweight,
-            opacity: newlineopacity,
-            fillOpacity: fillOpacity,
-            linecap: newlinecap
-        };
-    }
-
-    //get number of colors in color ramp
-    var getreverse = symbolcolors.length;
-
-    //loop through color set
-    for (j = 0; j < getreverse; j++) {
-          //loop through breaks; symbolize features accordingly
-        if (mapvar >= breaks[j]) {
-            return {
-                fillColor: symbolcolors[(getreverse - 1) - j],
-                color: newlinecolor,
-                weight: newlineweight,
-                opacity: newlineopacity,
-                fillOpacity: fillOpacity,
-                linecap: newlinecap
-            };
-        }
-    }
-}  //end feat1
-
-
-  //called from index.html.  Determines whether to show or hide form controls based on whether the value of the select by attribute dropdown is equal to 'None'
-function advenable(curval) {
-    if (curval == 'none') {
-        $("#advsign").prop("disabled", true);
-        $("#advtext").prop("disabled", true);
-    } else {
-        $("#advsign").prop("disabled", false);
-        $("#advtext").prop("disabled", false);
-    }
-} //end advenable
-
-//called from index.html when select button is pressed in advanced tools
-function querygeonums() {
-
-    var advstate = $("#advstate").val();  //state selected
-    var advattribute = $("#advattribute").val();  //criteria (median household income, etc)
-    var advsign = $("#advsign").val(); //sign; greater than, less than, etc
-    var advtext = $("#advtext").val(); //value (as in: median household income is greater than VALUE)
-
-    advtext = advtext.replace(/[^0-9\.]+/g, ''); //strip non numeric from VALUE text
-
-    var advtable;
-    var advnumerator;
-    var advdenominator;
-
-    //loop through datatree (where data themes are defined), find varcode that matches the CRITERIA and assigns table, numerator, and denominator variables
-    for (i = 0; i < datatree.data.length; i++) {
-        if (advattribute == datatree.data[i].varcode) {
-            advtable = datatree.data[i].table;
-            advnumerator = datatree.data[i].numerator;
-            advdenominator = datatree.data[i].denominator;
-        }
-    }
-  
-    //send paramters found above to advsearch.php, where query will return a list of geonums that fit that qualification
-    $.ajax({
-        url: "assets/php/advsearch.php?advsumlev=" + sumlev + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
-        dataType: 'json',
-        jsonpCallback: 'getJson',
-        success: selectgeonums
-    });
-
-}
-
-//function selects all matching geographies, highlights them, puts them into/draws table
-function selectgeonums(data) {
-
-    dataset = [];  //clear existing selection (may want to think about option to add to existing selection set)
-    for (i = 0; i < data.length; i++) {
-        dataset.push(data[i]); //add each new geonum into dataset[]
-    }
-  
-    createnewtable = 0; //set flag to redraw table - which will be called in the styling function
-    geojsonLayer.setStyle(feat1); //restyle entire layer (restyle function includes highlighting selected features)
-  updatequerysearchstring();
-
-}
-
 //format number - may want to replace all references to this with the D3 format function instead, which is more flexible
 //i did not write this, found it online
 Number.prototype.formatMoney = function(c, d, t) {
@@ -847,1594 +2773,47 @@ function getCSVData() {
     $("#csv_text").val(csv_value);
 }
 
-//globals
-//comment all of these
-//varlist
-L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
-var params = parseQueryString();
-
-var stopafterheader = 0;
-var createnewtable = 0;
-var summable;
-var favtable = 'Median Household Income';
-
-var globalbusy=0;
-var tblfl = '-1'; //tableflavor default to plain
-var map;
-var current_desc = ""; //name of the current census variable being mapped
-var numerator = []; //[]needed?
-var denominator = [];
-var moenumerator;
-var moedenominator;
-var moeformula;
-var data;
-var sumlev = '50';
-var limit = '10000';
-var db = 'acs0913';
-var schema = 'data';
-var demogdatalayer;
-var table = 'b19013';
-var formula = 'fp.b19013001';
-var usezeroasnull = 'yes';
-var breaks = [];
-var varcode = 'mhi';
-var ifnulljson = {};
-var ifzerojson = {};
-var symbolcolors = [];
-var type = "";
-var mininc = 0;
-var minval = 0;
-var geojsonLayer;
-var cselected='red';
-var cmouseover='rgb(128,0,127)';
-
-//universal
-var linecolor = "Gray";
-var lineweight = 0;
-var lineopacity = 0.2; //transparency control
-var fillOpacity = 0.5; //transparency control
-
-//symbology
-var colorscheme = "mh1";
-var classes = 7;
-var schemename = "jenks";
-
-//data table ??empty??
-var dataset = [];
-
-//map bounds the last time the data was loaded
-var nelat, nelng, swlat, swlng;
-var lastzoom=8;
-
-
-//if varcode (v) stated in parameter string, use it (override default)
-    if(params.v!==undefined){	
-		varcode=params.v;
-	};
-
-//change selection color
-function cselectedchg(newcolor){
-  cselected=newcolor;
-}
-
-//change mouseover color
-function cmouseoverchg(newcolor){
-  cmouseover=newcolor;
-}
-
-
-//bootleaf navbar controls
-$("#about-btn").click(function() {
-    $("#aboutModal").modal("show");
-    $(".navbar-collapse.in").collapse("hide");
-    return false;
-});
-$("#advanced-btn").click(function() {
-    $("#symbologyModal").modal("show");
-    $(".navbar-collapse.in").collapse("hide");
-    return false;
-});
-$("#nav-btn").click(function() {
-    $(".navbar-collapse").collapse("toggle");
-    return false;
-});
-
-
-
-/* Basemap Layers */  //not ideal because of double - labels
-var mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
-    'zIndex': 1
-});
-
-var mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
-
-var mapboxST = L.tileLayer('http://{s}.tiles.mapbox.com/v3/statecodemog.map-392qgzze/{z}/{x}/{y}.png', {
-    attribution: '<a href="http://www.mapbox.com/about/maps/">&copy; Map Box and OpenStreetMap</a>',
-    maxZoom: 18
-});
-var Stamen_Terrain = L.tileLayer('http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png', {
-    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    subdomains: 'abcd',
-    minZoom: 4,
-    maxZoom: 18
-});
-
-//default lat and lng and zoomlevel
-	var latcoord=39;
-	var lngcoord=-104.8;
-	var zoomlev=9;
-
-//if lat in querystring
-	if(params.lat!==undefined){	
-		latcoord=params.lat;
-	};
-
-//if lng in querystring
-	if(params.lng!==undefined){	
-		lngcoord=params.lng;
-	};
-
-//if zoomlevel (z) in querystring
-	if(params.z!==undefined){	
-		zoomlev=params.z;
-	};
-
-
-map = L.map("map", {
-    zoom: zoomlev,
-    center: [latcoord, lngcoord],
-    minZoom: 4,
-    layers: [mbstyle],
-    zoomControl: false,
-    attributionControl: false
-});
-
-//if sumlev (s) in querystring
-  	if(params.s!==undefined){	
-		sumlev=params.s;
-      $("input[name=geoRadios][value=" + sumlev + "]").prop('checked', true);
-	};
-
-
-//depending on sumlev, changes minZoom, adds the correct string to the advanced query tool i.e (select all 'tracts')
-
-        if (sumlev == '50') {
-          map.options.minZoom = 4;
-            $('#advgeo').text('counties');
-        }
-        if (sumlev == '40') {
-          map.options.minZoom = 4;
-            $('#advgeo').text('states');
-        }
-        if (sumlev == '140') {
-                    map.options.minZoom = 9;
-            $('#advgeo').text('tracts');
-        }
-        if (sumlev == '150') {
-                    map.options.minZoom = 9;
-            $('#advgeo').text('block groups');
-        }
-        if (sumlev == '160') {
-                    map.options.minZoom = 9;
-            $('#advgeo').text('places');
-        }
-
-//define labels layer
-var mblabels = L.mapbox.tileLayer('statecodemog.798453f5', {
-    'clickable': 'false',
-    'zIndex': 1000
-});
-
-
-//create map sandwich
-var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
-var topLayer = mblabels.addTo(map);
-topPane.appendChild(topLayer.getContainer());
-
-
-var baseLayers = {
-    "Mapbox: Satellite": mbsat,
-    "Mapbox: Contrast Base": mbstyle,
-    "Mapbox: Streets": mapboxST,
-    "Stamen Terrain": Stamen_Terrain
-};
-
-//in the future ill figure out how to toggle labels on and off (and still have it appear on top)
-var groupedOverlays = {
-//  "Labels and Borders": mblabels
-};
-
-
-
-/* Attribution control */  //bootleaf
-var attributionControl = L.control({
-    position: "bottomright"
-});
-attributionControl.onAdd = function(map) {
-    var div = L.DomUtil.create("div", "leaflet-control-attribution");
-  div.innerHTML = "<span class='hidden-xs'>Developed by: <a href='http://www.colorado.gov/demography'>Colorado State Demography Office</a></span><span class='spanhide'> | <a href='#' onclick='$(\"#attributionModal\").modal(\"show\"); return false;'>Sources</a></span>";
-    return div;
-};
-map.addControl(attributionControl);
-
-//MapBox and OpenStreet Map Required Attribution
-var attributionControl2 = L.control({
-    position: "bottomright"
-});
-attributionControl2.onAdd = function(map) {
-    var div = L.DomUtil.create("div", "leaflet-control-attribution");
-    div.innerHTML = "<a href='https://www.mapbox.com/about/maps/' target='_blank'>Maps &copy; Mapbox &copy; OpenStreetMap</a><span class='spanhide'>&nbsp;&nbsp;&nbsp;<a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve This Map</a></span>";
-    return div;
-};
-map.addControl(attributionControl2);
-
-//geocoder is from Google.
-var geocoder = new google.maps.Geocoder();
-
-//google geocoder
-function googleGeocoding(text, callResponse) {
-    geocoder.geocode({
-        address: text
-    }, callResponse);
-}
-
-//google geocoder function
-function filterJSONCall(rawjson) {
-    var json = {},
-        key, loc, disp = [];
-    for (var i in rawjson) {
-        key = rawjson[i].formatted_address;
-        loc = L.latLng(rawjson[i].geometry.location.lat(), rawjson[i].geometry.location.lng());
-        json[key] = loc; //key,value format
-    }
-    return json;
-}
-
-//google geocoder
-var searchControl = map.addControl(new L.Control.Search({
-    callData: googleGeocoding,
-    filterJSON: filterJSONCall,
-    markerLocation: false,
-    autoType: true,
-    autoCollapse: false,
-    minLength: 4,
-    position: 'topright'
-}));
-
-
-var zoomControl = L.control.zoom({
-    position: "topright"
-}).addTo(map);
-
-/* GPS enabled geolocation control set to follow the user's location */
-var locateControl = L.control.locate({
-    position: "topright",
-    drawCircle: true,
-    follow: true,
-    setView: true,
-    keepCurrentZoomLevel: true,
-    markerStyle: {
-        weight: 1,
-        opacity: 0.8,
-        fillOpacity: 0.8
-    },
-    circleStyle: {
-        weight: 1,
-        clickable: false
-    },
-    icon: "icon-direction",
-    metric: false,
-    strings: {
-        title: "My location",
-        popup: "You are within {distance} {unit} from this point",
-        outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
-    },
-    locateOptions: {
-        maxZoom: 18,
-        watch: true,
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 10000
-    }
-}).addTo(map);
-
-/* Larger screens get expanded layer control and visible sidebar */
-if (document.body.clientWidth <= 767) {
-    var isCollapsed = true;
-} else {
-    var isCollapsed = false;
-}
-
-//add layer control
-L.control.layers(baseLayers, groupedOverlays, {
-    'autoZIndex': false
-}).addTo(map);
-
-//legend control
-var legend = L.control({
-    position: 'bottomright'
-});
-
-//create or recreate legend
-legend.onAdd = function(map) {
-
-    var labels = [];
-    var color = [];
-
-  //retrieve individual colors depending on colorscheme and number of classes - puts those colors into color array
-    for (j = 0; j < colortree.colorschemes.length; j++) {
-
-        if (colortree.colorschemes[j].schemename == colorscheme) {
-            if (colortree.colorschemes[j].count == classes) {
-                color = colortree.colorschemes[j].colors;
-            }
-        }
-    }
-
-  //legend title
-    var div = L.DomUtil.create('div', 'info legend');
-    div.innerHTML = "<h4 style='color: black;'><b>" + current_desc + "</b></h4>";
-
-//retrieve breaks
-    for (i = (breaks.length - 1); i > -1; i--) {
-        labels.push(breaks[i]);
-    }
-
-  //format depending on number type: currency, number, regular, percent
-  var lowlabel, toplabel;
-    if (schemename !== "stddev") {
-        for (i = 0; i < labels.length; i++) {
-            if (i === 0) {
-                lowlabel = minval;
-            }
-            if (type == 'currency') {
-                lowlabel = labels[i];
-                toplabel = labels[i + 1] - mininc;
-                lowlabel = '$' + lowlabel.formatMoney(0);
-                if (!toplabel) {
-                    toplabel = " +";
-                } else {
-                    toplabel = ' to $' + toplabel.formatMoney(0);
+var TrelloClipboard = new ((function () {
+//Trello Clipboard allows the map user to Ctrl-C at any time to add a map link to their clipboard  
+    function _Class() {
+      this.value = function(){return window.location.href;};
+        $(document).keydown((function (_this) {
+            return function (e) {
+                var _ref, _ref1;
+                if (!_this.value || !(e.ctrlKey || e.metaKey)) {
+                    return;
                 }
-            }
-            if (type == 'number') {
-                lowlabel = labels[i];
-                toplabel = labels[i + 1] - mininc;
-                var resprec = (mininc + "").split(".")[1];
-                if (!resprec) {
-                    resprec = 0;
-                } else {
-                    resprec = resprec.length;
+                if ($(e.target).is("input:visible,textarea:visible")) {
+                    return;
                 }
-                lowlabel = lowlabel.formatMoney(resprec); //still not correct
-                if (!toplabel) {
-                    toplabel = " +";
-                } else {
-                    toplabel = ' to ' + toplabel.formatMoney(resprec);
+                if (typeof window.getSelection === "function" ? (_ref = window.getSelection()) != null ? _ref.toString() : void 0 : void 0) {
+                    return;
                 }
-            }
-            if (type == 'percent') {
-                lowlabel = labels[i];
-                toplabel = labels[i + 1] - (mininc / 100);
-                lowlabel = (lowlabel * 100).formatMoney(2) + ' %';
-                if (!toplabel) {
-                    toplabel = " +";
-                } else {
-                    toplabel = ' to ' + (toplabel * 100).formatMoney(2) + ' %';
+                if ((_ref1 = document.selection) != null ? _ref1.createRange().text : void 0) {
+                    return;
                 }
-            }
-            if (type == 'regular') {
-                lowlabel = labels[i];
-                toplabel = labels[i + 1] - mininc;
-                if (!toplabel) {
-                    toplabel = " +";
-                } else {
-                    toplabel = ' to ' + toplabel;
-                }
-
-            }
-
-            //if there is a negative anywhere in 'toplabel' dont display (causes havoc with quantile )
-            if (toplabel.search('-') == -1) {
-                div.innerHTML += '<i style="background:' + color[i] + ';opacity: ' + fillOpacity + ';"></i> ' + '&nbsp;&nbsp;&nbsp;' + lowlabel + toplabel + '<br />';
-            }
-
-
-        }
-    } else {
-//labels for standard deviation are treated differently and dont depend on number type
-        var labels2 = [];
-
-        if (classes == 7) {
-            labels = ['< -2.5 Std. Dev.', '-1.5 to -2.5 Std. Dev', '-0.5 to -1.5 Std. Dev.', '0.5 to -0.5 Std. Dev.', '0.5 to 1.5 Std. Dev.', '1.5 to 2.5 Std. Dev.', '> 2.5 Std. Dev.'];
-        }
-        if (classes == 8) {
-            labels = ['< -1.5 Std. Dev.', '-1 to -1.5 Std. Dev', '-0.5 to -1 Std. Dev.', '0 to -0.5 Std. Dev.', '0 to 0.5 Std. Dev.', '0.5 to 1 Std. Dev.', '1 to 1.5 Std. Dev.', '> 1.5 Std. Dev.'];
-        }
-
-        for (i = 0; i < labels.length; i++) {
-
-            div.innerHTML += '<i style="background:' + color[i] + ';opacity: ' + fillOpacity + ';"></i> ' + '&nbsp;&nbsp;&nbsp;' + labels[i] + '<br />';
-
-        }
-
-
-    }
-    return div;
-};
-
-//clear selection button in table modal
-function clearsel() {
-    dataset = [];
-    redrawTable();
-
-    //change selected symbology back to unselected
-    map.eachLayer(function(layer) {
-        //console.log(layer.options);
-        if (layer.options) {
-            if (layer.options.color) {
-                if (layer.options.linecap == 'butt') {
-                    layer.setStyle({
-                        weight: lineweight,
-                        color: linecolor,
-                        lineopacity: lineopacity,
-                        linecap: 'round'
-                    });
-                }
-            }
-
-        }
-    });
-
-}
-
-//hide table - from button
-function mintable() {
-    $('#resizediv').hide();
-  updatequerysearchstring();
-}
-
-//min or max table - from button
-function minmaxtable() {
-  
-  //check the top attribute of the closebtn to figure if table needs to be minimized or maximized
-  var btnstate=$('#closebtn').css('top');
-  
-  if(btnstate=='3px'){
-    $('#resizediv').css('max-height','100%');  
-    $('#resizediv').css('height','100%');
-    $('#resizediv').css('padding-top','50px');  
-  $('#closebtn').css('top','53px');
-  $('#minmaxbtn').css('top','53px');
-$( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-minus-sign" ); //change icon
-  }else{
-    $('#resizediv').css('max-height','40%');  
-    $('#resizediv').css('height','auto');
-    $('#resizediv').css('padding-top','0px');  
-  $('#closebtn').css('top','3px');
-  $('#minmaxbtn').css('top','3px');  
-    $( "#minmaxbtn2" ).removeClass( "glyphicon-minus-sign" ).addClass( "glyphicon-plus-sign" ); //change icon
-  }
-
-  updatequerysearchstring();
-}
-
-
-
-//on dom loaded
-$(document).ready(function() {
-//begin
-  
-  $('#linkbutton').tooltip({placement : 'right'});
-
-  //get list of selected geographies (d) - store them in global variable (dataset)
-    	if(params.d!==undefined){
-		dataset=LZString.decompressFromEncodedURIComponent(params.d).split(',');
-	};
-  
-      //set classification scheme if in querystring
-  if(params.sn!==undefined){	
-		schemename=params.sn;
-    $("#classification").val(schemename).change();
-	}
-
-  
-      //change classification
-    $('#classification').change(
-        function() {
-          classes = 7; //default number of classes
-          
-          //if classes (cl) is in querystring, override default number of classes
-             if(params.cl!==undefined){	
-		           classes=params.cl;
-               delete params.cl;
-	          }
-          
-            schemename = this.value;
-          updatequerysearchstring();
-            if (schemename == 'jenks') {
-                $('#classes').html('<option value="5">5</option><option value="7" >7</option><option value="9">9</option>');
-            }
-            if (schemename == 'quantile') {
-                $('#classes').html('<option value="5">5</option><option value="7" >7</option><option value="9">9</option><option value="11">11</option>');
-            }
-            if (schemename == 'stddev') {
-                $('#classes').html('<option value="7" >7</option><option value="8">8</option>');
-            }
-          
-          $('#classes').val(classes);
-
-            filtercolorschemes();
-            
-
-        }
-    );
-
-  //trigger the function
-$('#classification').change();
-  
-
-  //when doubleclicking on row, remove item from selection (and table)
-    $(document).on('dblclick', 'tr', function() {
-        var classname = this.className;
-        for (var i = 0; i < dataset.length; i++) {
-            if (dataset[i] == Number(classname)) {
-                dataset.splice(i, 1);
-            }
-        }
-        $('.' + classname).remove();
-        //recalc footer
-       // writeFooter();  //do add this back in later
-      updatequerysearchstring();
-        //change color back to black //insane
-        geojsonLayer.setStyle(feat1);
-
-    });
-
-    //initialize bootstrap switch for MOE
-    $("[name='my-checkbox']").bootstrapSwitch({
-        animate: false
-    });
-
-
-    //moe toggle - bootstrap switch
-    $('input[name="my-checkbox"]').on('switchChange.bootstrapSwitch', function(event, state) {
-        //console.log(this); // DOM element
-        //console.log(event); // jQuery event
-        if (state) {
-            $('.moe').show();
-        } else {
-            $('.moe').hide();
-        }
-      updatequerysearchstring();
-    });
-  
-    //default is for MOE to be on (yes) - if querystring says 'no' turn it off
-      	if(params.moe!==undefined){	
-          if(params.moe=='no'){
-  $('input[name="my-checkbox"]').bootstrapSwitch('state', false);
-          }
-        }
-  
-    //looks for table dropdown change - changes table flavor
-    $('#tableoption').on('change', function() {
-        chgtblfl();
-    });
-  
-    //initialize stupid table plugin on our data table
-    $("#table").stupidtable();
-
-    //Create Easy Buttons (Top-Left)
-  
-  //theme modal & button
-    $('#homeModal').modal({
-        show: false
-    });
-    L.easyButton('fa fa-bars', function() {
-        $('#homeModal').modal('toggle');
-    }, 'Change Data Theme');
-  
-    //geo modal & button
-    $('#geoModal').modal({
-        show: false
-    });
-    L.easyButton('fa fa-compass', function() {
-        $('#geoModal').modal('toggle');
-    }, 'Change Geography Level');
-
-  //table button
-    L.easyButton('fa fa-table', function() {
-        $('#resizediv').toggle();
-      updatequerysearchstring();
-    }, 'View Table');
-
-    //chart modal & button
-    $('#chartModal').modal({
-        show: false
-    });
-    L.easyButton('fa fa-line-chart', function() {
-        $('#chartModal').modal('toggle');
-        $('#chartdiv').empty();
-        addchart();
-      setTimeout(function(){updatequerysearchstring();},1000);
-    }, 'View Chart');
-
-    //print modal & button
-    $('#dataModal').modal({show: false});  
-    L.easyButton('fa fa-floppy-o', function (){$('#dataModal').modal('toggle');},'Print Map'); 
-
-  //clear selected (eraser) button
-    L.easyButton('fa fa-eraser', function() {
-        clearsel();
-      updatequerysearchstring();
-    }, 'Clear Selection');
-
-    //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
-  if(params.print=='yes'){
-    console.log('printing');
-    $('.leaflet-control-search').hide();
-    $('.leaflet-control-zoom').hide();
-    $('.leaflet-control-locate').hide();
-    $('.leaflet-control-layers').hide();
-    $('.leaflet-bar').hide();
-    $('.navbar-nav').hide();
-    $('#popup').hide();
-    $('.spanhide').hide();
-  }
-  
-
-    //Initialize transparency slider
-    var trslider = $('#ex1').slider({
-        formatter: function(value) {
-            return value + '%';
-        }
-    });
-
-  //if a transparency value is set in the querystring, change the slider to that value
-    	if(params.tr!==undefined){	
-		fillOpacity=params.tr;
-        trslider.slider('setValue', parseInt(fillOpacity*100));
-	};
-
-    //when user stops moving transparency slider, change transparency of geojson layer
-    $("#ex1").on("slideStop", function(slideEvt) {
-        //lineopacity = slideEvt.value / 100; //transparency control as pct
-        fillOpacity = slideEvt.value / 100;
-
-        //transparency needs to be reflected in the legend
-        legend.removeFrom(map);
-        geojsonLayer.setStyle({
-            //opacity: lineopacity,
-            fillOpacity: fillOpacity
-        });
-        legend.addTo(map);
-      updatequerysearchstring();
-    });
-
-  
-  //every geojson feature will have a mouseover, mouseout, and click event.
-    function onEachFeature(feature, layer) {
-        layer.on({
-            mouseover: highlightFeature,
-            mouseout: mouseout,
-            click: featureSelect
-        });
-    }
-
-
-    // Create a mouseout event that undoes the mouseover changes
-    function mouseout(e) {
-        var rsstyle = e.layer.options.linecap;
-        var layer = e.target;
-
-        if (rsstyle == "butt") {
-            layer.setStyle({
-                opacity: 1,
-                weight: 2,
-                color: cselected
-            });
-        } else {
-            layer.setStyle({
-                opacity: lineopacity,
-                weight: lineweight,
-                color: linecolor
-            });
-        }
-        $("#popup").remove();
-    }
-
-
-    //initialize geojsonLayer
-    geojsonLayer = L.geoJson.ajax("", {
-      loading: function(){
-        map.spin(true);
-      },
-        middleware: function(data) {
-            getJson(data);
-        }, 
-        onEachFeature: onEachFeature
-    });
-
-  
-  //mouseover highlight
-    function highlightFeature(e) {
-        var layer = e.target;
-      
-      //can turn to off for no mouseover
-      if(cmouseover!=='off'){
-        layer.setStyle({
-            opacity: 1,
-            weight: 2,
-            color: cmouseover
-        });
-
-            //bring feature to front
-            if (!L.Browser.ie && !L.Browser.opera) {
-                layer.bringToFront();
-            }
-      }
-      
-        var fp = e.target.feature.properties;
-        var popupresult = eval(formula);
-
-        if (type == 'currency') {
-            popupresult = '$ ' + popupresult.formatMoney(0);
-        }
-
-        if (type == 'number') {
-            var resprec = (mininc + "").split(".")[1];
-            if (!resprec) {
-                resprec = 0;
-            } else {
-                resprec = resprec.length;
-            }
-            popupresult = popupresult.formatMoney(resprec);
-        }
-
-        if (type == 'percent') {
-            popupresult = (popupresult * 100).formatMoney(2) + ' %';
-        }
-        if (type == 'regular') {
-            popupresult = popupresult;
-        } //no formatting - think: median year housing unit built (only one)
-
-        // Create a popup
-        var popup = $("<div></div>", {
-            id: "popup",
-            css: {
-                position: "absolute",
-                top: "45px",
-                right: "100px",
-                zIndex: 1002,
-                backgroundColor: "white",
-                padding: "8px",
-                border: "1px solid #ccc"
-            }
-        });
-
-        // Insert a headline into that popup
-        var hed = $("<div></div>", {
-            text: fp.geoname + ": " + popupresult,
-            css: {
-                fontSize: "16px",
-                marginBottom: "3px"
-            }
-        }).appendTo(popup);
-
-        // Add the popup to the map
-        popup.appendTo("#map");
-      
-
-    }
-
-
-//on geojson click
-    function featureSelect(e) {
-
-        var layer = e.target;
-        var curcolor = (e.layer.options.linecap);
-
-        //convert json object to array
-        var arr = $.map(e.target.feature.properties, function(el) {
-            return el;
-        });
-
-        //if currently selected - remove it
-        if (curcolor == 'butt') {
-            layer.setStyle({
-                weight: lineweight,
-                color: linecolor,
-                lineopacity: lineopacity,
-                linecap: 'round'
-            });
-
-            //search dataset (geonum) array for item to remove
-            for (var i = 0; i < dataset.length; i++) {
-                if (dataset[i] == arr[1]) {
-                    dataset.splice(i, 1);
-                }
-            }
-            // Delete table row which has matching geonum class
-            $('.' + e.target.feature.properties.geonum).remove();
-            //send feature to back
-            if (!L.Browser.ie && !L.Browser.opera) {
-                layer.bringToBack();
-            }
-
-        } else { //else add it
-            layer.setStyle({
-                weight: 2,
-                color: cselected,
-                lineopacity: 1,
-                linecap: 'butt'
-            });
-
-            //bring feature to front
-            if (!L.Browser.ie && !L.Browser.opera) {
-                layer.bringToFront();
-            }
-
-            tblfl = $('#tableoption').val();
-            var rowstr = '';
-
-            var classadd = ''; //add moe class
-            var plusminus = '';
-
-            //add row to table
-            if (tblfl == '-1') {
-                //plain
-                rowstr = '<tr class="' + e.target.feature.properties.geonum + '">';
-                rowstr = rowstr + '<td>' + e.target.feature.properties.geoname + '</td>';
-                rowstr = rowstr + '<td>' + e.target.feature.properties.geonum + '</td>';
-                for (var k in e.target.feature.properties) {
-                    if (k != 'geoname' && k != 'geonum') {
-
-                        var resprec;
-
-                        if (k.search("moe") != -1) {
-                            classadd = "moe";
-                            plusminus = '&plusmn; ';
-                        } else {
-                            classadd = "";
-                            plusminus = '';
-                        }
-
-                        if (type == 'number' || type == 'percent') {
-                            resprec = ((e.target.feature.properties[k]) + "").split(".")[1];
-                            if (!resprec) {
-                                resprec = 0;
-                            } else {
-                                resprec = resprec.length;
-                            }
-                            rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + parseFloat(e.target.feature.properties[k]).formatMoney(resprec) + '</td>';
-                        }
-
-                        if (type == 'currency') {
-                            resprec = ((e.target.feature.properties[k]) + "").split(".")[1];
-                            if (!resprec) {
-                                resprec = 0;
-                            } else {
-                                resprec = resprec.length;
-                            }
-                            rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + '$' + parseFloat(e.target.feature.properties[k]).formatMoney(resprec) + '</td>';
-                        }
-
-                        /* if(type=='percent'){
-                          resprec= ((e.target.feature.properties[k])+"").split(".")[1];
-                          if(!resprec){resprec=0;}else{resprec = resprec.length;}
-                          rowstr=rowstr+'<td class="'+classadd+'">'+plusminus+parseFloat(e.target.feature.properties[k]).formatMoney(resprec)+'%</td>'; 
-                        } */ //percent cant happen
-
-                        if (type == 'regular') {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + e.target.feature.properties[k] + '</td>';
-                        }
-
-                    }
-                }
-                rowstr = rowstr + '</tr>';
-
-            } else {
-
-                //descriptive      //Table Flavor
-                var j = 0;
-                rowstr = '';
-                var fp = e.target.feature.properties;
-
-                //add matched records to table
-                rowstr = '<tr class="' + e.target.feature.properties.geonum + '">';
-                rowstr = rowstr + '<td>' + e.target.feature.properties.geoname + '</td>';
-                rowstr = rowstr + '<td>' + e.target.feature.properties.geonum + '</td>';
-
-
-
-                $.each(tabletree.data[tblfl].Data, function(k, v) {
-
-                    if ((tabletree.data[tblfl].Data[k].Formula).search("moe") != -1) {
-                        classadd = "moe";
-                        plusminus = '&plusmn; ';
-                    } else {
-                        classadd = "";
-                        plusminus = '';
-                    }
-                    if ((tabletree.data[tblfl].Data[k].FieldName) == "CV") {
-                        plusminus = '';
-                    } //no plusmn on coefficient of variance
-
-                    if (tabletree.data[tblfl].Data[k].type == "currency") {
-                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(eval(v.Formula)).formatMoney(0) + '</td>';
-                    }
-                    if (tabletree.data[tblfl].Data[k].type == "percent") {
-                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)).toFixed(2) + '" class="' + classadd + '">' + plusminus + Number(eval(v.Formula)).toFixed(2) + '%</td>';
-                    }
-                    if (tabletree.data[tblfl].Data[k].type == "regular") {
-                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + eval(v.Formula) + '</td>';
-                    }
-                    if (tabletree.data[tblfl].Data[k].type == "number") {
-                        var resprec = (eval(v.Formula) + "").split(".")[1];
-                        if (!resprec) {
-                            resprec = 0;
-                        } else {
-                            resprec = resprec.length;
-                        }
-                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).formatMoney(resprec) + '</td>';
-                    }
-
+                return $.Deferred(function () {
+                    var $clipboardContainer;
+                    $clipboardContainer = $("#clipboard-container");
+                    $clipboardContainer.empty().show();
+                    return $("<textarea id='clipboard'></textarea>").val(_this.value).appendTo($clipboardContainer).focus().select();
                 });
-
-                rowstr = rowstr + '</tr>';
-
-            }
-
-            $('#tablebody').append(rowstr);
-
-            //hide (or not) if class=moe
-            var checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
-            if (checkstate) {
-                $('.moe').show();
-            } else {
-                $('.moe').hide();
-            }
-
-            //add item to array
-            dataset.push(arr[1]);
-        }
-
-updatequerysearchstring();
-      
-        writeFooter();
-
-
-    }
-
-
-
-      //disable geo options at inappropriate zoom levels //should this be here??
-            var curzoom=map.getZoom();
-      if(curzoom<9){
-        $("#rbplace").hide();
-        $("#rbtract").hide();
-        $("#rbbg").hide();
-      }else{
-        $("#rbplace").show();
-        $("#rbtract").show();
-        $("#rbbg").show();
-      }
-  
-  
-    populate(); //populate them modal from datatree
-    drawcolorschemes(); //populate symbology portion of advanced dialog
-    legend.addTo(map); 
-    changeall('yes', '0');  //draw 
-  
-  
-
-
-    function populate() {
-
-      
-        //count different categories
-        var sectionsarray = [];
-        for (i = 0; i < datatree.data.length; i++) {
-            sectionsarray.push(datatree.data[i].section);
-        }
-        //whittle down sectionsarray to only unique items
-        var uniqueNames = [];
-        $.each(sectionsarray, function(i, el) {
-            if ($.inArray(el, uniqueNames) === -1) uniqueNames.push(el);
-        });
-
-        //sort array alphabetically
-        uniqueNames.sort();
-
-        //populate accordion1
-        for (i = 0; i < (parseInt((uniqueNames.length) / 2) + 1); i++) {
-            $('#accordion1').append('<div class="panel panel-default"><div class="panel-heading" role="tab" id="heading1' + i + '"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion1" href="#collapse' + i + '" aria-expanded="false" aria-controls="collapse1">' + uniqueNames[i] + '</a></h4></div><div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div id="id' + uniqueNames[i] + '" class="panel-body"></div></div></div>');
-        }
-
-        //populate accordion2 instead
-        for (i = (parseInt((uniqueNames.length) / 2) + 1); i < uniqueNames.length; i++) {
-            $('#accordion2').append('<div class="panel panel-default"><div class="panel-heading" role="tab" id="heading2' + i + '"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion2" href="#collapse' + i + '" aria-expanded="false" aria-controls="collapse1">' + uniqueNames[i] + '</a></h4></div><div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div id="id' + uniqueNames[i] + '" class="panel-body"></div></div></div>');
-        }
-
-        var vchecked = "";
-
-        //loop through - add all themes
-        for (i = 0; i < datatree.data.length; i++) {
-          if(params.v===undefined){
-            if (i === 0) {
-                vchecked = "checked";
-            } else {
-                vchecked = "";
-            }
-          }
-          if(params.v!==undefined){          
-            if (params.v==datatree.data[i].varcode) {
-                vchecked = "checked";
-            } else {
-                vchecked = "";
-            }
-          }
-            $('#id' + datatree.data[i].section).append('<div class="radio"><label><input type="radio" name="optionsRadios" value="' + datatree.data[i].varcode + '" ' + vchecked + '> ' + datatree.data[i].verbose + '</label></div>'); //to accordion
-            $('#advattribute').append('<option value="' + datatree.data[i].varcode + '" > ' + datatree.data[i].verbose + '</option>'); //to advanced selection tool
-        }
-
-    }
-
-    function drawcolorschemes() {
-        $('#colorschemes').html('');
-        var schemecount = 0;
-
-        //populate colorschemes
-        for (i = 0; i < colortree.colorschemes.length; i++) {
-
-
-
-            var cclasses = colortree.colorschemes[i].count; //check for correct number of classes
-            var prefix = colortree.colorschemes[i].schemename.substring(0, 2);
-
-            //classes to be added
-            var pt1 = "";
-            var pt2 = "";
-
-            if (prefix == 'mh') {
-                pt1 = "jenks";
-            }
-            if (prefix == 'sh') {
-                pt1 = "jenks";
-            }
-            if (prefix == 'ds') {
-                pt1 = "quantile";
-            }
-
-            if (cclasses == 5) {
-                pt2 = "c5";
-            }
-            if (cclasses == 7) {
-                pt2 = "c7";
-            }
-            if (cclasses == 8) {
-                pt2 = "c8";
-            }
-            if (cclasses == 9) {
-                pt2 = "c9";
-            }
-            if (cclasses == 11) {
-                pt2 = "c11";
-            }
-
-
-            var appendstring = '<label class="allradio radio-inline ' + pt1 + ' ' + pt2 + '"><input id="' + colortree.colorschemes[i].schemename + cclasses + '" type="radio" name="schemeRadios" class="allradio form-control ' + pt1 + ' ' + pt2 + '" value="' + colortree.colorschemes[i].schemename + '">';
-
-            for (j = 0; j < colortree.colorschemes[i].count; j++) {
-                appendstring = appendstring + '<span style="background-color:' + colortree.colorschemes[i].colors[j] + ';">&nbsp;&nbsp;</span>';
-            }
-
-            appendstring = appendstring + '</label>';
-
-          //add all colorscheme dom elements to dialog
-            $('#colorschemes').append(appendstring);
-
-        }
-      
-      filtercolorschemes();
-      
-
-      //if colorscheme info is in querystring, use it.  otherwise, use default
-          if(params.cs!==undefined){	
-		          colorscheme=params.cs;
-            $('#'+colorscheme+classes).prop('checked',true);
-              delete params.cs;
-            updatequerysearchstring();
-	        }else{
-                    //set default
-        $('#mh17').prop('checked', true);
-              updatequerysearchstring();
-          }
-
-    }
-
-  //calling this function means its time to refilter colorschems based on classification scheme and number of classes
-    function filtercolorschemes() {
-
-        $('.allradio').show();
-
-        if (classes == 5) {
-            $('.c7').hide();
-            $('.c8').hide();
-            $('.c9').hide();
-            $('.c11').hide();
-        }
-        if (classes == 7) {
-            $('.c5').hide();
-            $('.c8').hide();
-            $('.c9').hide();
-            $('.c11').hide();
-        }
-        if (classes == 8) {
-            $('.c5').hide();
-            $('.c7').hide();
-            $('.c9').hide();
-            $('.c11').hide();
-        }
-        if (classes == 9) {
-            $('.c5').hide();
-            $('.c7').hide();
-            $('.c8').hide();
-            $('.c11').hide();
-        }
-        if (classes == 11) {
-            $('.c5').hide();
-            $('.c7').hide();
-            $('.c8').hide();
-            $('.c9').hide();
-        }
-
-        if (schemename == "jenks") {
-            $('.quantile').hide();
-        }
-        if (schemename == "quantile" || schemename == "stddev") {
-            $('.jenks').hide();
-        }
-
-    }
-
-
-    //START ALL FUNCTIONS- DO THEY NEED TO BE WITHIN DOCUMENT READY?
-
-    //change data theme
-    $('input[name=optionsRadios]:radio').change(function() {
-      varcode=this.value;
-      updatequerysearchstring();
-        createnewtable = 0;
-        changeall('yes', '1');
-    });
-
-    //change colorscheme
-    $('input[name=schemeRadios]:radio').change(function() {
-        colorscheme = this.value;
-      updatequerysearchstring();
-        changeall('no', '0');
-    });
-
-    //change geo //change advanced dialog text, change minZoom level
-    $('input[name=geoRadios]:radio').change(function() {
-
-        sumlev = $('input:radio[name ="geoRadios"]:checked').val();
-
-        if (sumlev == '50') {
-          map.options.minZoom = 4;
-            $('#advgeo').text('counties');
-        }
-        if (sumlev == '40') {
-          map.options.minZoom = 4;
-            $('#advgeo').text('states');
-        }
-        if (sumlev == '140') {
-                    map.options.minZoom = 9;
-            $('#advgeo').text('tracts');
-        }
-        if (sumlev == '150') {
-                    map.options.minZoom = 9;
-            $('#advgeo').text('block groups');
-        }
-        if (sumlev == '160') {
-                    map.options.minZoom = 9;
-            $('#advgeo').text('places');
-        }
-
-        updatequerysearchstring();
-        changeall('yes', '0');
-    });
-
-
-
-    //change in classes dropdown
-    $('#classes').change(function() {
-        classes = this.value;
-      updatequerysearchstring();
-        filtercolorschemes();
-    });
-
-
-    //get all datatheme data from datatree.js , breaks from breakstree.js and colortree.js for sybolizing
-    function changeall(redraw, override) {
-    //override??
-
-        var i, j, k;
-
-        legend.removeFrom(map);
-
-        var manageradio = $('input:radio[name ="optionsRadios"]:checked').val();
-
-        for (i = 0; i < datatree.data.length; i++) {
-
-            if (manageradio == datatree.data[i].varcode) {
-                current_desc = datatree.data[i].verbose;
-                table = datatree.data[i].table;
-                type = datatree.data[i].type;
-                mininc = datatree.data[i].mininc;
-                minval = Number(datatree.data[i].minval);
-                numerator = datatree.data[i].numerator;
-                denominator = datatree.data[i].denominator;
-                moenumerator = datatree.data[i].moenumerator;
-                moedenominator = datatree.data[i].moedenominator;
-                moeformula = "(" + moenumerator + ")" + "/" + "(" + moedenominator + ")";
-                formula = "(" + numerator + ")" + "/" + "(" + denominator + ")";
-                summable = false;
-                favtable = datatree.data[i].favtable;
-                varcode = datatree.data[i].varcode;
-                usezeroasnull = datatree.data[i].usezeroasnull;
-                var symbarray = (datatree.data[i].favstyle).split(',');
-                if (override == '1') {
-                    schemename = symbarray[0];
-                    classes = symbarray[1];
-                    colorscheme = symbarray[2];
-                    //change value in dropdowns
-                    $('#classification').val(schemename);
-                    $('#classes').val(classes);
-                    $('#' + colorscheme + classes).prop('checked', true);
-                    filtercolorschemes();
-                }
-            }
-        }
-      
-              //loop through colorschemes only - we have breaks info and colorscheme    
-        for (k = 0; k < colortree.colorschemes.length; k++) {
-
-            if (colortree.colorschemes[k].schemename == colorscheme && colortree.colorschemes[k].count == classes) {
-                ifnulljson = colortree.colorschemes[k].ifnull;
-                ifzerojson = colortree.colorschemes[k].ifzero;
-                symbolcolors = colortree.colorschemes[k].colors;
-            }
-        }
-      
-      //localStorage.setItem("mhi_county_jenks_7", JSON.stringify([79183,64205,54206,46817,40204,33445,1]));
-        var geo;
-        
-        if(sumlev==40){geo='state';}
-        if(sumlev==50){geo='county';}
-        if(sumlev==140){geo='tract';}
-        if(sumlev==150){geo='bg';}
-        if(sumlev==160){geo='place';}    
-
-
-      
-if(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes)){
-breaks=JSON.parse(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes));
-
-  
-        legend.addTo(map);
-
-        if (redraw == "yes") {
-            ajaxcall();
-        } else {
-            geojsonLayer.setStyle(feat1);
-        }
-
-  
-}else{
-
-        var stripnum=numerator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g,',');
-        var stripdenom=denominator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g,',');
-
-        
-        //double check discard = maybe related to usezeroasnull
-      $.ajax({
-          url: "assets/php/getranges.php?geo="+geo+"&num="+stripnum+"&denom="+stripdenom+"&discard="+usezeroasnull,
-          dataType: 'json',
-          jsonpCallback: 'getJson',
-          success: jsonstring
-      });  
-        
-
-
-}
-      
-
-        
-
-        
-    function jsonstring(thedata) {  //after successfull ajax call, data is sent here
-
-     
-  
-      var max=ss.max(thedata);
-
-      if(max===0){thedata=[1,2,3,4,5,6,7,8,9,10,11,12,13,14];}  //all values in array are 0. (presumably no bg data)  Add a '1' to the array so simplestatistics library doesnt fail computing jenks.
-      
-      
-      var mean=ss.mean(thedata);
-
-      var median=ss.median(thedata);
-
-      var stddev=ss.standard_deviation(thedata);
-
-      
-      var jenks5=ss.jenks(thedata,5);
-      jenks5[0]=minval;
-      jenks5.pop();      
-      var jenks7=ss.jenks(thedata,7);
-      jenks7[0]=minval; 
-      jenks7.pop();          
-      var jenks9=ss.jenks(thedata,9);
-      jenks9[0]=minval;
-      jenks9.pop();    
-      
-      var quantile5=[ss.quantile(thedata,0.8),ss.quantile(thedata,0.6),ss.quantile(thedata,0.4),ss.quantile(thedata,0.2),minval];
-      var quantile7=[ss.quantile(thedata,0.857143),ss.quantile(thedata,0.714286),ss.quantile(thedata,0.57143),ss.quantile(thedata,0.42857),ss.quantile(thedata,0.28571),ss.quantile(thedata,0.14286),minval];
-      var quantile9=[ss.quantile(thedata,0.88888),ss.quantile(thedata,0.77777),ss.quantile(thedata,0.66666),ss.quantile(thedata,0.55555),ss.quantile(thedata,0.44444),ss.quantile(thedata,0.33333),ss.quantile(thedata,0.22222),ss.quantile(thedata,0.11111),minval];
-      var quantile11=[ss.quantile(thedata,0.90909),ss.quantile(thedata,0.81818),ss.quantile(thedata,0.72727),ss.quantile(thedata,0.63636),ss.quantile(thedata,0.54545),ss.quantile(thedata,0.45454),ss.quantile(thedata,0.36364),ss.quantile(thedata,0.27273),ss.quantile(thedata,0.18182),ss.quantile(thedata,0.09091),minval];      
-
- 
-      //half stddev breaks (8)
-      var standard8=[median+(stddev*1.5),median+(stddev*1),median+(stddev*0.5),median,median-(stddev*0.5),median-(stddev*1),median-(stddev*1.5),minval];
-      //wide stddev breaks (7)
-      var standard7=[median+(stddev*2.5),median+(stddev*1.5),median+(stddev*0.5),median-(stddev*0.5),median-(stddev*1.5),median-(stddev*2.5),minval];   
-      
-        
-      
-      
-      eval("localStorage." + varcode+"_" + geo + "_jenks_5 = '" + JSON.stringify(jenks5.reverse()) + "'");
-      eval("localStorage." + varcode+"_" + geo + "_jenks_7 = '" + JSON.stringify(jenks7.reverse()) + "'");
-      eval("localStorage." + varcode+"_" + geo + "_jenks_9 = '" + JSON.stringify(jenks9.reverse()) + "'");
-
-      eval("localStorage." + varcode+"_" + geo + "_quantile_5 = '" + JSON.stringify(quantile5) + "'");
-      eval("localStorage." + varcode+"_" + geo + "_quantile_7 = '" + JSON.stringify(quantile7) + "'");
-      eval("localStorage." + varcode+"_" + geo + "_quantile_9 = '" + JSON.stringify(quantile9) + "'");
-      eval("localStorage." + varcode+"_" + geo + "_quantile_11 = '" + JSON.stringify(quantile11) + "'");      
-
-      eval("localStorage." + varcode+"_" + geo + "_standard_7 = '" + JSON.stringify(standard7) + "'");
-      eval("localStorage." + varcode+"_" + geo + "_standard_8 = '" + JSON.stringify(standard8) + "'");        
-
-
-      breaks=JSON.parse(eval("localStorage."+varcode+"_"+geo+"_"+schemename+"_"+classes));
-      
-      
-        legend.addTo(map);
-
-        if (redraw == "yes") {
-            ajaxcall();
-        } else {
-            geojsonLayer.setStyle(feat1);
-        }
-
-      
-    } 
-
-     
-
-
-
-
-      
-    }
-
-  
-  //keep track of time.  when stopped moving for two seconds, redraw
-      map.on('movestart', function() {
-      var d = new Date();
-      globalbusy = d.getTime(); 
-      });
- 
-    map.on('moveend', function() {
-
-      updatequerysearchstring();
-
-      var d = new Date();
-      globalbusy = d.getTime(); 
-
-      
-      setTimeout(function(){ 
-        var e=new Date();
-        var curtime = e.getTime();
-              if(curtime>= (globalbusy+1000)){
-                
-        //get center of map point
-        var c = map.getCenter();
-        var clat = c.lat;
-        var clng = c.lng;
-
-        //if center point is still within the current map bounds, then dont do anything.  otherwise, run query again
-        if (clat < nelat && clat > swlat && clng < nelng && clng > swlng) {
-          
-          if(map.getZoom()!==lastzoom){ ajaxcall(); }
-          
-        } else {
-            ajaxcall();
-        }
-                
-                
-                
-              }
-        }, 1000);
-      
-      
-    }); // end 'on moveend'
-
-    map.on('zoomstart', function() {
-      var d = new Date();
-      globalbusy = d.getTime(); 
-    });
-  
-    //when map is zoomed in or out
-    map.on('zoomend', function() {
-
-      updatequerysearchstring();
-
-      var d = new Date();
-      globalbusy = d.getTime(); 
-      
-      setTimeout(function(){ 
-        var e=new Date();
-        var curtime = e.getTime();
-        
-              if(curtime>= (globalbusy+1000)){
-
-          if(map.getZoom()!==lastzoom){ ajaxcall(); }
-
-              }
-        }, 1000);
-      
-      //grey radio buttons for geography levels if zoomed out too far
-      var curzoom=map.getZoom();
-      if(curzoom<9){
-        $("#rbplace").hide();
-        $("#rbtract").hide();
-        $("#rbbg").hide();
-      }else{
-        $("#rbplace").show();
-        $("#rbtract").show();
-        $("#rbbg").show();
-      }
-      //rbplace
-      
-    });
-
-
-
-    //change table flavor
-    function chgtblfl() {
-
-        tblfl = $('#tableoption').val();
-
-        if (tblfl == -1) {
-            favtable = "Plain";
-        } else {
-            favtable = tabletree.data[tblfl].TableAlias;
-        }
-
-        stopafterheader = 0;
-        var geonums = '';
-
-        //turn dataset into a comma delimited string and call it geoids
-        geonums = dataset.join(",");
-
-        $('#tablebody').empty();
-        $('#tableheader').empty();
-        $('#tablefooter').empty();
-
-        //ajax call to load selected features
-
-        if (dataset.length === 0) {
-            stopafterheader = 1;
-            geonums = '108079';
-        } //if nothing selected, we still need to query database to get header info.  We give the query a dummy goenum to chew on.  It won't add that row due to the stopafterhearder variable.
-
-
-        $.ajax({
-            type: "POST",
-            url: "assets/php/demogpost.php",
-            data: "db=acs0913&schema=data&table=" + table + "&geonum=" + geonums + "&moe=yes",
-            dataType: 'json',
-            jsonpCallback: 'getJson',
-            success: addRows
-        });
-
-
-    }
-
-
-
-    //after successfull ajax call, data is sent here
-    function getJson(data) {
-        $("#popup").remove();
-
-        geojsonLayer.clearLayers(); //(mostly) eliminates double-draw (should be technically unneccessary if you look at the code of leaflet-ajax...but still seems to help)
-        geojsonLayer.addData(data);
-
-        geojsonLayer.setStyle(feat1);   
-        map.addLayer(geojsonLayer);
-        map.spin(false);
-
-        //OMG OMG, I Figured out how to bring selected features to the front
-        map.eachLayer(function(layer) {
-            if (layer.options) {
-                if (layer.options.color) {
-                    if (layer.options.linecap == 'butt') {
-                        //bring feature to front
-                        if (!L.Browser.ie && !L.Browser.opera) {
-                            layer.bringToFront();
-                        }
-                    }
-                }
-
+            };
+        })(this));
+        $(document).keyup(function (e) {
+            if ($(e.target).is("#clipboard")) {
+                return $("#clipboard-container").empty().hide();
             }
         });
-      
-        if(params.dt!==undefined){
-          
-          if(params.dt=='yes'){
-            $('#resizediv').toggle();
-          }
-          
-          if(params.dt=='max'){
-            $('#resizediv').toggle();
-                $('#resizediv').css('max-height','100%');  
-    $('#resizediv').css('height','100%');
-    $('#resizediv').css('padding-top','50px');  
-  $('#closebtn').css('top','53px');
-  $('#minmaxbtn').css('top','53px');
-$( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-minus-sign" );
-          }
-          
-          delete params.dt;
-        }
-
-              if(params.ch!==undefined){
-          
-          if(params.ch=='yes'){
-        $('#chartModal').modal('toggle');
-        $('#chartdiv').empty();
-        addchart();
-      setTimeout(function(){updatequerysearchstring();},1000);
-          }
-          
-          delete params.ch;
-        }
-      
-      
     }
 
-    function ajaxcall() {
+    _Class.prototype.set = function (value) {
+        this.value = value;
+    };
 
-        geojsonLayer.clearLayers();
+    return _Class;
 
-        lastzoom = map.getZoom();
-        var r = map.getBounds();
-        nelat = (r._northEast.lat);
-        nelng = (r._northEast.lng);
-        swlat = (r._southWest.lat);
-        swlng = (r._southWest.lng);
-
-        var diff1 = (nelat - swlat) / 2;
-        var diff2 = (nelng - swlng) / 2;
-
-        //we calculate a bounding box equal much larger than the actual visible map.  This preloades shapes that are off the map.  Combined with the center point query, this will allow us to not have to requery the database on every map movement.
-        var newbounds = (swlng - diff2) + "," + (swlat - diff1) + "," + (nelng + diff2) + "," + (nelat + diff1);
-
-        geojsonLayer.refresh("../CensusAPI/geojson.php?db=" + db + "&schema=" + schema + "&sumlev=" + sumlev + "&limit=" + limit + "&table=" + table + "&bb=" + newbounds + "&zoom=" + map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
-
-    }
+})());
 
     function commafy(nStr) {
         var x, x1, x2, rgx;
@@ -2449,374 +2828,3 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
         return x1 + x2;
     }
 
-
-}); //end document on ready
-
-function redrawTable() {
-
-    var str = '';
-    var parsehtml;
-    var seltext = '';
-
-    if (tblfl == '-1') {
-        seltext = 'selected';
-    } else {
-        seltext = '';
-    }
-
-    $('#tableoption').empty();
-    $('#tableoption').append($.parseHTML("<option value='-1' " + seltext + ">Plain Table</option>"));
-
-    //get table id, search for table id in tabletree (tableflavor.js) to populate select box 'tableoption'
-
-    for (i = 0; i < tabletree.data.length; i++) {
-
-        //setting value=array index for tabletree
-        if (tabletree.data[i].ActualTable == table) {
-            if (tabletree.data[i].TableAlias == favtable) {
-                tblfl = String(i);
-            }
-            if (String(i) == tblfl) {
-                seltext = 'selected';
-            } else {
-                seltext = '';
-            }
-            str = "<option value='" + i + "' " + seltext + ">" + tabletree.data[i].TableAlias + "</option>";
-            parsehtml = $.parseHTML(str);
-            $('#tableoption').append(parsehtml);
-        }
-    }
-
-    stopafterheader = 0;
-    var geonums = '';
-
-
-    //turn dataset into a comma delimited string and call it geoids
-    geonums = dataset.join(",");
-
-
-    $('#tablebody').empty();
-    $('#tableheader').empty();
-    $('#tablefooter').empty();
-    $('#tablefooter').hide();
-    //ajax call to load selected features
-
-    if (dataset.length === 0) {
-        stopafterheader = 1;
-        geonums = '108079';
-    } //if nothing selected, we still need to query database to get header info.  We give the query a dummy goenum to chew on.  It won't add that row due to the stopafterhearder variable.
-
-
-    $.ajax({
-        type: "POST",
-        url: "assets/php/demogpost.php",
-        data: "db=acs0913&schema=data&table=" + table + "&geonum=" + geonums + "&moe=yes",
-        dataType: 'json',
-        jsonpCallback: 'getJson',
-        success: addRows
-    });
-
-
-
-}
-
-
-
-function addRows(data) {
-
-        //create column headers
-        var tblstr = '';
-        var datatype = 'float';
-        var tableclassadd = '';
-
-
-        tblfl = $('#tableoption').val();
-
-        //Plain Table
-        //if select value is 0, it means plain table is selected
-        if (tblfl == '-1') {
-            $.each(data.data[0], function(k, v) {
-
-                if (k.search("moe") != -1) {
-                    tableclassadd = "moe";
-                } else {
-                    tableclassadd = "";
-                }
-                if (k != 'state' && k != 'county' && k != 'place' && k != 'tract' && k != 'bg') {
-
-                    if (k == 'geoname') {
-                        datatype = "string";
-                    } else {
-                        datatype = "float";
-                    }
-                    tblstr = tblstr + '<th data-sort="' + datatype + '" class="' + tableclassadd + '">' + k + '</th>';
-                }
-            });
-        } else {
-
-            //Table Flavor
-            //if select value >0 that means a table flavor is selected        
-
-            //First Two Columns Are Always Geoname and Geonum
-            tblstr = tblstr + '<th data-sort="string">Name</th>';
-            tblstr = tblstr + '<th data-sort="int">ID</th>';
-
-            for (i = 0; i < tabletree.data[tblfl].Data.length; i++) {
-
-                //console.log(tabletree.data[tblfl].Data[i].Formula);
-                if ((tabletree.data[tblfl].Data[i].Formula).search("moe") != -1) {
-                    tableclassadd = "moe";
-                } else {
-                    tableclassadd = "";
-                }
-
-                tblstr = tblstr + '<th data-sort="' + datatype + '" class="' + tableclassadd + '">' + tabletree.data[tblfl].Data[i].FieldName + '</th>';
-
-            }
-
-
-        }
-
-
-        //Both Plain and Table Favor Append tblstr
-        $('#tableheader').append(tblstr);
-
-
-
-        if (stopafterheader === 0) {
-            //add rows
-            var rowstr = '';
-            var classadd = '';
-            var plusminus = '';
-
-            if (tblfl == '-1') {
-                //Plain
-                for (i = 0; i < (data.data).length; i++) {
-
-                    //add matched records to table
-                    rowstr = '<tr class="' + data.data[i].geonum + '">';
-
-                    $.each(data.data[i], function(k, v) {
-                        if (k == 'geoname' || k == 'geonum') {
-                            rowstr = rowstr + '<td>' + v + '</td>';
-                        }
-                        if (k != 'state' && k != 'county' && k != 'place' && k != 'tract' && k != 'bg' && k != 'geoname' && k != 'geonum') {
-
-                            if (k.search("moe") != -1) {
-                                classadd = "moe";
-                                plusminus = '&plusmn; ';
-                            } else {
-                                classadd = "";
-                                plusminus = '';
-                            }
-
-                            if (type == "currency") {
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(v).formatMoney(0) + '</td>';
-                            }
-                            if (type == "number" || type == "percent") {
-                                var resprec = (v + "").split(".")[1];
-                                if (!resprec) {
-                                    resprec = 0;
-                                } else {
-                                    resprec = resprec.length;
-                                }
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + parseFloat(v).formatMoney(resprec) + '</td>';
-                            }
-                            if (type == "regular") {
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + v + '</td>';
-                            }
-
-
-                        }
-                    });
-
-                    rowstr = rowstr + '</tr>';
-
-                    //Both Plain and Table Flavor Append Rows Here
-                    $('#tablebody').append(rowstr);
-                }
-
-
-            } else {
-
-                var fp;
-
-                //Table Flavor
-                for (i = 0; i < (data.data).length; i++) {
-                    //console.log(i);
-                    //add matched records to table
-                    rowstr = '<tr class="' + data.data[i].geonum + '">';
-                    rowstr = rowstr + '<td>' + data.data[i].geoname + '</td>';
-                    rowstr = rowstr + '<td>' + data.data[i].geonum + '</td>';
-
-
-                    $.each(tabletree.data[tblfl].Data, function(k, v) {
-                        fp = data.data[i];
-
-                        if ((tabletree.data[tblfl].Data[k].Formula).search("moe") != -1) {
-                            classadd = "moe";
-                            plusminus = '&plusmn; ';
-                        } else {
-                            classadd = "";
-                            plusminus = '';
-                        }
-                        if ((tabletree.data[tblfl].Data[k].FieldName) == "CV") {
-                            plusminus = '';
-                        } //no plusmn on coefficient of variance
-
-                        if (tabletree.data[tblfl].Data[k].type == "currency") {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(eval(v.Formula)).formatMoney(0) + '</td>';
-                        }
-                        if (tabletree.data[tblfl].Data[k].type == "regular") {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + eval(v.Formula) + '</td>';
-                        }
-                        if (tabletree.data[tblfl].Data[k].type == "number") {
-                            var resprec = (eval(v.Formula) + "").split(".")[1];
-                            if (!resprec) {
-                                resprec = 0;
-                            } else {
-                                resprec = resprec.length;
-                            }
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).formatMoney(resprec) + '</td>';
-                        }
-                        if (tabletree.data[tblfl].Data[k].type == "percent") {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)).toFixed(2) + '" class="' + classadd + '">' + plusminus + Number(eval(v.Formula)).toFixed(2) + '%</td>';
-                        }
-                        //rowstr=rowstr+'<td>'+eval(v.Formula)+'</td>';        
-
-                    });
-                    rowstr = rowstr + '</tr>';
-
-                    //Both Plain and Table Flavor Append Rows Here
-                    $('#tablebody').append(rowstr);
-                }
-
-            }
-
-
-            //hide (or not) if class=moe
-            var checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
-            if (checkstate) {
-                $('.moe').show();
-            } else {
-                $('.moe').hide();
-            }
-
-
-            writeFooter();
-
-
-        } //stop after header
-    } //end addRows
-
-
-
-function writeFooter() {
-//needs so much work...not included  work on and add later
-
-    //write table to an array
-    var array = [];
-    var headers = [];
-
-    $('#table th').each(function(index, item) {
-        headers[index] = $(item).html();
-    });
-
-    $('#tablebody tr').has('td').each(function() {
-        var arrayItem = {};
-        $('td', $(this)).each(function(index, item) {
-            arrayItem[headers[index]] = $(item).html();
-        });
-        array.push(arrayItem);
-    });
-
-    //console.log(headers);  
-    //console.log(array);
-
-
-    //console.log(array.length);
-
-    if (array.length === 0) {
-        $('#tablefooter').hide();
-    } else {
-        $('#tablefooter').show();
-    }
-
-    //clear whatever was in the sum row previously
-    $('#tablefooter').empty();
-
-    //check to make sure summable is possible
-    if (summable) {
-
-        //first two cells will always look like this
-        var footstr = '<td>Totals</td>';
-        footstr = footstr + '<td></td>';
-
-
-        //plain
-        var runningval = 0;
-        var runningmoe = 0;
-        var n = '';
-        var o = '';
-        var p;
-        var addmoeclass = '';
-        var plusminus = '';
-
-        for (var l = 2; l < headers.length; l++) {
-
-            runningval = 0;
-            runningmoe = 0;
-
-            if ((headers[l]).search("moe") !== -1) {
-                addmoeclass = 'moe';
-            } else {
-                addmoeclass = '';
-            }
-
-            for (var m = 0; m < array.length; m++) {
-
-                runningval = runningval + Number((array[m][headers[l]]).replace(/[^a-zA-Z0-9]/g, '')); //replace all charcters not numbers and ???letters
-                runningmoe = runningmoe + Math.pow(runningval, 2); //revisit this.  This isn't right
-                if (array[m][headers[l]].search(/\$/g) !== -1) {
-                    n = '$';
-                } //dollar flag
-                if (array[m][headers[l]].search(/%/g) !== -1) {
-                    o = '%';
-                } //pct flag
-                if (array[m][headers[l]].search(",") !== -1) {
-                    p = 1;
-                } //comma flag
-
-            }
-
-            runningmoe = Math.sqrt(runningmoe);
-
-            //if we're in an moe field, switch to give the moe calculation
-            if (addmoeclass == "moe") {
-                runningval = runningmoe;
-                plusminus = '&plusmn; ';
-            } else {
-                plusminus = '';
-            }
-
-            footstr = footstr + '<td class="' + addmoeclass + '">' + plusminus + n + runningval.formatMoney(0) + o + '</td>';
-        }
-
-        //write new footer
-        $('#tablefooter').html(footstr);
-
-        //hide (or not) if class=moe
-        var checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
-        if (checkstate) {
-            $('.moe').show();
-        } else {
-            $('.moe').hide();
-        }
-
-    } else {
-
-        $('#tablefooter').hide();
-
-    } // end if summable
-
-}
