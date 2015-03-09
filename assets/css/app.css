@@ -342,3 +342,62 @@ table tfoot td, table tfoot th, table tfoot tr {text-align: center; font: 120%  
   margin-left: auto ;
   margin-right: auto ;
   }
+
+    #chartdiv {
+    font: 10px sans-serif;
+}
+    
+     #titletext {
+    font: 16px sans-serif;
+       font-weight: bold;
+}   
+    
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+.bar {
+    fill: steelblue;
+}
+.x.axis path {
+    display: none;
+}
+    
+    .line {
+  fill: none;
+  stroke: #444;
+  stroke-width: 1.5px;
+}
+    
+    path{
+    shape-rendering:crispEdges;
+}
+    
+    .no-transition {
+  -webkit-transition: height 0.01s;
+  -moz-transition: height 0.01s;
+  -ms-transition: height 0.01s;
+  -o-transition: height 0.01s;
+  transition: height 0.01s;
+}
+
+    #clipboard-container{
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: 100px;
+      height: 100px;
+
+   }
+    
+      #linkbutton{
+      position: absolute;
+      top: 15px;
+      left: 13px;
+              z-index: 5999;
+   }  
+    
+    
+.red-tooltip + .tooltip > .tooltip-inner {background-color: #800000; opacity: 1;}
+    

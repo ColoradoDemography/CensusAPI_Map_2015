@@ -48,7 +48,7 @@ L.easyButton = function( btnIcon , btnFunction , btnTitle , btnMap ) {
   } else if ( btnMap ) {
     btnMap.addControl(newControl);
   } else {
-    map.addControl(newControl);
+    cMap.map.addControl(newControl);
   }
   return newControl;
 };

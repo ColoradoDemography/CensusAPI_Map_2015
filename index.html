@@ -31,64 +31,7 @@
     <link rel="stylesheet" href="assets/css/bootstrap-switch.css">
 
   <style>
-    #chartdiv {
-    font: 10px sans-serif;
-}
-    
-     #titletext {
-    font: 16px sans-serif;
-       font-weight: bold;
-}   
-    
-.axis path, .axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-}
-.bar {
-    fill: steelblue;
-}
-.x.axis path {
-    display: none;
-}
-    
-    .line {
-  fill: none;
-  stroke: #444;
-  stroke-width: 1.5px;
-}
-    
-    path{
-    shape-rendering:crispEdges;
-}
-    
-    .no-transition {
-  -webkit-transition: height 0.01s;
-  -moz-transition: height 0.01s;
-  -ms-transition: height 0.01s;
-  -o-transition: height 0.01s;
-  transition: height 0.01s;
-}
 
-    #clipboard-container{
-      position: absolute;
-      top: 5px;
-      left: 5px;
-      width: 100px;
-      height: 100px;
-
-   }
-    
-      #linkbutton{
-      position: absolute;
-      top: 15px;
-      left: 13px;
-              z-index: 5999;
-   }  
-    
-    
-.red-tooltip + .tooltip > .tooltip-inner {background-color: #800000; opacity: 1;}
-    
   </style>
   
 </head>
@@ -126,9 +69,9 @@
         
 
 <div id="resizediv" style="display: none;">
-     <span id="minmaxbtn" class="pull-left inline" onclick="minmaxtable();"><button type="button" class="btn btn-primary btn-xs">
+     <span id="minmaxbtn" class="pull-left inline" ><button id="minmaxclick"  type="button" class="btn btn-primary btn-xs">
   <span id="minmaxbtn2"  class="glyphicon glyphicon-plus-sign" aria-hidden="true"  ></span>
-</button></span>     <span id="closebtn" class="pull-left inline" onclick="mintable();"><button type="button" class="btn btn-primary btn-xs">
+</button></span>     <span id="closebtn" class="pull-left inline" ><button id="mintableclick" type="button" class="btn btn-primary btn-xs">
   <span class="glyphicon glyphicon-remove" aria-hidden="true"  ></span>
 </button></span>
 <br />
@@ -143,7 +86,7 @@
   <div class="col-xs-4">   
       <form class="inline" action="assets/php/getCSV.php" method ="post" > 
         <input class="inline"  type="hidden" name="csv_text" id="csv_text">
-        <button type="submit" class="btn btn-primary btn-xs inline" onclick="getCSVData();" download>CSV</button>
+        <button type="submit" class="btn btn-primary btn-xs inline" id="getcsvdata" download>CSV</button>
       </form>   
    </div>
 
@@ -439,7 +382,7 @@
                             &nbsp;&nbsp;AND</p>
                           <!--<p>County&nbsp;=&nbsp;&nbsp;<select><option value='ALL' selected>All</option></select>&nbsp;&nbsp;AND</p>-->
                           <p>Attribute:&nbsp;
-                            <select id="advattribute" onchange="advenable(this.value);">
+                            <select id="advattribute" >
                               <option value='none' selected>None</option>
                             </select>
                             &nbsp;&nbsp;is&nbsp;&nbsp;
@@ -451,7 +394,7 @@
                               <option value='e'>=</option>                              
                             </select>
                             &nbsp;&nbsp;<input type="text" id="advtext" disabled /></p>
-                    <button type="button" class="btn btn-default inline" onclick="querygeonums();">Select</button>                            
+                    <button type="button" class="btn btn-default inline" id="querygeonums" >Select</button>                            
                         </div>
                       
                       
@@ -459,7 +402,7 @@
                           <br />
                           <p>
                                <span class="inline"><b>MOE:</b>&nbsp;&nbsp;<input id="moecheck" type="checkbox" name="my-checkbox" data-size="mini" checked/></span><br /><br />
-                             <label for="cselected">Selection Color:&nbsp;</label><select id="cselected" onchange="cselectedchg(this.value);">
+                             <label for="cselected">Selection Color:&nbsp;</label><select id="cselected">
                               <option value='purple'>Purple</option>
                               <option value='blue'>Blue</option>
                               <option value='cyan'>Cyan</option>
@@ -468,7 +411,7 @@
                               <option value='orange'>Orange</option>  
                               <option value='red' selected>Red</option>  
                             </select>           <br /><br />
-                                <label for="cmouseover">Mouseover Color:&nbsp;</label><select id="cmouseover" onchange="cmouseoverchg(this.value);">
+                                <label for="cmouseover">Mouseover Color:&nbsp;</label><select id="cmouseover">
                               <option value='off'>Off</option>                            
                               <option value='rgb(128,0,127)' selected>Purple</option>
                               <option value='rgb(0,0,254)'>Blue</option>
@@ -503,7 +446,7 @@
       <div id="chartdiv" class="modal-body firstdiv">
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" onclick="setTimeout(function(){updatequerysearchstring();},1000);" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" id="closechart" data-dismiss="modal">Close</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -518,7 +461,7 @@
       </div>
       <div class="modal-body firstdiv">
             <div class="sidebar-pane" id="data">
-<button type="button" class="btn btn-default inline" onclick="download('png');">Download PNG</button>         
+<button type="button" class="btn btn-default inline" id="printbtn" >Download PNG</button>         
             </div><br />
 <div class="progress">
   <div  id="progressbar" class="progress-bar progress-bar-success no-transition" role="progressbar" aria-valuenow="0"
@@ -528,7 +471,7 @@
 </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal" onclick="resetslider();">Close</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal" id="resetslider" >Close</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -553,7 +496,7 @@
     <script src="assets/js/leaflet-search.js"></script>
     <script src="assets/js/spin.min.js"></script>
     <script src="assets/js/leaflet-spin.js"></script>
-    <script src="assets/js/easy-button.js"></script> 
+    <!--<script src="assets/js/easy-button.js"></script> -->
     <script src="assets/js/stupidtable.js"></script>
     <script src="assets/js/table2CSV.js"></script>  
     <script src="assets/js/bootstrap-switch.js"></script>
