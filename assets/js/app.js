@@ -1,6 +1,8 @@
 (function(){
   "use strict";
   
+  //jslint globals to ignore:  L $ google colortree datatree LZString History tabletree d3 ss
+  /*jslint browser: true, devel: true, evil: true, nomen: true, regexp: true, unparam: true, sloppy: true, white: true */
   
   //Leaflet Easy Button Library Function
   L.Control.EasyButtons = L.Control.extend({
@@ -63,7 +65,7 @@ L.easyButton = function( btnIcon , btnFunction , btnTitle , btnMap ) {
   
 //gets parameters from the address query string
 function parseQueryString(){
-     'use strict';
+
   var newstr, objURL;
 
                    newstr = String(window.location.search);
@@ -141,7 +143,7 @@ cMap.table = 'b19013';
 
 cMap.usezeroasnull = 'yes';
 cMap.breaks = [];
-cMap.varcode = 'mhi';
+cMap.varcode = cMap.params.v || 'mhi';
 
 cMap.ifnulljson = {};
 cMap.ifzerojson = {};
@@ -182,7 +184,7 @@ cMap.lastzoom=8;
 
 //after a major map action, the query search string (address) is updated with the new state of the application
 function updatequerysearchstring(){
-     'use strict';
+     
   var ch, tr, s, v, sn, cs, cl, dt, d, moe, dstring, compressed, btnstate, urlstr, newurl;
   
   ch=''; //chart
@@ -224,12 +226,6 @@ function updatequerysearchstring(){
   
 }
 
-
-
-//if varcode (v) stated in parameter string, use it (override default)
-    if(cMap.params.v!==undefined){	
-		cMap.varcode=cMap.params.v;
-	}
 
 //change selection color
 function cselectedchg(newcolor){
@@ -423,12 +419,6 @@ var locateControl = L.control.locate({
     }
 }).addTo(cMap.map);
 
-/* Larger screens get expanded layer control and visible sidebar */
-if (document.body.clientWidth <= 767) {
-    var isCollapsed = true;
-} else {
-    var isCollapsed = false;
-}
 
 //add layer control
 L.control.layers(baseLayers, groupedOverlays, {
@@ -442,7 +432,7 @@ var legend = L.control({
 
 //create or recreate legend
 legend.onAdd = function() {
-     'use strict';
+     
 var i, j, labels = [], color = [], div, lowlabel, toplabel, resprec;
 
   //retrieve individual colors depending on colorscheme and number of classes - puts those colors into color array
@@ -550,7 +540,7 @@ var i, j, labels = [], color = [], div, lowlabel, toplabel, resprec;
 
   //calling this function means its time to refilter colorschemes based on classification scheme and number of classes
     function filtercolorschemes() {
-   'use strict';
+   
       
         $('.allradio').show();
 
@@ -597,7 +587,7 @@ var i, j, labels = [], color = [], div, lowlabel, toplabel, resprec;
 
 
 function addRows(data) {
-   'use strict';
+   
   
         //create column headers
         var tblstr = '', datatype = 'float', tableclassadd = '', rowstr = '', classadd = '', plusminus = '', resprec, checkstate, i, fp;
@@ -731,7 +721,7 @@ function addRows(data) {
                         }
                         if ((tabletree.data[cMap.tblfl].Data[k].FieldName) === "CV") {
                             plusminus = '';
-                        } //no plusmn on coefficient of variance
+                        } //no plusmn on coefficient of variance 
 
                         if (tabletree.data[cMap.tblfl].Data[k].type === "currency") {
                             rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(eval(v.Formula),10).formatMoney(0) + '</td>';
@@ -780,7 +770,7 @@ function addRows(data) {
 
 
 function redrawTable() {
-   'use strict';
+   
   
     var str = '', parsehtml, seltext = '', geonums, i;
 
@@ -849,7 +839,7 @@ function redrawTable() {
 
 //symbolize everything right here!!!  Every geography feature in the view is iterated over
 function feat1(feature) {
-     'use strict';
+     
   
  var fp = feature.properties, mapvar = eval(cMap.formula), geonum = fp.geonum, newlinecolor = cMap.feature.linecolor, newlineweight, newlineopacity, newlinecap, getreverse, i, j;   
 
@@ -935,11 +925,11 @@ function feat1(feature) {
 
     //change table flavor
     function chgtblfl() {
-   'use strict';
+   
       
         cMap.tblfl = $('#tableoption').val();
 
-        if (cMap.tblfl === -1) {
+        if (cMap.tblfl === '-1') {
             cMap.favtable = "Plain";
         } else {
             cMap.favtable = tabletree.data[cMap.tblfl].TableAlias;
@@ -979,7 +969,7 @@ function feat1(feature) {
 //input parameters are JSONdata (from chartpost.php), xwidth & xheight to control the SVG size, and stateorusavg (State/USA average from an additional ajax call to chartpost.php)
 //most of this code found in various D3 examples around the web (thus not familiar in depth with how it works) - I've made cosmetic changes only
 function dochart(JSONdata, xwidth, xheight, stateorusavg) {
-   'use strict';
+   
   
   var margin, width, height, x0,x1, y0, y1, xAxis, tformat, yAxis, svg, ageNames, state, zero, errorBarArea, errorBars, lineData, lineFunction, lineGraph;
 
@@ -1243,7 +1233,7 @@ function dochart(JSONdata, xwidth, xheight, stateorusavg) {
 //function then retrieves percent or median data at the State level (if result set is from only one state) or national level (if result set contains geographies from multiple states)
 //that data is then passed into the chart creation routine
 function figurechart(JSONdata) {
-     'use strict';
+     
   
   var resultlength, xwidth, xheight, statearray, uniqueStates, sendgeonum, i;
 
@@ -1469,7 +1459,7 @@ function figurechart(JSONdata) {
 //called from pressing chart button (only)
 //the addchart() function gets data from the database, then funnels it to figurechart()
 function addchart() {
-   'use strict';
+   
   
     //take array of geonums and turn it into a comma delimited string
     var geonums = cMap.dataset.join(",");
@@ -1488,7 +1478,7 @@ function addchart() {
 
 //clear selection button in table modal
 function clearsel() {
-     'use strict';
+     
   
     cMap.dataset = [];
     redrawTable();
@@ -1516,7 +1506,7 @@ function clearsel() {
 
     // Create a mouseout event that undoes the mouseover changes
     function mouseout(e) {
-         'use strict';
+         
       
         var rsstyle = e.layer.options.linecap, layer = e.target;
 
@@ -1540,7 +1530,7 @@ function clearsel() {
   //mouseover highlight
     function highlightFeature(e) {
       
-         'use strict';
+         
       
         var layer = e.target, fp = e.target.feature.properties, popupresult = eval(cMap.formula), resprec, popup, hed;
       
@@ -1613,7 +1603,7 @@ function clearsel() {
 
 //on geojson click
     function featureSelect(e) {
-         'use strict';
+         
         var i, layer = e.target, curcolor = (e.layer.options.linecap), arr, rowstr = '', classadd = '', plusminus = '', resprec, fp, checkstate, k;
 
       
@@ -1807,7 +1797,7 @@ function mintable() {
 
 //min or max table - from button
 function minmaxtable() {
-     'use strict';
+     
   
   //check the top attribute of the closebtn to figure if table needs to be minimized or maximized
   var btnstate=$('#closebtn').css('top');
@@ -1835,7 +1825,7 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
 
   //called from index.html.  Determines whether to show or hide form controls based on whether the value of the select by attribute dropdown is equal to 'None'
 function advenable(curval) {
-     'use strict';
+     
     if (curval === 'none') {
         $("#advsign").prop("disabled", true);
         $("#advtext").prop("disabled", true);
@@ -1848,7 +1838,7 @@ function advenable(curval) {
 
 //function selects all matching geographies, highlights them, puts them into/draws table
 function selectgeonums(data) {
-     'use strict';
+     
 var i;
   
     cMap.dataset = [];  //clear existing selection (may want to think about option to add to existing selection set)
@@ -1866,7 +1856,7 @@ var i;
 
 //called from index.html when select button is pressed in advanced tools
 function querygeonums() {
-     'use strict';
+     
   
   var advstate, advattribute, advsign, advtext, advtable, advnumerator, advdenominator, i;
 
@@ -1900,7 +1890,7 @@ function querygeonums() {
 
 
     function ajaxcall() {
-         'use strict';
+         
       
       var r, diff1, diff2, newbounds;     
 
@@ -1928,7 +1918,7 @@ function querygeonums() {
 
     //get all datatheme data from datatree.js , breaks from breakstree.js and colortree.js for sybolizing
     function changeall(redraw, override) {
-         'use strict';
+         
     //override??
 
         var i, k, manageradio, symbarray, geo, stripnum, stripdenom;
@@ -2099,7 +2089,7 @@ cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.sch
 
     //after successfull ajax call, data is sent here
     function getJson(data) {
-         'use strict';
+         
         $("#popup").remove();
 
         cMap.geojsonLayer.clearLayers(); //(mostly) eliminates double-draw (should be technically unneccessary if you look at the code of leaflet-ajax...but still seems to help)
@@ -2159,7 +2149,7 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
     }
 
     function populate() {
-         'use strict';
+         
 var i, sectionsarray = [], uniqueNames = [], vchecked;
       
         //count different categories
@@ -2209,7 +2199,7 @@ var i, sectionsarray = [], uniqueNames = [], vchecked;
     }
 
     function drawcolorschemes() {
-         'use strict';
+         
       var i,j, cclasses, prefix, pt1, pt2, appendstring;
       
         $('#colorschemes').html('');
@@ -2286,7 +2276,7 @@ var i, sectionsarray = [], uniqueNames = [], vchecked;
 
 //table2CSV plugin - from button
 function getCSVData() {
-     'use strict';
+     
     var csv_value = $('#table').table2CSV({
         delivery: 'value'
     });
@@ -2297,7 +2287,7 @@ function getCSVData() {
   
 //creates a random alphanumeric string for use in uniquely naming exported map
 function makeid(){
-     'use strict';
+     
     var text = "", possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", i;
 
     for( i=0; i < 5; i=i+1 ){
@@ -2310,7 +2300,7 @@ function makeid(){
 
 //export  map function called from button.  Needs work.  No notice when fails.
 function download(pictype){
-     'use strict';
+     
   
 var newobj={}, tempp;
   
@@ -2375,7 +2365,7 @@ console.log('15 seconds');
 
 //kinda a hacky slider. Revisit.
 function resetslider(){
-     'use strict';
+     
                   $("#progressbar").css('width','0%').stop();
       $("#progressbar").html('0%');
 }
@@ -2383,7 +2373,7 @@ function resetslider(){
 
 //on dom loaded
 $(document).ready(function() {
-     'use strict';
+     
   
 //begin
   
@@ -2494,7 +2484,8 @@ $('#classification').change();
       
         classname = this.className;
         for (i = 0; i < cMap.dataset.length; i=i+1) {
-            if (cMap.dataset[i] === Number(classname)) {
+
+            if (Number(cMap.dataset[i]) === Number(classname)) {
                 cMap.dataset.splice(i, 1);
             }
         }
@@ -2794,7 +2785,7 @@ $('#classification').change();
 
 
 function writeFooter() {
-     'use strict';
+     
 //needs so much work...not included  work on and add later
 
     //write table to an array
