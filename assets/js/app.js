@@ -95,16 +95,7 @@ var mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
 
 var mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
 
-var mapboxST = L.tileLayer('http://{s}.tiles.mapbox.com/v3/statecodemog.map-392qgzze/{z}/{x}/{y}.png', {
-    attribution: '<a href="http://www.mapbox.com/about/maps/">&copy; Map Box and OpenStreetMap</a>',
-    maxZoom: 18
-});
-var Stamen_Terrain = L.tileLayer('http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.png', {
-    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    subdomains: 'abcd',
-    minZoom: 4,
-    maxZoom: 18
-});
+
 
   var cMap={}; //hold all globals
   
@@ -134,8 +125,7 @@ cMap.moenumerator = '';
 cMap.moedenominator = '';
 cMap.moeformula = '';
 
-
-cMap.sumlev = '50';
+cMap.sumlev = cMap.params.s || '50';
 cMap.limit = '10000';
 cMap.db = 'acs0913';
 cMap.schema = 'data';
@@ -257,6 +247,8 @@ $("#nav-btn").click(function() {
 
 
 
+  
+
 cMap.map = L.map("map", {
     zoom: zoomlev,
     center: [latcoord, lngcoord],
@@ -266,35 +258,10 @@ cMap.map = L.map("map", {
     attributionControl: false
 });
 
-//if sumlev (s) in querystring
-  	if(cMap.params.s!==undefined){	
-		cMap.sumlev=cMap.params.s;
-      $("input[name=geoRadios][value=" + cMap.sumlev + "]").prop('checked', true);
-	}
 
 
-//depending on sumlev, changes minZoom, adds the correct string to the advanced query tool i.e (select all 'tracts')
 
-        if (cMap.sumlev === '50') {
-          cMap.map.options.minZoom = 4;
-            $('#advgeo').text('counties');
-        }
-        if (cMap.sumlev === '40') {
-          cMap.map.options.minZoom = 4;
-            $('#advgeo').text('states');
-        }
-        if (cMap.sumlev === '140') {
-                    cMap.map.options.minZoom = 9;
-            $('#advgeo').text('tracts');
-        }
-        if (cMap.sumlev === '150') {
-                    cMap.map.options.minZoom = 9;
-            $('#advgeo').text('block groups');
-        }
-        if (cMap.sumlev === '160') {
-                    cMap.map.options.minZoom = 9;
-            $('#advgeo').text('places');
-        }
+
 
 //define labels layer
 var mblabels = L.mapbox.tileLayer('statecodemog.798453f5', {
@@ -311,9 +278,7 @@ topPane.appendChild(topLayer.getContainer());
 
 var baseLayers = {
     "Mapbox: Satellite": mbsat,
-    "Mapbox: Contrast Base": mbstyle,
-    "Mapbox: Streets": mapboxST,
-    "Stamen Terrain": Stamen_Terrain
+    "Mapbox: Contrast Base": mbstyle
 };
 
 //in the future ill figure out how to toggle labels on and off (and still have it appear on top)
@@ -1775,6 +1740,210 @@ updatequerysearchstring();
 
 
     }
+  
+  function commafy(nStr) {
+	var x, x1, x2, rgx;
+
+	nStr += '';
+	x = nStr.split('.');
+	x1 = x[0];
+	x2 = x.length > 1 ? '.' + x[1] : '';
+	rgx = /(\d+)(\d{3})/;
+	while (rgx.test(x1)) {
+		x1 = x1.replace(rgx, '$1' + ',' + '$2');
+	}
+	return x1 + x2;
+}
+  
+function chartmaker(dataset, labelset, moedata, title) {
+
+  $('#rclicktitle').html(title);
+  
+  $('#rclick').empty();
+
+	var w, h, barPadding, maxval, svg, increase, dchange, label;
+
+	//Width and height
+	w = 540;
+	h = 250;
+	barPadding = 4;
+
+	maxval = d3.max(dataset);
+
+  
+	//Create SVG element
+	svg = d3.select('#rclick')
+		.append("svg")
+		.attr("width", w+11)
+		.attr("height", h+100);
+
+
+	svg.selectAll("rect")
+		.data(dataset)
+		.enter()
+		.append("rect")
+		.attr("x", function (d, i) {
+		return ((i * (w / dataset.length)) + 11);
+	})
+		.attr("y", function (d) {
+		return ((h - 20) - (((h - 20) / maxval) * d) + 20);
+	})
+		.attr("width", w / dataset.length - barPadding)
+		.attr("height", function (d) {
+		return (((h - 20) / maxval) * d);
+	})
+		.attr("fill", "LightBlue ")
+    .attr("stroke-width", 1)
+    .attr("stroke", "navy")
+  .on("mouseover", function(d) {
+  d3.select(this).style("stroke-width", 2).style("fill-opacity", 0.5);
+})                  
+.on("mouseout", function(d) {
+  d3.select(this).style("stroke-width", 1).style("fill-opacity", 1);
+})
+  .append("svg:title")
+   .text(function (d, i){ return "MOE: ± " + commafy(parseInt(moedata[i]));})
+
+	svg.selectAll("text")
+		.data(dataset)
+		.enter()
+		.append("text")
+		.text(function (d) {
+		return commafy(d);
+	})
+		.attr("text-anchor", "middle")
+		.attr("x", function (d, i) {
+		return ((i * (w / dataset.length) + (w / dataset.length - barPadding) / 2) + 10);
+	})
+		.attr("y", function (d) {
+		return ((h - 20) - (((h - 20) / maxval) * d) + 20) - 5;
+	})
+		.attr("font-family", "sans-serif")
+		.attr("font-size", "9px")
+		.attr("fill", "#333333");
+
+
+
+
+	increase = -6;
+	dchange = (w / labelset.length);
+
+	for (label in labelset) {
+		svg.append("text")
+			.attr("x", h+7)
+			.attr("y", increase - (dchange / 2))
+			.attr("transform", "rotate(90)")
+			.text(labelset[label])
+		.attr("font-family", "sans-serif")
+		.attr("font-size", "11px")
+		.attr("fill", "#333333");
+
+		increase = increase - dchange;
+
+	}
+
+  	// horizontal line for the x-axis
+	svg.append("line")
+		.attr("x1", 6)
+		.attr("x2", w+12)
+		.attr("y1", h)
+		.attr("y2", h)
+  .style("stroke-opacity", 1)
+  .attr("stroke-width", 2)
+		.style("stroke", "#111");
+
+}
+
+  
+  
+  
+  function rightclick(e){
+    
+    
+            var i, fp = e.target.feature.properties, newobj={}, companiontable='', companionindex, m, valdata = [], moedata=[], labelset = [];
+    
+    function assigndata(data){
+      
+      
+        function parsephp(c){
+          //upon successfull return from chart data gathering, create chart
+
+          //convert all values in return object to number
+      for(var key in c) {
+          c[key] = Number(c[key]);
+      }
+          
+        for(i=0;i<charttree.data[companionindex].Data.length;i=i+1){
+         labelset.push(charttree.data[companionindex].Data[i].FieldName);
+         valdata.push(eval(charttree.data[companionindex].Data[i].Formula));
+         moedata.push(eval(charttree.data[companionindex].Data[i].MoeFormula));          
+        }
+          
+    
+          chartmaker(valdata, labelset, moedata, charttree.data[companionindex].ChartAlias+": "+fp.geoname);
+          }
+    
+      
+      
+      m=data;
+       
+      //convert all values in return object to number
+      for(var key in m) {
+          m[key] = Number(m[key]);
+      }
+      
+              //regular data
+      $.ajax({
+        type: "GET",
+        url: "assets/php/simple.php",
+        data: "db="+cMap.db+"&schema="+cMap.schema+"&table=" + companiontable + "&geonum=" + fp.geonum,
+        dataType: 'json',
+        jsonpCallback: 'getJson',
+        success: parsephp
+    });
+        
+      
+           
+    }
+    
+
+
+    
+    //find companion table
+    for(i=0;i<charttree.data.length;i=i+1){
+      
+      if(charttree.data[i].ActualTable===cMap.table){
+        companionindex=i;
+        companiontable=charttree.data[i].ChartTable;
+                
+        //only do the chart thing if there is an entry in charttree
+        $("#rclickModal").modal("show");
+        
+        //moe data
+    $.ajax({
+        type: "GET",
+        url: "assets/php/simple.php",
+        data: "db="+cMap.db+"&schema="+cMap.schema+"&table=" + companiontable + "_moe&geonum=" + fp.geonum,
+        dataType: 'json',
+        jsonpCallback: 'getJson',
+        success: assigndata
+    });
+        
+
+        
+      }
+    }
+    
+    
+
+
+
+    
+    
+  }
+  
+  
+  
 
 
 
@@ -1783,7 +1952,8 @@ updatequerysearchstring();
         layer.on({
             mouseover: highlightFeature,
             mouseout: mouseout,
-            click: featureSelect
+            click: featureSelect,
+            contextmenu: rightclick
         });
     }
 
@@ -2386,6 +2556,33 @@ $(document).ready(function() {
             return value + '%';
         }
     });
+  
+  
+  //depending on sumlev, changes minZoom, adds the correct string to the advanced query tool i.e (select all 'tracts')
+      $("input[name=geoRadios][value=" + cMap.sumlev + "]").prop('checked', true);
+  
+        if (cMap.sumlev === '50') {
+          cMap.map.options.minZoom = 4;
+            $('#advgeo').text('counties');
+        }
+        if (cMap.sumlev === '40') {
+          cMap.map.options.minZoom = 4;
+            $('#advgeo').text('states');
+        }
+        if (cMap.sumlev === '140') {
+                    cMap.map.options.minZoom = 9;
+            $('#advgeo').text('tracts');
+        }
+        if (cMap.sumlev === '150') {
+                    cMap.map.options.minZoom = 9;
+            $('#advgeo').text('block groups');
+        }
+        if (cMap.sumlev === '160') {
+                    cMap.map.options.minZoom = 9;
+            $('#advgeo').text('places');
+        }
+  
+
 
   
   $('#closechart').click(function(){
