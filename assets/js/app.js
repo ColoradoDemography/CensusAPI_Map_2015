@@ -1775,7 +1775,7 @@ function chartmaker(dataset, labelset, moedata, title) {
 	svg = d3.select('#rclick')
 		.append("svg")
 		.attr("width", w+11)
-		.attr("height", h+100);
+		.attr("height", h+150);
 
 
 	svg.selectAll("rect")
@@ -1860,7 +1860,7 @@ function chartmaker(dataset, labelset, moedata, title) {
   function rightclick(e){
     
     
-            var i, fp = e.target.feature.properties, newobj={}, companiontable='', companionindex, m, valdata = [], moedata=[], labelset = [];
+            var i, j, fp = e.target.feature.properties, newobj={}, companiontable='', companionindex, m, valdata = [], moedata=[], labelset = [], temparray=[];
     
     function assigndata(data){
       
@@ -1912,7 +1912,11 @@ function chartmaker(dataset, labelset, moedata, title) {
     //find companion table
     for(i=0;i<charttree.data.length;i=i+1){
       
-      if(charttree.data[i].ActualTable===cMap.table){
+      temparray = (charttree.data[i].ActualTable).split(",");  //Actual Table can have multiple values separated by a comma.  This will turn that into an array.
+      
+      for(j=0;j<temparray.length;j=j+1){  //loop through array of values created above
+      
+      if(temparray[j]===cMap.table){
         companionindex=i;
         companiontable=charttree.data[i].ChartTable;
                 
@@ -1932,13 +1936,11 @@ function chartmaker(dataset, labelset, moedata, title) {
 
         
       }
+      
+      }
+      
+      
     }
-    
-    
-
-
-
-    
     
   }
   
