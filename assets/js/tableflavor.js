@@ -133,6 +133,55 @@ var tabletree = {
               
             ]          
         },{
+            "ActualTable": "b03002",
+            "TableAlias": "Race-Ethnicity (total)",
+            "Summable": "yes",
+            "Type": "number",
+            "Data": [
+                {
+                    "FieldName": "Hispanic",
+                    "Formula": "fp.b03002012",
+                    "type": "number",
+                    "sum": "total"
+                },{
+                    "FieldName": "White, Non-Hispanic",
+                    "Formula": "fp.b03002003",
+                    "type": "number",
+                    "sum": "total"
+                },{
+                    "FieldName": "Black, Non-Hispanic",
+                    "Formula": "fp.b03002004",
+                    "type": "number",
+                    "sum": "total"
+                },{
+                    "FieldName": "Native American, Non-Hispanic",
+                    "Formula": "fp.b03002005",
+                    "type": "number",
+                    "sum": "total"
+                },{
+                    "FieldName": "Asian, Non-Hispanic",
+                    "Formula": "fp.b03002006",
+                    "type": "number",
+                    "sum": "total"
+                },{
+                    "FieldName": "Hawaiian / Pacific Islander, Non-Hispanic",
+                    "Formula": "fp.b03002007",
+                    "type": "number",
+                    "sum": "total"
+                },{
+                    "FieldName": "Other Race, Non-Hispanic",
+                    "Formula": "fp.b03002008",
+                    "type": "number",
+                    "sum": "total"
+                },{
+                    "FieldName": "Two or More Races, Non-Hispanic",
+                    "Formula": "fp.b03002009",
+                    "type": "number",
+                    "sum": "total"
+                }
+              
+            ]          
+        },{
             "ActualTable": "b01001",
             "TableAlias": "Age by Tens (percent)",
             "Summable": "no",
