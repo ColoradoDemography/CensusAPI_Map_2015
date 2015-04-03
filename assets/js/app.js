@@ -106,7 +106,7 @@ var mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
 	var lngcoord=cMap.params.lng || -104.8;
 	var zoomlev=cMap.params.z || 9;
 
- 
+ var initialbasemap;
 
 cMap.stopafterheader = 0;
 cMap.createnewtable = 0;
@@ -171,14 +171,21 @@ cMap.coord.swlng='';
 
 cMap.lastzoom=8;
 
+cMap.rc={};
+cMap.rc.geoname='';
+cMap.rc.geonum=0;
+  
+cMap.basemap = 'cb';
+
 
 //after a major map action, the query search string (address) is updated with the new state of the application
 function updatequerysearchstring(){
      
-  var ch, tr, s, v, sn, cs, cl, dt, d, moe, dstring, compressed, btnstate, urlstr, newurl;
+  var rc, ch, tr, s, v, sn, cs, cl, dt, d, moe, dstring, compressed, btnstate, urlstr, newurl, ga, gn, bm;
   
   ch=''; //chart
   tr=''; //transparency
+  rc=''; //right click chart
   s='&s='+cMap.sumlev; //sumlev
   v='&v='+cMap.varcode; //varcode
   sn='&sn='+cMap.cs.schemename; 
@@ -187,6 +194,9 @@ function updatequerysearchstring(){
   dt='';
   d='';
   moe='';
+  if(cMap.rc.geoname!==''){ga='&ga='+cMap.rc.geoname;}else{ga='';} //last right click feature
+  if(cMap.rc.geonum!==0){gn='&gn='+cMap.rc.geonum;}else{gn='';}
+  if(cMap.basemap!=='cb'){bm='&bm='+cMap.basemap;}else{bm='';}
   
   if(cMap.dataset.length!==0){
     dstring=cMap.dataset.join();
@@ -207,9 +217,13 @@ function updatequerysearchstring(){
   
   //only adding these if they differ from the defaults
   if($('#chartModal').hasClass('in')){ch="&ch=yes";}
+  
+  //only adding these if they differ from the defaults
+  if($('#rclickModal').hasClass('in')){ch="&rc=yes";}  
+  
   if(cMap.feature.fillOpacity!==0.5){tr="&tr="+cMap.feature.fillOpacity;}
   
-    urlstr='?'+'lat='+cMap.map.getCenter().lat +'&lng='+cMap.map.getCenter().lng + '&z='+cMap.map.getZoom()+ch+tr+s+v+sn+cs+cl+dt+moe+d;
+    urlstr='?'+'lat='+cMap.map.getCenter().lat +'&lng='+cMap.map.getCenter().lng + '&z='+cMap.map.getZoom()+ch+tr+s+v+sn+cs+cl+dt+ga+gn+bm+moe+d;
     newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + urlstr;
     History.pushState({path:newurl},'',newurl);
 
@@ -244,23 +258,18 @@ $("#nav-btn").click(function() {
     return false;
 });
 
-
-
-
   
+  initialbasemap=mbstyle;
+  if(cMap.params.bm==='sat'){initialbasemap=mbsat;cMap.basemap='sat';}  
 
 cMap.map = L.map("map", {
     zoom: zoomlev,
     center: [latcoord, lngcoord],
     minZoom: 4,
-    layers: [mbstyle],
+    layers: [initialbasemap],
     zoomControl: false,
     attributionControl: false
 });
-
-
-
-
 
 
 //define labels layer
@@ -1757,6 +1766,10 @@ updatequerysearchstring();
   
 function chartmaker(dataset, labelset, moedata, title) {
 
+  var dollarsign;
+
+  if(cMap.type==="currency"){dollarsign="$";}else{dollarsign="";}
+  
   $('#rclicktitle').html(title);
   
   $('#rclick').empty();
@@ -1802,14 +1815,14 @@ function chartmaker(dataset, labelset, moedata, title) {
   d3.select(this).style("stroke-width", 1).style("fill-opacity", 1);
 })
   .append("svg:title")
-   .text(function (d, i){ return "MOE: ± " + commafy(parseInt(moedata[i]));})
+   .text(function (d, i){ return "MOE: ± " + dollarsign + commafy(parseInt(moedata[i]));})
 
 	svg.selectAll("text")
 		.data(dataset)
 		.enter()
 		.append("text")
 		.text(function (d) {
-		return commafy(d);
+		return dollarsign + commafy(d);
 	})
 		.attr("text-anchor", "middle")
 		.attr("x", function (d, i) {
@@ -1862,6 +1875,11 @@ function chartmaker(dataset, labelset, moedata, title) {
     
             var i, j, fp = e.target.feature.properties, newobj={}, companiontable='', companionindex, m, valdata = [], moedata=[], labelset = [], temparray=[];
     
+    
+    cMap.rc.geoname=fp.geoname;
+    cMap.rc.geonum=fp.geonum;
+    
+    
     function assigndata(data){
       
       
@@ -1881,6 +1899,9 @@ function chartmaker(dataset, labelset, moedata, title) {
           
     
           chartmaker(valdata, labelset, moedata, charttree.data[companionindex].ChartAlias+": "+fp.geoname);
+          
+              setTimeout(function(){updatequerysearchstring();},1000);
+          
           }
     
       
@@ -2164,10 +2185,7 @@ function querygeonums() {
       
     } 
 
-     
 
-
-      
       
         legend.removeFrom(cMap.map);
 
@@ -2255,6 +2273,8 @@ cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.sch
 
 }
       
+      updatequerysearchstring();
+      
     }
 
 
@@ -2316,6 +2336,29 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
           
           delete cMap.params.ch;
         }
+      
+      //right click chart
+      if(cMap.params.rc!==undefined){
+          
+          if(cMap.params.rc==='yes'){
+        $('#rclickModal').modal('toggle');
+        $('#rclick').empty();
+            console.log('em');
+            var e={};
+            e.target={};
+            e.target.feature={};
+            e.target.feature.properties={};
+            e.target.feature.properties.geonum=cMap.params.gn;
+            e.target.feature.properties.geoname=cMap.params.ga;
+            
+            console.log(e);
+        rightclick(e);
+      setTimeout(function(){updatequerysearchstring();},1000);
+          }
+          
+          delete cMap.params.rc;
+        } 
+      
       
       
     }
@@ -2428,9 +2471,8 @@ var i, sectionsarray = [], uniqueNames = [], vchecked;
       
       filtercolorschemes();
       
-
       //if colorscheme info is in querystring, use it.  otherwise, use default
-          if(cMap.params.cs!==undefined){	
+          if(cMap.params.cs!==undefined){
 		          cMap.cs.colorscheme=cMap.params.cs;
             $('#'+cMap.cs.colorscheme+cMap.cs.classes).prop('checked',true);
               delete cMap.params.cs;
@@ -2440,7 +2482,7 @@ var i, sectionsarray = [], uniqueNames = [], vchecked;
         $('#mh17').prop('checked', true);
               updatequerysearchstring();
           }
-
+      
     }
 
 
@@ -2492,6 +2534,7 @@ var newobj={}, tempp;
   newobj.cl = tempp.cl;
   if(tempp.tr!==undefined){newobj.tr = tempp.tr;}
   if(tempp.d!==undefined){newobj.d = tempp.d;}
+  if(tempp.bm!==undefined){newobj.bm = tempp.bm;}
   
 cMap.map.spin(true);
  
@@ -2585,11 +2628,21 @@ $(document).ready(function() {
         }
   
 
-
-  
-  $('#closechart').click(function(){
+  //updatequerysearchstring after close rclick and chart modals
+  $('.cclose').click(function(){
+    cMap.rc.geoname='';
+    cMap.rc.geonum=0;
     setTimeout(function(){updatequerysearchstring();},1000);
     });
+
+  $('.leaflet-control-layers-selector').change(function(){
+    var temptext;
+    temptext = $(this).next().text();
+    console.log(temptext);
+    if(temptext===' Mapbox: Contrast Base'){console.log('there');cMap.basemap='cb';}
+    if(temptext===' Mapbox: Satellite'){console.log('here');cMap.basemap='sat';}    
+    updatequerysearchstring();
+  });
   
   $('#mintableclick').click(function(){
     mintable();
@@ -2636,9 +2689,10 @@ $(document).ready(function() {
 	}
   
       //set classification scheme if in querystring
-  if(cMap.params.sn!==undefined){	
+  if(cMap.params.sn!==undefined){
 		cMap.cs.schemename=cMap.params.sn;
     $("#classification").val(cMap.cs.schemename).change();
+    updatequerysearchstring();
 	}
 
   
@@ -2653,8 +2707,7 @@ $(document).ready(function() {
 	          }
           
             cMap.cs.schemename = this.value;
-      
-          updatequerysearchstring();
+
       
             if (cMap.cs.schemename === 'jenks') {
                 $('#classes').html('<option value="5">5</option><option value="7" >7</option><option value="9">9</option>');
@@ -2669,7 +2722,8 @@ $(document).ready(function() {
           $('#classes').val(cMap.cs.classes);
 
             filtercolorschemes();
-            
+        
+          updatequerysearchstring();          
 
         } );
 
@@ -2720,11 +2774,14 @@ $('#classification').change();
           if(cMap.params.moe==='no'){
   $('input[name="my-checkbox"]').bootstrapSwitch('state', false);
           }
+                
+          updatequerysearchstring();
         }
   
     //looks for table dropdown change - changes table flavor
     $('#tableoption').on('change', function() {
         chgtblfl();
+          updatequerysearchstring();
     });
   
     //initialize stupid table plugin on our data table
@@ -2791,9 +2848,11 @@ $('#classification').change();
 
 
   //if a transparency value is set in the querystring, change the slider to that value
-    	if(cMap.params.tr!==undefined){	
+    	if(cMap.params.tr!==undefined){
 		cMap.feature.fillOpacity=cMap.params.tr;
         trslider.slider('setValue', parseInt((cMap.feature.fillOpacity*100),10));
+              
+          updatequerysearchstring();
 	}
 
     //when user stops moving transparency slider, change transparency of geojson layer
