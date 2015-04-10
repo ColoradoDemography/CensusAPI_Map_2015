@@ -234,6 +234,9 @@ function updatequerysearchstring(){
 //change selection color
 function cselectedchg(newcolor){
   cMap.cselected=newcolor;
+  
+  //change all previously selected elements
+  cMap.geojsonLayer.setStyle(feat1);
 }
 
 //change mouseover color
