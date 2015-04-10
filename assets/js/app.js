@@ -2532,6 +2532,11 @@ var newobj={}, tempp;
   newobj.sn = tempp.sn;
   newobj.cs = tempp.cs;
   newobj.cl = tempp.cl;
+  
+  if(tempp.ch!==undefined){newobj.ch = tempp.ch;}
+    if(tempp.dt!==undefined){newobj.dt = tempp.dt;}
+    if(tempp.rc!==undefined){newobj.rc = tempp.rc;}
+  
   if(tempp.tr!==undefined){newobj.tr = tempp.tr;}
   if(tempp.d!==undefined){newobj.d = tempp.d;}
   if(tempp.bm!==undefined){newobj.bm = tempp.bm;}
