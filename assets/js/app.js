@@ -143,7 +143,8 @@ cMap.type = "";
 cMap.mininc = 0;
 cMap.minval = 0;
 cMap.geojsonLayer = '';
-cMap.cselected='red';
+
+cMap.cselected=cMap.params.csel ||'red';
 cMap.cmouseover='rgb(128,0,127)';
 
 //universal
@@ -178,10 +179,11 @@ cMap.rc.geonum=0;
 cMap.basemap = 'cb';
 
 
+  
 //after a major map action, the query search string (address) is updated with the new state of the application
 function updatequerysearchstring(){
      
-  var rc, ch, tr, s, v, sn, cs, cl, dt, d, moe, dstring, compressed, btnstate, urlstr, newurl, ga, gn, bm;
+  var rc, ch, tr, s, v, sn, cs, cl, dt, d, moe, dstring, compressed, btnstate, urlstr, newurl, ga, gn, bm, csel, cmo;
   
   ch=''; //chart
   tr=''; //transparency
@@ -197,6 +199,9 @@ function updatequerysearchstring(){
   if(cMap.rc.geoname!==''){ga='&ga='+cMap.rc.geoname;}else{ga='';} //last right click feature
   if(cMap.rc.geonum!==0){gn='&gn='+cMap.rc.geonum;}else{gn='';}
   if(cMap.basemap!=='cb'){bm='&bm='+cMap.basemap;}else{bm='';}
+  
+ if(cMap.cselected!=='red'){csel='&csel='+cMap.cselected;}else{csel='';}
+ if(cMap.cmouseover!=='rgb(128,0,127)'){cmo='&cmo='+cMap.cmouseover;}else{cmo='';}
   
   if(cMap.dataset.length!==0){
     dstring=cMap.dataset.join();
@@ -223,7 +228,7 @@ function updatequerysearchstring(){
   
   if(cMap.feature.fillOpacity!==0.5){tr="&tr="+cMap.feature.fillOpacity;}
   
-    urlstr='?'+'lat='+cMap.map.getCenter().lat +'&lng='+cMap.map.getCenter().lng + '&z='+cMap.map.getZoom()+ch+tr+s+v+sn+cs+cl+dt+ga+gn+bm+moe+d;
+    urlstr='?'+'lat='+cMap.map.getCenter().lat +'&lng='+cMap.map.getCenter().lng + '&z='+cMap.map.getZoom()+ch+tr+s+v+sn+cs+cl+dt+ga+gn+bm+moe+csel+cmo+d;
     newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + urlstr;
     History.pushState({path:newurl},'',newurl);
 
@@ -234,14 +239,16 @@ function updatequerysearchstring(){
 //change selection color
 function cselectedchg(newcolor){
   cMap.cselected=newcolor;
+  updatequerysearchstring();
   
   //change all previously selected elements
-  cMap.geojsonLayer.setStyle(feat1);
+ cMap.geojsonLayer.setStyle(feat1);
 }
 
 //change mouseover color
 function cmouseoverchg(newcolor){
   cMap.cmouseover=newcolor;
+  updatequerysearchstring();
 }
 
 
@@ -2535,6 +2542,8 @@ var newobj={}, tempp;
   newobj.sn = tempp.sn;
   newobj.cs = tempp.cs;
   newobj.cl = tempp.cl;
+  console.log(tempp.csel);
+    if(tempp.csel!==undefined){newobj.csel = tempp.csel;}
   
   if(tempp.ch!==undefined){newobj.ch = tempp.ch;}
     if(tempp.dt!==undefined){newobj.dt = tempp.dt;}
@@ -2679,16 +2688,7 @@ $(document).ready(function() {
   $('#resetslider').click(function(){
     resetslider();
     });    
-  
-  $('#cselected').change(function(){
-    cselectedchg(this.value);
-    });      
-  
-  $('#cmouseover').change(function(){
-    cmouseoverchg(this.value);
-    });      
-  
-  
+
   $('#linkbutton').tooltip({placement : 'right'});
 
   //get list of selected geographies (d) - store them in global variable (dataset)
@@ -2703,6 +2703,17 @@ $(document).ready(function() {
     updatequerysearchstring();
 	}
 
+        //set selected color if in querystring
+  if(cMap.params.csel!==undefined){
+    cMap.cselected=cMap.params.csel;
+    $("#cselected").val(cMap.params.csel).change();
+	}
+  
+         //set mouseover color if in querystring
+  if(cMap.params.cmo!==undefined){
+    cMap.cmouseover=cMap.params.cmo;
+    $("#cselected").val(cMap.params.cmo).change();
+	} 
   
       //change classification
     $('#classification').change( function() {
@@ -2892,6 +2903,24 @@ $('#classification').change();
         onEachFeature: onEachFeature
     });
 
+ 
+    
+  $('#cselected').change(function(){
+    
+//change selection color
+  cMap.cselected=this.value;
+  updatequerysearchstring();
+  
+  //change all previously selected elements
+ cMap.geojsonLayer.setStyle(feat1);
+  });      
+  
+  $('#cmouseover').change(function(){
+  cMap.cmouseover=this.value;
+  updatequerysearchstring();
+    });      
+  
+  
   
     populate(); //populate them modal from datatree
     drawcolorschemes(); //populate symbology portion of advanced dialog

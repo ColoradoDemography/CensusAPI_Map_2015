@@ -28,6 +28,9 @@ if (isset($_GET['rc'])){$rc = '\&rc='.$_GET['rc'];}
 $tr='';
 if (isset($_GET['tr'])){$tr = '\&tr='.$_GET['tr'];}
 
-exec ('phantomjs phantomjs/rasterize.js http://'.$_SERVER['SERVER_NAME'].'/CensusAPI_Map/index.html?lat='.$lat.'\&lng='.$lng.'\&z='.$z.'\&s='.$s.'\&v='.$v.'\&sn='.$sn.'\&bm='.$cs.'\&bm='.$bm.'\&cl='.$cl.'\&print=yes'.$d.$ch.$dt.$rc.$tr.'  dump/'.$outname.'.'.$type);
+$csel='';
+if (isset($_GET['csel'])){$csel = '\&csel='.$_GET['csel'];}
+
+exec ('phantomjs phantomjs/rasterize.js http://'.$_SERVER['SERVER_NAME'].'/CensusAPI_Map/index.html?lat='.$lat.'\&lng='.$lng.'\&z='.$z.'\&s='.$s.'\&v='.$v.'\&sn='.$sn.'\&bm='.$cs.'\&bm='.$bm.'\&cl='.$cl.'\&print=yes'.$d.$ch.$dt.$rc.$tr.$csel.'  dump/'.$outname.'.'.$type);
 
 ?>
