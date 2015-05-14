@@ -132,7 +132,10 @@ var datatree = {
        
        { "varcode": "unemp", "verbose": "Percent Unemployed", "section": "Employment", "table": "b23025", "numerator": "Number(fp.b23025005)",  "denominator": "Number(fp.b23025002)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Unemployment (percent)", "favstyle":"jenks,7,sh6"},
        
-      { "varcode": "armedforces", "verbose": "Percent of Labor Force in Armed Forces", "section": "Employment", "table": "b23025", "numerator": "Number(fp.b23025006)",  "denominator": "Number(fp.b23025002)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Unemployment (percent)", "favstyle":"jenks,7,mh1"}
+      { "varcode": "armedforces", "verbose": "Percent of Labor Force in Armed Forces", "section": "Employment", "table": "b23025", "numerator": "Number(fp.b23025006)",  "denominator": "Number(fp.b23025002)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Unemployment (percent)", "favstyle":"jenks,7,mh1"},
+      
+      { "varcode": "retaxes", "verbose": "Median Real Estate Taxes Paid", "section": "Housing", "table": "b25103", "numerator": "Number(fp.b25103001)",  "denominator": "1",  "type": "currency",  "minval": "1", "mininc": "1",  "usezeroasnull": "yes", "favtable":"", "favstyle":"jenks,7,mh1"}
+
        
 
       
