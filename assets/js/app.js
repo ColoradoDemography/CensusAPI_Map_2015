@@ -282,6 +282,7 @@ cMap.map = L.map("map", {
 });
 
 
+
 //define labels layer
 var mblabels = L.mapbox.tileLayer('statecodemog.798453f5', {
     'clickable': 'false',
@@ -402,6 +403,10 @@ var locateControl = L.control.locate({
         timeout: 10000
     }
 }).addTo(cMap.map);
+
+  
+var fullscreencontrol = new L.Control.Fullscreen({position:'topright'}).addTo(cMap.map);
+  
 
 
 //add layer control
