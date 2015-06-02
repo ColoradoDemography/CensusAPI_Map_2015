@@ -1791,10 +1791,6 @@ updatequerysearchstring();
   
 function chartmaker(dataset, labelset, moedata, title) {
 
-  var dollarsign;
-
-  if(cMap.type==="currency"){dollarsign="$";}else{dollarsign="";}
-  
   $('#rclicktitle').html(title);
   
   $('#rclick').empty();
@@ -1840,14 +1836,14 @@ function chartmaker(dataset, labelset, moedata, title) {
   d3.select(this).style("stroke-width", 1).style("fill-opacity", 1);
 })
   .append("svg:title")
-   .text(function (d, i){ return "MOE: ± " + dollarsign + commafy(parseInt(moedata[i]));})
+   .text(function (d, i){ return "MOE: ± " + commafy(parseInt(moedata[i]));})
 
 	svg.selectAll("text")
 		.data(dataset)
 		.enter()
 		.append("text")
 		.text(function (d) {
-		return dollarsign + commafy(d);
+		return commafy(d);
 	})
 		.attr("text-anchor", "middle")
 		.attr("x", function (d, i) {
@@ -2180,7 +2176,9 @@ function querygeonums() {
       //wide stddev breaks (7)
       standard7=[median+(stddev*2.5),median+(stddev*1.5),median+(stddev*0.5),median-(stddev*0.5),median-(stddev*1.5),median-(stddev*2.5),cMap.minval];   
       
-        
+        console.log(standard8);
+        console.log(standard7);
+      
       
       
       eval("localStorage." + cMap.varcode+"_" + geo + "_jenks_5 = '" + JSON.stringify(jenks5.reverse()) + "'");
@@ -2192,14 +2190,18 @@ function querygeonums() {
       eval("localStorage." + cMap.varcode+"_" + geo + "_quantile_9 = '" + JSON.stringify(quantile9) + "'");
       eval("localStorage." + cMap.varcode+"_" + geo + "_quantile_11 = '" + JSON.stringify(quantile11) + "'");      
 
-      eval("localStorage." + cMap.varcode+"_" + geo + "_standard_7 = '" + JSON.stringify(standard7) + "'");
-      eval("localStorage." + cMap.varcode+"_" + geo + "_standard_8 = '" + JSON.stringify(standard8) + "'");        
+      eval("localStorage." + cMap.varcode+"_" + geo + "_stddev_7 = '" + JSON.stringify(standard7) + "'");
+      eval("localStorage." + cMap.varcode+"_" + geo + "_stddev_8 = '" + JSON.stringify(standard8) + "'");        
 
+      console.log('after eval local storage');
 
       cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.schemename+"_"+cMap.cs.classes));
       
+      console.log('after breaks');
       
         legend.addTo(cMap.map);
+      
+      console.log('added legend');
 
         if (redraw === "yes") {
             ajaxcall();
@@ -2207,15 +2209,16 @@ function querygeonums() {
             cMap.geojsonLayer.setStyle(feat1);
         }
 
+      console.log('end func');
       
-    } 
+    }
 
 
-      
+      console.log('beforeremovelegend');
         legend.removeFrom(cMap.map);
-
+console.log('beforemanageradio');
         manageradio = $('input:radio[name ="optionsRadios"]:checked').val();
-
+console.log('aftermanageradio');
         for (i = 0; i < datatree.data.length; i=i+1) {
 
             if (manageradio === datatree.data[i].varcode) {
@@ -2239,6 +2242,7 @@ function querygeonums() {
                     cMap.cs.schemename = symbarray[0];
                     cMap.cs.classes = parseInt(symbarray[1],10);
                     cMap.cs.colorscheme = symbarray[2];
+                  console.log('override');
                     //change value in dropdowns
                     $('#classification').val(cMap.cs.schemename);
                     $('#classes').val(cMap.cs.classes);
@@ -2246,8 +2250,9 @@ function querygeonums() {
                     filtercolorschemes();
                 }
             }
+         
         }
-      
+       console.log('for i loop');
               //loop through colorschemes only - we have breaks info and colorscheme    
         for (k = 0; k < colortree.colorschemes.length; k=k+1) {
 
@@ -2257,6 +2262,7 @@ function querygeonums() {
                 cMap.symbolcolors = colortree.colorschemes[k].colors;
             }
         }
+      console.log('k loop after');
       
       //localStorage.setItem("mhi_county_jenks_7", JSON.stringify([79183,64205,54206,46817,40204,33445,1]));
         if(cMap.sumlev==='40'){geo='state';}
@@ -2266,7 +2272,7 @@ function querygeonums() {
         if(cMap.sumlev==='160'){geo='place';}    
 
 
-      
+      console.log('before eval');
 if(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.schemename+"_"+cMap.cs.classes)){
 cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.schemename+"_"+cMap.cs.classes));
 
@@ -2297,6 +2303,8 @@ cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.sch
 
 
 }
+      
+            console.log('after eval');
       
       updatequerysearchstring();
       
