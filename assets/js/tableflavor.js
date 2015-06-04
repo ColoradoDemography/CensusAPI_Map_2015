@@ -518,32 +518,32 @@ var tabletree = {
                     "type": "number",
                     "sum": "total"
                 },{
-                    "FieldName": "-In Labor Force",
+                    "FieldName": " In Labor Force",
                     "Formula": "Number(fp.b23025002)",
                     "type": "number",
                     "sum": "total"
                 },{
-                    "FieldName": "--Civilian Labor Force",
+                    "FieldName": "  Civilian Labor Force",
                     "Formula": "Number(fp.b23025003)",
                     "type": "number",
                     "sum": "total"
                 },{
-                    "FieldName": "---Employed",
+                    "FieldName": "   Employed",
                     "Formula": "Number(fp.b23025004)",
                     "type": "number",
                     "sum": "total"
                 },{
-                    "FieldName": "---Unemployed",
+                    "FieldName": "   Unemployed",
                     "Formula": "Number(fp.b23025005)",
                     "type": "number",
                     "sum": "total"
                 },{
-                    "FieldName": "--Armed Forces",
+                    "FieldName": "  Armed Forces",
                     "Formula": "Number(fp.b23025006)",
                     "type": "number",
                     "sum": "total"
                 },{
-                    "FieldName": "-Not in Labor Force",
+                    "FieldName": " Not in Labor Force",
                     "Formula": "Number(fp.b23025007)",
                     "type": "number",
                     "sum": "total"
@@ -553,32 +553,32 @@ var tabletree = {
                     "type": "number",
                     "sum": "total_moe"
                 },{
-                    "FieldName": "-In Labor Force (moe)",
+                    "FieldName": " In Labor Force (moe)",
                     "Formula": "Number(fp.b23025_moe002)",
                     "type": "number",
                     "sum": "total_moe"
                 },{
-                    "FieldName": "--Civilian Labor Force (moe)",
+                    "FieldName": "  Civilian Labor Force (moe)",
                     "Formula": "Number(fp.b23025_moe003)",
                     "type": "number",
                     "sum": "total_moe"
                 },{
-                    "FieldName": "---Employed (moe)",
+                    "FieldName": "   Employed (moe)",
                     "Formula": "Number(fp.b23025_moe004)",
                     "type": "number",
                     "sum": "total_moe"
                 },{
-                    "FieldName": "---Unemployed (moe)",
+                    "FieldName": "   Unemployed (moe)",
                     "Formula": "Number(fp.b23025_moe005)",
                     "type": "number",
                     "sum": "total_moe"
                 },{
-                    "FieldName": "--Armed Forces (moe)",
+                    "FieldName": "  Armed Forces (moe)",
                     "Formula": "Number(fp.b23025_moe006)",
                     "type": "number",
                     "sum": "total_moe"
                 },{
-                    "FieldName": "-Not in Labor Force (moe)",
+                    "FieldName": " Not in Labor Force (moe)",
                     "Formula": "Number(fp.b23025_moe007)",
                     "type": "number",
                     "sum": "total_moe"
@@ -1007,49 +1007,49 @@ var tabletree = {
                     "sum": "total"
                 },
                 {
-                    "FieldName": "- Family Households",
+                    "FieldName": "  Family Households",
                     "Formula": "fp.b11001002",
                     "type": "number",
                     "sum": "total"
                 },
                 {
-                    "FieldName": "-- Married-couple family",
+                    "FieldName": "   Married-couple family",
                     "Formula": "fp.b11001003",
                     "type": "number",
                     "sum": "total"
                 },
                 {
-                    "FieldName": "-- Other family",
+                    "FieldName": "   Other family",
                     "Formula": "fp.b11001004",
                     "type": "number",
                     "sum": "total"
                 },
                 {
-                    "FieldName": "--- Male Householder, no Wife Present",
+                    "FieldName": "    Male Householder, no Wife Present",
                     "Formula": "fp.b11001005",
                     "type": "number",
                     "sum": "total"
                 },
                 {
-                    "FieldName": "--- Female Householder, no Husband Present",
+                    "FieldName": "    Female Householder, no Husband Present",
                     "Formula": "fp.b11001006",
                     "type": "number",
                     "sum": "total"
                 },
                 {
-                    "FieldName": "- Nonfamily households",
+                    "FieldName": "  Nonfamily households",
                     "Formula": "fp.b11001007",
                     "type": "number",
                     "sum": "total"
                 },
                 {
-                    "FieldName": "-- Householder Living Alone",
+                    "FieldName": "   Householder Living Alone",
                     "Formula": "fp.b11001008",
                     "type": "number",
                     "sum": "total"
                 },
                 {
-                    "FieldName": "-- Householder Not Living Alone",
+                    "FieldName": "   Householder Not Living Alone",
                     "Formula": "fp.b11001009",
                     "type": "number",
                     "sum": "total"
@@ -1061,49 +1061,49 @@ var tabletree = {
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "- Family Households (moe)",
+                    "FieldName": "  Family Households (moe)",
                     "Formula": "fp.b11001_moe002",
                     "type": "number",
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "-- Married-couple family (moe)",
+                    "FieldName": "   Married-couple family (moe)",
                     "Formula": "fp.b11001_moe003",
                     "type": "number",
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "-- Other family (moe)",
+                    "FieldName": "   Other family (moe)",
                     "Formula": "fp.b11001_moe004",
                     "type": "number",
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "--- Male Householder, no Wife Present (moe)",
+                    "FieldName": "    Male Householder, no Wife Present (moe)",
                     "Formula": "fp.b11001_moe005",
                     "type": "number",
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "--- Female Householder, no Husband Present (moe)",
+                    "FieldName": "    Female Householder, no Husband Present (moe)",
                     "Formula": "fp.b11001_moe006",
                     "type": "number",
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "- Nonfamily households (moe)",
+                    "FieldName": "  Nonfamily households (moe)",
                     "Formula": "fp.b11001_moe007",
                     "type": "number",
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "-- Householder Living Alone (moe)",
+                    "FieldName": "   Householder Living Alone (moe)",
                     "Formula": "fp.b11001_moe008",
                     "type": "number",
                     "sum": "total_moe"
                 },
                 {
-                    "FieldName": "-- Householder Not Living Alone (moe)",
+                    "FieldName": "   Householder Not Living Alone (moe)",
                     "Formula": "fp.b11001_moe009",
                     "type": "number",
                     "sum": "total_moe"

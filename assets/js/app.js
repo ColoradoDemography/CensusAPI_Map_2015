@@ -2141,6 +2141,8 @@ function querygeonums() {
         
     function jsonstring(thedata) {  //after successfull ajax call, data is sent here
 
+      console.log(thedata);
+      
      var max, mean, median, stddev, jenks5, jenks7, jenks9, quantile5, quantile7, quantile9, quantile11, standard8, standard7;
   
       max=ss.max(thedata);
