@@ -513,7 +513,7 @@ var charttree = {
                 }
             ]
         },{
-            "ActualTable": "b11001",
+            "ActualTable": "b11001,b11005",
             "ChartTable": "b11001",
             "ChartAlias": "Family & Nonfamily Households",
             "ChartType": "barchart",          

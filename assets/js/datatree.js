@@ -46,11 +46,11 @@ var datatree = {
       
       { "varcode": "medianage", "verbose": "Median Age", "section": "Age", "table": "b01002", "numerator": "Number(fp.b01002001)",  "denominator": "1",  "type": "number",  "minval": "1", "mininc": "0.1",  "usezeroasnull": "yes", "favtable":"Median Age", "favstyle":"jenks,7,mh8", "bg":"yes"},
       
-      { "varcode": "households", "verbose": "Total Households", "section": "Housing", "table": "b11001", "numerator": "Number(fp.b11001001)",  "denominator": "1",  "type": "number",  "minval": "0", "mininc": "1",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh9", "bg":"yes"},
+      { "varcode": "households", "verbose": "Total Households", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001001)",  "denominator": "1",  "type": "number",  "minval": "0", "mininc": "1",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh9", "bg":"yes"},
       
-      { "varcode": "familyhh", "verbose": "Percent Family Households", "section": "Housing", "table": "b11001", "numerator": "Number(fp.b11001002)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh10", "bg":"yes"},
+      { "varcode": "familyhh", "verbose": "Percent Family Households", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001002)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh10", "bg":"yes"},
       
-      { "varcode": "nonfamhh", "verbose": "Percent Non Family Households", "section": "Housing", "table": "b11001", "numerator": "Number(fp.b11001007)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh11", "bg":"yes"},
+      { "varcode": "nonfamhh", "verbose": "Percent Non Family Households", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001007)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh11", "bg":"yes"},
       
       { "varcode": "housingun", "verbose": "Total Housing Units", "section": "Housing", "table": "b25002", "numerator": "Number(fp.b25002001)",  "denominator": "1",  "type": "number",  "minval": "0", "mininc": "1",  "usezeroasnull": "no", "favtable":"Housing Units (total)", "favstyle":"jenks,7,mh12", "bg":"yes"},
       
@@ -108,8 +108,6 @@ var datatree = {
        
        { "varcode": "avghhsize", "verbose": "Average Household Size", "section": "Housing", "table": "b25010", "numerator": "Number(fp.b25010001)",  "denominator": "1",  "type": "number",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "yes", "favtable":"Average Household Size", "favstyle":"jenks,7,mh5", "bg":"yes"},
        
-       { "varcode": "hhldralone", "verbose": "Percent Householder Living Alone", "section": "Housing", "table": "b11001", "numerator": "Number(fp.b11001008)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (percent)", "favstyle":"jenks,7,mh6", "bg":"yes"},
-       
        { "varcode": "insured", "verbose": "Percent Insured", "section": "Insurance", "table": "b27001", "numerator": "Number(fp.b27001004)+Number(fp.b27001007)+Number(fp.b27001010)+Number(fp.b27001013)+Number(fp.b27001016)+Number(fp.b27001019)+Number(fp.b27001022)+Number(fp.b27001025)+Number(fp.b27001028)+Number(fp.b27001032)+Number(fp.b27001035)+Number(fp.b27001038)+Number(fp.b27001041)+Number(fp.b27001044)+Number(fp.b27001047)+Number(fp.b27001050)+Number(fp.b27001053)+Number(fp.b27001056)",  "denominator": "Number(fp.b27001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Insurance (percent)", "favstyle":"jenks,7,mh7", "bg":"no"},
        
        { "varcode": "uninsured", "verbose": "Percent No Insurance", "section": "Insurance", "table": "b27001", "numerator": "Number(fp.b27001005)+Number(fp.b27001008)+Number(fp.b27001011)+Number(fp.b27001014)+Number(fp.b27001017)+Number(fp.b27001020)+Number(fp.b27001023)+Number(fp.b27001026)+Number(fp.b27001029)+Number(fp.b27001033)+Number(fp.b27001036)+Number(fp.b27001039)+Number(fp.b27001042)+Number(fp.b27001045)+Number(fp.b27001048)+Number(fp.b27001051)+Number(fp.b27001054)+Number(fp.b27001057)",  "denominator": "Number(fp.b27001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Insurance (percent)", "favstyle":"jenks,7,mh8", "bg":"no"},
@@ -134,11 +132,23 @@ var datatree = {
        
       { "varcode": "armedforces", "verbose": "Percent of Labor Force in Armed Forces", "section": "Employment", "table": "b23025", "numerator": "Number(fp.b23025006)",  "denominator": "Number(fp.b23025002)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Unemployment (percent)", "favstyle":"jenks,7,mh1", "bg":"yes"},
       
-      { "varcode": "realtaxes", "verbose": "Median Real Estate Taxes Paid", "section": "Housing", "table": "b25103", "numerator": "Number(fp.b25103001)",  "denominator": "1",  "type": "currency",  "minval": "1", "mininc": "1",  "usezeroasnull": "yes", "favtable":"", "favstyle":"jenks,7,mh1", "bg":"no"},
+      { "varcode": "realtaxes", "verbose": "Median Real Estate Taxes Paid", "section": "Housing", "table": "b25103", "numerator": "Number(fp.b25103001)",  "denominator": "1",  "type": "currency",  "minval": "1", "mininc": "1",  "usezeroasnull": "yes", "favtable":"", "favstyle":"jenks,7,mh2", "bg":"no"},
       
-      { "varcode": "moc_wmc", "verbose": "Median Monthly Owner Costs (w Mortgage)", "section": "Housing", "table": "b25088", "numerator": "Number(fp.b25088002)",  "denominator": "1",  "type": "currency",  "minval": "1", "mininc": "1",  "usezeroasnull": "yes", "favtable":"", "favstyle":"jenks,7,mh1", "bg":"yes"},
+      { "varcode": "moc_wmc", "verbose": "Median Monthly Owner Costs (w Mortgage)", "section": "Housing", "table": "b25088", "numerator": "Number(fp.b25088002)",  "denominator": "1",  "type": "currency",  "minval": "1", "mininc": "1",  "usezeroasnull": "yes", "favtable":"", "favstyle":"jenks,7,mh3", "bg":"yes"},
       
-      { "varcode": "moc_nmc", "verbose": "Median Monthly Owner Costs (no Mortgage)", "section": "Housing", "table": "b25088", "numerator": "Number(fp.b25088003)",  "denominator": "1",  "type": "currency",  "minval": "1", "mininc": "1",  "usezeroasnull": "yes", "favtable":"", "favstyle":"jenks,7,mh1", "bg":"yes"}
+      { "varcode": "moc_nmc", "verbose": "Median Monthly Owner Costs (no Mortgage)", "section": "Housing", "table": "b25088", "numerator": "Number(fp.b25088003)",  "denominator": "1",  "type": "currency",  "minval": "1", "mininc": "1",  "usezeroasnull": "yes", "favtable":"", "favstyle":"jenks,7,mh4", "bg":"yes"},
+      
+      { "varcode": "hhalone", "verbose": "Pct of Households w Householder Living Alone", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001008)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"", "favstyle":"jenks,7,mh5", "bg":"yes"},
+      
+      { "varcode": "hhnalone", "verbose": "Pct of Households w Householder Not Living Alone", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001009)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh6", "bg":"yes"},
+            
+      { "varcode": "mcfhh", "verbose": "Percent Married Couple Family Households", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001003)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh7", "bg":"yes"},
+      
+      { "varcode": "mhhnwphh", "verbose": "Percent Male Householder, No Wife Present Households", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001005)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh8", "bg":"yes"},
+      
+      { "varcode": "fhhnhphh", "verbose": "Percent Female Householder, No Husband Present Households", "section": "Household", "table": "b11001", "numerator": "Number(fp.b11001006)",  "denominator": "Number(fp.b11001001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"Household Type (total)", "favstyle":"jenks,7,mh9", "bg":"yes"},
+      
+      { "varcode": "hhwchild", "verbose": "Percent Households w Children Under 18 Present", "section": "Household", "table": "b11005", "numerator": "Number(fp.b11005002)",  "denominator": "Number(fp.b11005001)",  "type": "percent",  "minval": "0", "mininc": "0.01",  "usezeroasnull": "no", "favtable":"", "favstyle":"jenks,7,mh10", "bg":"yes"}
 
        
 

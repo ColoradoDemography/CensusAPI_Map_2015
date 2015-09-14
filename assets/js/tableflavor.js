@@ -1177,6 +1177,31 @@ var tabletree = {
                     "sum": "none"
                 }
             ]
+        },{
+            "ActualTable": "b11005",
+            "TableAlias": "Percent of Households with Children Under 18",
+            "Summable": "no",
+            "Type": "percent",
+            "Data": [
+                {
+                    "FieldName": "Total Households",
+                    "Formula": "Number(fp.b11005001)",
+                    "type": "number",
+                    "sum": "total"
+                },
+                {
+                    "FieldName": "Total Households w Children < 18",
+                    "Formula": "Number(fp.b11005002)",
+                    "type": "number",
+                    "sum": "total"
+                },
+                {
+                    "FieldName": "Percent Households w Children < 18",
+                    "Formula": "((Number(fp.b11005002)/Number(fp.b11005001))*100).toFixed(2)",
+                    "type": "percent",
+                    "sum": "none"
+                }
+            ]
         }
       //
     ]
