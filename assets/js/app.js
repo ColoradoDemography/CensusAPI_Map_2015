@@ -4,6 +4,10 @@
   //jslint globals to ignore:  L $ google colortree datatree LZString History tabletree d3 ss
   /*jslint browser: true, devel: true, evil: true, nomen: true, regexp: true, unparam: true, sloppy: true, white: true */
   
+  
+  
+  //Leaflet Easy buttons include all of the buttons on the left side of the screen
+  
   //Leaflet Easy Button Library Function
   L.Control.EasyButtons = L.Control.extend({
     options: {
@@ -63,7 +67,8 @@ L.easyButton = function( btnIcon , btnFunction , btnTitle , btnMap ) {
   
   
   
-//gets parameters from the address query string
+
+  //On Application Startup, gets query string, breaks it apart into an object of parameters.  All initial setup options will either use these settings, or, if they dont exist, use a default setting.
 function parseQueryString(){
 
   var newstr, objURL;
@@ -72,41 +77,43 @@ function parseQueryString(){
   
                     objURL = {};
 
+                    console.log("newstr: "+newstr);
+  
                     newstr.replace(
                         new RegExp("([^?=&]+)(=([^&]*))?", "g"), function ($0, $1, $2, $3) {
                         objURL[$1] = $3;
-                        //console.log($0, $2);
+                        console.log("0: "+$0);
+                          console.log("1: "+$1);
+                          console.log("2: "+$2);
+                          console.log("3: "+$3);
                     });
     
+  console.log(objURL);
                     return objURL;
 
                 }
 
-//globals
-//comment all of these
-//varlist
+//access token for using mapbox services.  dont copy mine, use your own!
 L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
 
 
-/* Basemap Layers */  //not ideal because of double - labels
-var mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
-    'zIndex': 1
-});
-
-var mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
 
 
-
-  var cMap={}; //hold all globals
+//cMap holds all global values
+  var cMap={}; 
   
+  //the cMap params button gets the initial startup parameters from the address bar
   cMap.params = parseQueryString();
   
-//default lat and lng and zoomlevel
-	var latcoord=cMap.params.lat || 39;
-	var lngcoord=cMap.params.lng || -104.8;
-	var zoomlev=cMap.params.z || 9;
+  
+  
+// mbstyle is a mapbox 'style' (that I created as part of the CO Demog Office Mapbox account).
+cMap.mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
+    'zIndex': 1
+});
+  //mbsat is a mapbox 'project' (that I created as part of the CO Demog Office Mapbox account).
+cMap.mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
 
- var initialbasemap;
 
 cMap.stopafterheader = 0;
 cMap.createnewtable = 0;
@@ -175,8 +182,9 @@ cMap.lastzoom=8;
 cMap.rc={};
 cMap.rc.geoname='';
 cMap.rc.geonum=0;
-  
-cMap.basemap = 'cb';
+
+  //if no basemap specified, set to default
+if(!cMap.params.bm){cMap.params.bm='cb'};
 
 
   
@@ -198,7 +206,7 @@ function updatequerysearchstring(){
   moe='';
   if(cMap.rc.geoname!==''){ga='&ga='+cMap.rc.geoname;}else{ga='';} //last right click feature
   if(cMap.rc.geonum!==0){gn='&gn='+cMap.rc.geonum;}else{gn='';}
-  if(cMap.basemap!=='cb'){bm='&bm='+cMap.basemap;}else{bm='';}
+  if(cMap.params.bm!=='cb'){bm='&bm='+cMap.params.bm;}else{bm='';}
   
  if(cMap.cselected!=='red'){csel='&csel='+cMap.cselected;}else{csel='';}
  if(cMap.cmouseover!=='rgb(128,0,127)'){cmo='&cmo='+cMap.cmouseover;}else{cmo='';}
@@ -269,14 +277,18 @@ $("#nav-btn").click(function() {
 });
 
   
-  initialbasemap=mbstyle;
-  if(cMap.params.bm==='sat'){initialbasemap=mbsat;cMap.basemap='sat';}  
+  function setbasemap(){
+      var initialbasemap=cMap.mbstyle;
+  if(cMap.params.bm==='sat'){initialbasemap=cMap.mbsat;}  
+    return [initialbasemap];
+  }
+
 
 cMap.map = L.map("map", {
-    zoom: zoomlev,
-    center: [latcoord, lngcoord],
+    zoom: cMap.params.z || 9,
+    center: [cMap.params.lat || 39, cMap.params.lng || -104.8],
     minZoom: 4,
-    layers: [initialbasemap],
+    layers: setbasemap(),
     zoomControl: false,
     attributionControl: false
 });
@@ -297,8 +309,8 @@ topPane.appendChild(topLayer.getContainer());
 
 
 var baseLayers = {
-    "Mapbox: Satellite": mbsat,
-    "Mapbox: Contrast Base": mbstyle
+    "Mapbox: Satellite": cMap.mbsat,
+    "Mapbox: Contrast Base": cMap.mbstyle
 };
 
 //in the future ill figure out how to toggle labels on and off (and still have it appear on top)
@@ -2141,7 +2153,7 @@ function querygeonums() {
         
     function jsonstring(thedata) {  //after successfull ajax call, data is sent here
 
-      console.log(thedata);
+      //console.log(thedata);
       
      var max, mean, median, stddev, jenks5, jenks7, jenks9, quantile5, quantile7, quantile9, quantile11, standard8, standard7;
   
@@ -2178,8 +2190,8 @@ function querygeonums() {
       //wide stddev breaks (7)
       standard7=[median+(stddev*2.5),median+(stddev*1.5),median+(stddev*0.5),median-(stddev*0.5),median-(stddev*1.5),median-(stddev*2.5),cMap.minval];   
       
-        console.log(standard8);
-        console.log(standard7);
+        //console.log(standard8);
+        //console.log(standard7);
       
       
       
@@ -2195,15 +2207,15 @@ function querygeonums() {
       eval("localStorage." + cMap.varcode+"_" + geo + "_stddev_7 = '" + JSON.stringify(standard7) + "'");
       eval("localStorage." + cMap.varcode+"_" + geo + "_stddev_8 = '" + JSON.stringify(standard8) + "'");        
 
-      console.log('after eval local storage');
+      //console.log('after eval local storage');
 
       cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.schemename+"_"+cMap.cs.classes));
       
-      console.log('after breaks');
+      //console.log('after breaks');
       
         legend.addTo(cMap.map);
       
-      console.log('added legend');
+      //console.log('added legend');
 
         if (redraw === "yes") {
             ajaxcall();
@@ -2211,16 +2223,16 @@ function querygeonums() {
             cMap.geojsonLayer.setStyle(feat1);
         }
 
-      console.log('end func');
+      //console.log('end func');
       
     }
 
 
-      console.log('beforeremovelegend');
+      //console.log('beforeremovelegend');
         legend.removeFrom(cMap.map);
-console.log('beforemanageradio');
+//console.log('beforemanageradio');
         manageradio = $('input:radio[name ="optionsRadios"]:checked').val();
-console.log('aftermanageradio');
+//console.log('aftermanageradio');
         for (i = 0; i < datatree.data.length; i=i+1) {
 
             if (manageradio === datatree.data[i].varcode) {
@@ -2254,7 +2266,7 @@ console.log('aftermanageradio');
             }
          
         }
-       console.log('for i loop');
+       //console.log('for i loop');
               //loop through colorschemes only - we have breaks info and colorscheme    
         for (k = 0; k < colortree.colorschemes.length; k=k+1) {
 
@@ -2264,7 +2276,7 @@ console.log('aftermanageradio');
                 cMap.symbolcolors = colortree.colorschemes[k].colors;
             }
         }
-      console.log('k loop after');
+      //console.log('k loop after');
       
       //localStorage.setItem("mhi_county_jenks_7", JSON.stringify([79183,64205,54206,46817,40204,33445,1]));
         if(cMap.sumlev==='40'){geo='state';}
@@ -2274,7 +2286,7 @@ console.log('aftermanageradio');
         if(cMap.sumlev==='160'){geo='place';}    
 
 
-      console.log('before eval');
+      //console.log('before eval');
 if(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.schemename+"_"+cMap.cs.classes)){
 cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.schemename+"_"+cMap.cs.classes));
 
@@ -2306,7 +2318,7 @@ cMap.breaks=JSON.parse(eval("localStorage."+cMap.varcode+"_"+geo+"_"+cMap.cs.sch
 
 }
       
-            console.log('after eval');
+            //console.log('after eval');
       
       updatequerysearchstring();
       
@@ -2378,7 +2390,7 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
           if(cMap.params.rc==='yes'){
         $('#rclickModal').modal('toggle');
         $('#rclick').empty();
-            console.log('em');
+            //console.log('em');
             var e={};
             e.target={};
             e.target.feature={};
@@ -2386,7 +2398,7 @@ $( "#minmaxbtn2" ).removeClass( "glyphicon-plus-sign" ).addClass( "glyphicon-min
             e.target.feature.properties.geonum=cMap.params.gn;
             e.target.feature.properties.geoname=cMap.params.ga;
             
-            console.log(e);
+            //console.log(e);
         rightclick(e);
       setTimeout(function(){updatequerysearchstring();},1000);
           }
@@ -2681,8 +2693,8 @@ $(document).ready(function() {
     var temptext;
     temptext = $(this).next().text();
     console.log(temptext);
-    if(temptext===' Mapbox: Contrast Base'){console.log('there');cMap.basemap='cb';}
-    if(temptext===' Mapbox: Satellite'){console.log('here');cMap.basemap='sat';}    
+    if(temptext===' Mapbox: Contrast Base'){console.log('there');cMap.params.bm='cb';}
+    if(temptext===' Mapbox: Satellite'){console.log('here');cMap.params.bm='sat';}    
     updatequerysearchstring();
   });
   
