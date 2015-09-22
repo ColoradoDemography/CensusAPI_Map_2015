@@ -455,7 +455,6 @@ var i, j, labels = [], color = [], div, lowlabel, toplabel, resprec;
     } else {
       
 //labels for standard deviation are treated differently and dont depend on number type
-console.log(cMap.params.cl);
         if (cMap.params.cl === 7) {
             labels = ['< -2.5 Std. Dev.', '-1.5 to -2.5 Std. Dev', '-0.5 to -1.5 Std. Dev.', '0.5 to -0.5 Std. Dev.', '0.5 to 1.5 Std. Dev.', '1.5 to 2.5 Std. Dev.', '> 2.5 Std. Dev.'];
         }
@@ -2135,7 +2134,6 @@ function querygeonums() {
       eval("localStorage." + cMap.params.v+"_" + geo + "_stddev_8 = '" + JSON.stringify(standard8) + "'");        
 
       //console.log('after eval local storage');
-console.log(cMap.params.cl);
       cMap.breaks=JSON.parse(eval("localStorage."+cMap.params.v+"_"+geo+"_"+cMap.params.sn+"_"+cMap.params.cl));
       
       //console.log('after breaks');
@@ -2756,50 +2754,54 @@ $('#classification').change();
 
     //Create Easy Buttons (Top-Left)
   
+  
+  //Dont Bother creating easy buttons if in print mode
+
+  if(cMap.params.print!=="yes"){
   //theme modal & button
     $('#homeModal').modal({
         show: false
     });
-    L.easyButton('fa fa-bars', function() {
+    L.easyButton('fa fa-bars fa-lg', function() {
         $('#homeModal').modal('toggle');
-    }, 'Change Data Theme');
+    }, 'Change Data Theme').addTo(cMap.map);
   
     //geo modal & button
     $('#geoModal').modal({
         show: false
     });
-    L.easyButton('fa fa-compass', function() {
+    L.easyButton('fa fa-compass fa-lg', function() {
         $('#geoModal').modal('toggle');
-    }, 'Change Geography Level');
+    }, 'Change Geography Level').addTo(cMap.map);;
 
   //table button
-    L.easyButton('fa fa-table', function() {
+    L.easyButton('fa fa-table fa-lg', function() {
         $('#resizediv').toggle();
       updatequerysearchstring();
-    }, 'View Table');
+    }, 'View Table').addTo(cMap.map);;
 
     //chart modal & button
     $('#chartModal').modal({
         show: false
     });
-    L.easyButton('fa fa-line-chart', function() {
+    L.easyButton('fa fa-line-chart fa-lg', function() {
         $('#chartModal').modal('toggle');
         $('#chartdiv').empty();
         addchart();
       setTimeout(function(){updatequerysearchstring();},1000);
-    }, 'View Chart');
+    }, 'View Chart').addTo(cMap.map);;
 
     //print modal & button
     $('#dataModal').modal({show: false});  
-    L.easyButton('fa fa-floppy-o', function (){$('#dataModal').modal('toggle');},'Print Map'); 
+    L.easyButton('fa fa-floppy-o fa-lg', function (){$('#dataModal').modal('toggle');},'Print Map').addTo(cMap.map);; 
 
   //clear selected (eraser) button
-    L.easyButton('fa fa-eraser', function() {
+    L.easyButton('fa fa-eraser fa-lg', function() {
         clearsel();
       updatequerysearchstring();
-    }, 'Clear Selection');
+    }, 'Clear Selection').addTo(cMap.map);;
 
- 
+  }
 
 
   //if a transparency value is set in the querystring, change the slider to that value
@@ -2916,10 +2918,7 @@ $('#classification').change();
 
     //change in classes dropdown
     $('#classes').change(function() {
-
-            console.log(cMap.params.cl);
         cMap.params.cl = parseInt(this.value,10);
-      console.log(cMap.params.cl);
       updatequerysearchstring();
         filtercolorschemes();
     });

@@ -31,7 +31,7 @@ if (isset($_GET['tr'])){$tr = '\&tr='.$_GET['tr'];}
 $csel='';
 if (isset($_GET['csel'])){$csel = '\&csel='.$_GET['csel'];}
 
-exec ('phantomjs phantomjs/rasterize.js http://'.$_SERVER['SERVER_NAME'].'/CensusAPI_Map/index.html?lat='.$lat.'\&lng='.$lng.'\&z='.$z.'\&s='.$s.'\&v='.$v.'\&sn='.$sn.'\&bm='.$cs.'\&bm='.$bm.'\&cl='.$cl.'\&print=yes'.$d.$ch.$dt.$rc.$tr.$csel.'  dump/'.$outname.'.'.$type);
+exec ('phantomjs phantomjs/rasterize.js http://'.$_SERVER['SERVER_NAME'].'/CensusAPI_Map/index.html?lat='.$lat.'\&lng='.$lng.'\&z='.$z.'\&s='.$s.'\&v='.$v.'\&sn='.$sn.'\&cs='.$cs.'\&bm='.$bm.'\&cl='.$cl.'\&print=yes'.$d.$ch.$dt.$rc.$tr.$csel.'  dump/'.$outname.'.'.$type);
 
 echo ('phantomjs phantomjs/rasterize.js http://'.$_SERVER['SERVER_NAME'].'/CensusAPI_Map/index.html?lat='.$lat.'\&lng='.$lng.'\&z='.$z.'\&s='.$s.'\&v='.$v.'\&sn='.$sn.'\&bm='.$cs.'\&bm='.$bm.'\&cl='.$cl.'\&print=yes'.$d.$ch.$dt.$rc.$tr.$csel.'  dump/'.$outname.'.'.$type);
 ?>
