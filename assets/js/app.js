@@ -41,8 +41,7 @@ cMap.mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
 
 
 cMap.stopafterheader = 0;  //?
-cMap.createnewtable = 0;
-cMap.summable = false;
+cMap.createnewtable = 0;  //cMap.createnewtable is the flag to redraw the data table.  Set to 0 means redraw, set to 1 means don't redraw
 cMap.favtable = 'Median Household Income';
 
 cMap.globalbusy=0;
@@ -701,7 +700,7 @@ function addRows(data) {
             }
 
 
-           // writeFooter();
+           // writeFooter();  //todo
 
 
         } //stop after header
@@ -2176,7 +2175,6 @@ console.log(cMap.params.cl);
                 cMap.moedenominator = datatree.data[i].moedenominator;
                 cMap.moeformula = "(" + cMap.moenumerator + ")" + "/" + "(" + cMap.moedenominator + ")";
                 cMap.formula = "(" + cMap.numerator + ")" + "/" + "(" + cMap.denominator + ")";
-                cMap.summable = false;
                 cMap.favtable = datatree.data[i].favtable;
                 cMap.params.v = datatree.data[i].varcode;
                 cMap.usezeroasnull = datatree.data[i].usezeroasnull;
@@ -3018,116 +3016,6 @@ $('#classification').change();
 
 
 
-
-
-function writeFooter() {
-     
-//needs so much work...not included  work on and add later
-
-    //write table to an array
-    var array = [], headers = [], footstr, runningval, runningmoe, n, o, addmoeclass, plusminus, l, m, checkstate;
-
-    $('#table th').each(function(index, item) {
-        headers[index] = $(item).html();
-    });
-
-    $('#tablebody tr').has('td').each(function() {
-        var arrayItem = {};
-        $('td', $(this)).each(function(index, item) {
-            arrayItem[headers[index]] = $(item).html();
-        });
-        array.push(arrayItem);
-    });
-
-    //console.log(headers);  
-    //console.log(array);
-
-
-    //console.log(array.length);
-
-    if (array.length === 0) {
-        $('#tablefooter').hide();
-    } else {
-        $('#tablefooter').show();
-    }
-
-    //clear whatever was in the sum row previously
-    $('#tablefooter').empty();
-
-    //check to make sure summable is possible
-    if (cMap.summable) {
-
-        //first two cells will always look like this
-        footstr = '<td>Totals</td>';
-        footstr = footstr + '<td></td>';
-
-
-        //plain
-         runningval = 0;
-         runningmoe = 0;
-         n = '';
-         o = '';
-         addmoeclass = '';
-         plusminus = '';
-
-        for ( l = 2; l < headers.length; l=l+1) {
-
-            runningval = 0;
-            runningmoe = 0;
-
-            if ((headers[l]).search("moe") !== -1) {
-                addmoeclass = 'moe';
-            } else {
-                addmoeclass = '';
-            }
-
-            for ( m = 0; m < array.length; m=m+1) {
-
-                runningval = runningval + Number((array[m][headers[l]]).replace(/[^a-zA-Z0-9]/g, '')); //replace all charcters not numbers and ???letters
-                runningmoe = runningmoe + Math.pow(runningval, 2); //revisit this.  This isn't right
-                if (array[m][headers[l]].search(/\$/g) !== -1) {
-                    n = '$';
-                } //dollar flag
-                if (array[m][headers[l]].search(/%/g) !== -1) {
-                    o = '%';
-                } //pct flag
-                if (array[m][headers[l]].search(",") !== -1) {
-                    p = 1;
-                } //comma flag
-
-            }
-
-            runningmoe = Math.sqrt(runningmoe);
-
-            //if we're in an moe field, switch to give the moe calculation
-            if (addmoeclass === "moe") {
-                runningval = runningmoe;
-                plusminus = '&plusmn; ';
-            } else {
-                plusminus = '';
-            }
-
-            footstr = footstr + '<td class="' + addmoeclass + '">' + plusminus + n + runningval.formatMoney(0) + o + '</td>';
-        }
-
-        //write new footer
-        $('#tablefooter').html(footstr);
-
-        //hide (or not) if class=moe
-        checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
-        if (checkstate) {
-            $('.moe').show();
-        } else {
-            $('.moe').hide();
-        }
-
-    } else {
-
-        $('#tablefooter').hide();
-
-    } // end if summable
-
-}
 
 
 //for jquery history plugin
