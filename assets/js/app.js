@@ -2507,7 +2507,7 @@ var newobj={}, tempp;
   newobj.sn = tempp.sn;
   newobj.cs = tempp.cs;
   newobj.cl = tempp.cl;
-  console.log(tempp.csel);
+
     if(tempp.csel!==undefined){newobj.csel = tempp.csel;}
   
   if(tempp.ch!==undefined){newobj.ch = tempp.ch;}
@@ -2554,9 +2554,9 @@ console.log('15 seconds');
 
   
   	  $.get("do.php",newobj,function(){
-
+        console.log("http://"+window.location.hostname + "/CensusAPI_Map/dump/"+newobj.outname+"."+pictype);
           window.open("http://"+window.location.hostname + "/CensusAPI_Map/dump/"+newobj.outname+"."+pictype);
-	  });
+      });
   
 }
 
@@ -2801,19 +2801,7 @@ $('#classification').change();
       updatequerysearchstring();
     }, 'Clear Selection');
 
-    //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
-  if(cMap.params.print==='yes'){
-    console.log('printing');
-    $('.leaflet-control-search').hide();
-    $('.leaflet-control-zoom').hide();
-    $('.leaflet-control-locate').hide();
-    $('.leaflet-control-layers').hide();
-    $('.leaflet-bar').hide();
-    $('.navbar-nav').hide();
-    $('#popup').hide();
-    $('.spanhide').hide();
-  }
-  
+ 
 
 
   //if a transparency value is set in the querystring, change the slider to that value
@@ -3208,5 +3196,18 @@ var TrelloClipboard = new ((function () {
 })());
 
 
+      //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
+  if(cMap.params.print==='yes'){
+    console.log('printing');
+    $('.leaflet-control-search').hide();
+    $('.leaflet-control-zoom').hide();
+    $('.leaflet-control-locate').hide();
+    $('.leaflet-control-layers').hide();
+    $('.leaflet-bar').hide();
+    $('.navbar-nav').hide();
+    $('#popup').hide();
+    $('.spanhide').hide();
+  }
+  
 
 })();
