@@ -46,7 +46,7 @@ cMap.favtable = 'Median Household Income';
 
 cMap.globalbusy=0;
 cMap.tblfl = '-1'; //tableflavor default to plain
-cMap.map='';
+cMap.map='';  //holds map object
 cMap.current_desc = ""; //name of the current census variable being mapped
 
 cMap.numerator = ''; 
@@ -56,17 +56,17 @@ cMap.moenumerator = '';
 cMap.moedenominator = '';
 cMap.moeformula = '';
   
-if(!cMap.params.s){cMap.params.s='50'};
+if(!cMap.params.s){cMap.params.s='50'};  //summary level.  40 state 50 county 140 tract 150 block group 160 place
 
-cMap.limit = '10000';
-cMap.db = 'acs0913';
-cMap.schema = 'data';
-cMap.table = 'b19013';
+cMap.limit = '10000';  //feature retrieval limit
+cMap.db = 'acs0913';  //the database to retrieve data from.  currently set to acs0913
+cMap.schema = 'data';  //the database schema that the data is located in.  more data on this is available at my CensusAPI_DB repository: https://github.com/royhobbstn/CensusAPI_DB
+cMap.table = 'b19013';  //actual ACS table data is being drawn from
 
 cMap.usezeroasnull = 'yes';
 cMap.breaks = [];
   
-if(!cMap.params.v){cMap.params.v='mhi'};
+if(!cMap.params.v){cMap.params.v='mhi'};  //the variable being mapped.  corresponds to 'varcode' in file datatree.js
 
 cMap.ifnulljson = {};
 cMap.ifzerojson = {};
@@ -75,10 +75,10 @@ cMap.symbolcolors = [];
 cMap.type = "";
 cMap.mininc = 0;
 cMap.minval = 0;
-cMap.geojsonLayer = '';
+cMap.geojsonLayer = '';  //this will hold retrieved geojson from leafletajax library
 
-if(!cMap.params.csel){cMap.params.csel='red'};
-if(!cMap.params.cmo){cMap.params.cmo='rgb(128,0,127)'};
+if(!cMap.params.csel){cMap.params.csel='red'};  //color of selected geography
+if(!cMap.params.cmo){cMap.params.cmo='rgb(128,0,127)'};  //color of mouseover geography
 
 //universal
 cMap.feature={};
@@ -88,12 +88,12 @@ cMap.feature.lineopacity = 0.2; //transparency control
 cMap.feature.fillOpacity = 0.5; //transparency control
 
 //symbology
-if(!cMap.params.cs){cMap.params.cs = "mh1";} 
+if(!cMap.params.cs){cMap.params.cs = "mh1";} //colorscheme corresponds to a scheme as defined in file colortree.js
 if(!cMap.params.cl){cMap.params.cl = 7;}else{cMap.params.cl=parseInt(cMap.params.cl,10);} //number of classes should always be INT.  Starts off as String if from address bar text
-if(!cMap.params.sn){cMap.params.sn = "jenks";}
+if(!cMap.params.sn){cMap.params.sn = "jenks";}  //schemename: either jenks, quantile, or standard deviation
 
 //data table ??empty??
-cMap.dataset = [];
+cMap.dataset = [];  //selected geographies
 
 //map bounds the last time the data was loaded
 cMap.coord={};
@@ -104,6 +104,7 @@ cMap.coord.swlng='';
 
 cMap.lastzoom=8;
 
+  //??
 if(!cMap.params.ga){cMap.params.ga=''}else{cMap.params.ga=decodeURIComponent(cMap.params.ga);};
 if(!cMap.params.gn){cMap.params.gn=0};  
 
@@ -123,19 +124,20 @@ function updatequerysearchstring(){
   rc=''; //right click chart
   s='&s='+cMap.params.s; //sumlev
   v='&v='+cMap.params.v; //varcode
-  sn='&sn='+cMap.params.sn; 
-  cs='&cs='+cMap.params.cs;
-  cl='&cl='+cMap.params.cl;
-  dt='';
+  sn='&sn='+cMap.params.sn; //schemename: jenks quantile stddev
+  cs='&cs='+cMap.params.cs; //colorscheme
+  cl='&cl='+cMap.params.cl;  //number of classes
+  dt='';  //
   d='';
   moe='';
   if(cMap.params.ga!==''){ga='&ga='+cMap.params.ga;}else{ga='';} //last right click feature
   if(cMap.params.gn!==0){gn='&gn='+cMap.params.gn;}else{gn='';}
-  if(cMap.params.bm!=='cb'){bm='&bm='+cMap.params.bm;}else{bm='';}
+  if(cMap.params.bm!=='cb'){bm='&bm='+cMap.params.bm;}else{bm='';}  //basemap
   
- if(cMap.params.csel!=='red'){csel='&csel='+cMap.params.csel;}else{csel='';}
- if(cMap.params.cmo!=='rgb(128,0,127)'){cmo='&cmo='+cMap.params.cmo;}else{cmo='';}
+ if(cMap.params.csel!=='red'){csel='&csel='+cMap.params.csel;}else{csel='';} //selected geography color
+ if(cMap.params.cmo!=='rgb(128,0,127)'){cmo='&cmo='+cMap.params.cmo;}else{cmo='';}  //mouseover geography color
   
+  //takes array of selected geographies.  converts to string.  compress string to URI hash
   if(cMap.dataset.length!==0){
     dstring=cMap.dataset.join();
     compressed = LZString.compressToEncodedURIComponent(dstring);
@@ -153,26 +155,30 @@ function updatequerysearchstring(){
   
   if(!$("[name='my-checkbox']").is(':checked')){moe='&moe=no';}
   
-  //only adding these if they differ from the defaults
+  //only adding these to URL string if they differ from the defaults
   if($('#chartModal').hasClass('in')){ch="&ch=yes";}
   
-  //only adding these if they differ from the defaults
+  //only adding these to URL string if they differ from the defaults
   if($('#rclickModal').hasClass('in')){ch="&rc=yes";}  
   
+  //default transparency is 0.5, anything else and it is added to URL string
   if(cMap.feature.fillOpacity!==0.5){tr="&tr="+cMap.feature.fillOpacity;}
   
+  
+  //create a URL string with all variables not at a default value
     urlstr='?'+'lat='+cMap.map.getCenter().lat +'&lng='+cMap.map.getCenter().lng + '&z='+cMap.map.getZoom()+ch+tr+s+v+sn+cs+cl+dt+ga+gn+bm+moe+csel+cmo+d;
     newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + urlstr;
+  //make browser remember for back button compatibility
     History.pushState({path:newurl},'',newurl);
 
   
 }
 
 
-//change selection color
+//change selected geography color
 function cselectedchg(newcolor){
   cMap.params.csel=newcolor;
-  updatequerysearchstring();
+  updatequerysearchstring();  //update URL string with new value
   
   //change all previously selected elements
  cMap.geojsonLayer.setStyle(feat1);
@@ -181,7 +187,7 @@ function cselectedchg(newcolor){
 //change mouseover color
 function cmouseoverchg(newcolor){
   cMap.params.cmo=newcolor;
-  updatequerysearchstring();
+  updatequerysearchstring();  //update URL string with new value
 }
 
 
@@ -347,6 +353,7 @@ var locateControl = L.control.locate({
 var fullscreencontrol = new L.Control.Fullscreen({position:'topright'}).addTo(cMap.map);
   
   //ugly patch to hide buttons that wont work
+  //revisit
 cMap.map.on('fullscreenchange', function () {
     if (cMap.map.isFullscreen()) {
         console.log('entered fullscreen');
@@ -392,7 +399,7 @@ var i, j, labels = [], color = [], div, lowlabel, toplabel, resprec;
         labels.push(cMap.breaks[i]);
     }
 
-  //format depending on number type: currency, number, regular, percent
+  //format legend labels depending on number type: currency, number, regular, percent
     if (cMap.params.sn !== "stddev") {
         for (i = 0; i < labels.length; i=i+1) {
             if (i === 0) {
