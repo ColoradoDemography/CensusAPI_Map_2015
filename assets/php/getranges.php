@@ -28,7 +28,7 @@ $table=substr($numarray[0],0,6);
 $geopossible=0;
 if($geo=='bg'){$geopossible=217478;}
 if($geo=='tract'){$geopossible=72859;}
-if($geo=='county'){$geopossible=3143;}
+if($geo=='county'){$geopossible=3143;} //3143
 if($geo=='place'){$geopossible=29257;}
 if($geo=='state'){$geopossible=51;}
 
@@ -38,7 +38,7 @@ require '../../../CensusAPI/connect.php';
 $darray=[];
 
 // attempt a connection
-$dbh = pg_connect("host=".$server." dbname=acs0913 user=".$user." password=".$password);
+$dbh = pg_connect("host=".$server." dbname=acs1014 user=".$user." password=".$password);
 
 if (!$dbh) {
     die("Error in connection: " . pg_last_error());

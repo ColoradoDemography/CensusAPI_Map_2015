@@ -25,7 +25,7 @@ if (isset($_GET['advdenominator'])){$advdenominator = $_GET['advdenominator'];} 
 
   
 // attempt a connection
-$dbh = pg_connect("host=".$server." dbname=acs0913 user=".$user." password=".$password);
+$dbh = pg_connect("host=".$server." dbname=acs1014 user=".$user." password=".$password);
 
 if (!$dbh) {
     die("Error in connection: " . pg_last_error());

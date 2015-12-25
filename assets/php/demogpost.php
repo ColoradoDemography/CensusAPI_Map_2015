@@ -24,10 +24,11 @@ if (isset($_POST['table'])){$table = $_POST['table'];} //comma delimited list
 
 //potential single select
 if (isset($_POST['type'])){$type = $_POST['type'];}else{$type='json';} //if no db given, assume most current
-if (isset($_POST['db'])){$db = $_POST['db'];}else{$db='acs0913';} //if no db given, assume most current
+if (isset($_POST['db'])){$db = $_POST['db'];}else{$db='acs1014';} //if no db given, assume most current
 //set default for schema if it is missing
 if (isset($_POST['schema'])){$schema = $_POST['schema'];}else{
-   if($db=='acs0913'){$schema='data';}elseif // for example, acs0812 defaults to data 
+     if($db=='acs1014'){$schema='data';}elseif // for example, acs0812 defaults to data 
+  ($db=='acs0913'){$schema='data';}elseif // for example, acs0812 defaults to data     
   ($db=='acs0812'){$schema='data';}elseif // for example, acs0812 defaults to data
   ($db=='c2010'){$schema='data';}elseif // c2010 defaults to data
   ($db=='c2000'){$schema='sf1';}elseif // c1990 defaults to sf1
@@ -43,7 +44,7 @@ if (isset($_POST['limit'])){$limit = $_POST['limit'];}
 
 //if database is acs0812, check to see if moe option is flagged
 $moe='no';
-if($db=='acs0812' or $db=='acs0913'){if (isset($_POST['moe'])){$moe=$_POST['moe'];}}
+if($db=='acs0812' or $db=='acs0913' or $db=='acs1014'){if (isset($_POST['moe'])){$moe=$_POST['moe'];}}
 
 
 
@@ -81,7 +82,7 @@ foreach($getkey as $gk){
 }
 
   //validate database selected
-    if($db!='c1980' and $db!='c1990' and $db!='c2000' and $db!='c2010' and $db!='acs0812' and $db!='acs0913'){
+    if($db!='c1980' and $db!='c1990' and $db!='c2000' and $db!='c2010' and $db!='acs0812' and $db!='acs0913' and $db!='acs1014'){
       array_push($errorarray, 'Your database choice `'.$db.'` is not valid.');
     $db=""; goto a;
     }
