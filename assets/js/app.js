@@ -319,7 +319,7 @@ var cMap = {};
     });
     attributionControl.onAdd = function() {
         var div = L.DomUtil.create("div", "leaflet-control-attribution");
-        div.innerHTML = "<span class='hidden-xs'>Developed by: <a href='http://www.colorado.gov/demography'>Colorado State Demography Office</a></span><span class='spanhide'> | <a href='#' onclick='$(\"#attributionModal\").modal(\"show\"); return false;'>Sources</a></span>";
+        div.innerHTML = "<span class='hidden-xs'>Developed by: <a href='https://www.colorado.gov/demography'>Colorado State Demography Office</a></span><span class='spanhide'> | <a href='#' onclick='$(\"#attributionModal\").modal(\"show\"); return false;'>Sources</a></span>";
         return div;
     };
     cMap.map.addControl(attributionControl);
@@ -2700,8 +2700,8 @@ var cMap = {};
 
 
         $.get("do.php", newobj, function() {
-            console.log("http://" + window.location.hostname + "/CensusAPI_Map/dump/" + newobj.outname + "." + pictype);
-            window.open("http://" + window.location.hostname + "/CensusAPI_Map/dump/" + newobj.outname + "." + pictype);
+            console.log("https://" + window.location.hostname + "/CensusAPI_Map/dump/" + newobj.outname + "." + pictype);
+            window.open("https://" + window.location.hostname + "/CensusAPI_Map/dump/" + newobj.outname + "." + pictype);
         });
 
     }
