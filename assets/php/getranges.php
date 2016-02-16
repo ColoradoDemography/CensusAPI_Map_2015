@@ -38,7 +38,7 @@ require '../../../CensusAPI/connect.php';
 $darray=[];
 
 // attempt a connection
-$dbh = pg_connect("host=".$server." dbname=acs1014 user=".$user." password=".$password);
+$dbh = pg_connect("host=".$server." dbname=acs1014 port=".$port." user=".$user." password=".$password);
 
 if (!$dbh) {
     die("Error in connection: " . pg_last_error());

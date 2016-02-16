@@ -98,7 +98,7 @@ if (isset($_POST['table'])){array_push($errorarray, 'You specified TABLE.  This 
 }
   
 // attempt a connection
-$dbh = pg_connect("host=".$server." dbname=".$db." user=".$user." password=".$password);
+$dbh = pg_connect("host=".$server." dbname=".$db." port=".$port." user=".$user." password=".$password);
 
 if (!$dbh) {
     die("Error in connection: " . pg_last_error());
