@@ -40,9 +40,9 @@ $darray=[];
 $server="104.197.26.248";
 $user="codemog";
 $password="demography";
-$port="5432";
+$port="5433";
 // attempt a connection
-$dbh = pg_connect("host=".$server." dbname=acs1014 ".$port." user=".$user." password=".$password);
+$dbh = pg_connect("host=".$server." dbname=acs1014 port=".$port." user=".$user." password=".$password);
 
 
 

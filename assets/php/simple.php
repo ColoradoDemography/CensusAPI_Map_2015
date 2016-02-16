@@ -11,7 +11,10 @@ if (isset($_GET['schema'])){$schema = $_GET['schema'];}
 if (isset($_GET['table'])){$table = $_GET['table'];}
 if (isset($_GET['geonum'])){$geonum = $_GET['geonum'];} 
 
-require '../../../CensusAPI/connect.php';
+$server="104.197.26.248";
+$user="codemog";
+$password="demography";
+$port="5433";
 
 // attempt a connection
 $dbh = pg_connect("host=".$server." dbname=".$db." port=".$port." user=".$user." password=".$password);

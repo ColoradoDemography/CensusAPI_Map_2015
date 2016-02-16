@@ -3,12 +3,11 @@ header("Access-Control-Allow-Origin: *");
 //in the future this will go somewhere else (and may differ)
 
 set_include_path(__DIR__);
-require '../../../CensusAPI/connect.php';
-//file with connection information
-//setup like:
-//$server="server";
-//$user="username";
-//$password="password";
+
+$server="104.197.26.248";
+$user="codemog";
+$password="demography";
+$port="5433";
 
 
 //$GET Variables
