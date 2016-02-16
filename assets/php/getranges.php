@@ -33,7 +33,6 @@ if($geo=='place'){$geopossible=29257;}
 if($geo=='state'){$geopossible=51;}
 
 
-require '../../../CensusAPI/connect.php';
 
 $darray=[];
 
@@ -41,9 +40,9 @@ $darray=[];
 $server="104.197.26.248";
 $user="codemog";
 $password="demography";
-$port="5433";
+$port="5432";
 // attempt a connection
-$dbh = pg_connect("host=".$server." dbname=acs1014 port=5433 user=".$user." password=".$password);
+$dbh = pg_connect("host=".$server." dbname=acs1014 ".$port." user=".$user." password=".$password);
 
 
 
