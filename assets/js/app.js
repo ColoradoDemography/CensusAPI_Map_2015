@@ -24,7 +24,6 @@ var cMap = {};
             function($0, $1, $2, $3) {
                 objURL[$1] = $3;
             });
-        console.log(objURL);
         return objURL;
     }
 
@@ -842,7 +841,7 @@ var cMap = {};
 
         $.ajax({
             type: "POST",
-            url: "assets/php/demogpost.php",
+            url: "http://104.197.26.248:4003/demogpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&moe=yes",
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -986,7 +985,7 @@ var cMap = {};
 
         $.ajax({
             type: "POST",
-            url: "assets/php/demogpost.php",
+            url: "http://104.197.26.248:4003/demogpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&moe=yes",
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -1468,7 +1467,7 @@ var cMap = {};
             //ajax call to retrieve state or USA average from database
             $.ajax({
                 type: "POST",
-                url: "assets/php/chartpost.php",
+                url: "http://104.197.26.248:4003/chartpost",
                 data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + sendgeonum + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
                 dataType: 'json',
                 jsonpCallback: 'getJson'
@@ -1497,7 +1496,7 @@ var cMap = {};
 
         $.ajax({
             type: "POST",
-            url: "assets/php/chartpost.php",
+            url: "http://104.197.26.248:4003/chartpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -1952,10 +1951,12 @@ var cMap = {};
 
         function assigndata(data) {
 
+          data=data[0];
 
             function parsephp(c) {
                 //upon successfull return from chart data gathering, create chart
 
+              c=c[0];
                 //convert all values in return object to number
                 for (var key in c) {
                     c[key] = Number(c[key]);
@@ -1967,14 +1968,13 @@ var cMap = {};
                     moedata.push(eval(charttree.data[companionindex].Data[i].MoeFormula));
                 }
 
-
                 chartmaker(valdata, labelset, moedata, charttree.data[companionindex].ChartAlias + ": " + fp.geoname);
 
                 setTimeout(function() {
                     updatequerysearchstring();
                 }, 1000);
 
-            }
+            } //end parsephp
 
 
 
@@ -1988,16 +1988,14 @@ var cMap = {};
             //regular data
             $.ajax({
                 type: "GET",
-                url: "assets/php/simple.php",
-                data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "&geonum=" + fp.geonum,
+                url: "http://104.197.26.248:4003/simple?db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "&geonum=" + fp.geonum,
                 dataType: 'json',
-                jsonpCallback: 'getJson',
                 success: parsephp
             });
 
 
 
-        }
+        } //end assigndata()
 
 
 
@@ -2019,23 +2017,21 @@ var cMap = {};
                     //moe data
                     $.ajax({
                         type: "GET",
-                        url: "assets/php/simple.php",
-                        data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "_moe&geonum=" + fp.geonum,
+                        url: "http://104.197.26.248:4003/simple?db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "_moe&geonum=" + fp.geonum,
                         dataType: 'json',
-                        jsonpCallback: 'getJson',
                         success: assigndata
                     });
 
 
 
-                }
+                } //end if temparray
 
-            }
+            } //end for j
 
 
-        }
+        } //end for i
 
-    }
+    } //end rightclick function
 
 
 
@@ -2144,7 +2140,7 @@ var cMap = {};
 
         //send paramters found above to advsearch.php, where query will return a list of geonums that fit that qualification
         $.ajax({
-            url: "assets/php/advsearch.php?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
+            url: "http://104.197.26.248:4003/advsearch?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
             dataType: 'json',
             jsonpCallback: 'getJson',
             success: selectgeonums
@@ -2174,7 +2170,7 @@ var cMap = {};
         //we calculate a bounding box equal much larger than the actual visible map.  This preloades shapes that are off the map.  Combined with the center point query, this will allow us to not have to requery the database on every map movement.
         newbounds = (cMap.coord.swlng - diff2) + "," + (cMap.coord.swlat - diff1) + "," + (cMap.coord.nelng + diff2) + "," + (cMap.coord.nelat + diff1);
 
-        cMap.geojsonLayer.refresh("../CensusAPI/geojson.php?db=" + cMap.db + "&schema=" + cMap.schema + "&sumlev=" + cMap.params.s + "&limit=" + cMap.limit + "&table=" + cMap.table + "&bb=" + newbounds + "&zoom=" + cMap.map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
+        cMap.geojsonLayer.refresh("http://104.197.26.248:4002/geojson?db=" + cMap.db + "&schema=" + cMap.schema + "&sumlev=" + cMap.params.s + "&limit=" + cMap.limit + "&table=" + cMap.table + "&bb=" + newbounds + "&zoom=" + cMap.map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
 
     }
 
@@ -2358,7 +2354,7 @@ var cMap = {};
 
             //double check discard = maybe related to usezeroasnull
             $.ajax({
-                url: "assets/php/getranges.php?geo=" + geo + "&num=" + stripnum + "&denom=" + stripdenom + "&discard=" + cMap.usezeroasnull,
+                url: "http://104.197.26.248:4003/getranges?geo=" + geo + "&num=" + stripnum + "&denom=" + stripdenom + "&discard=" + cMap.usezeroasnull,
                 dataType: 'json',
                 jsonpCallback: 'getJson',
                 success: jsonstring
@@ -2598,7 +2594,11 @@ var cMap = {};
         var csv_value = $('#table').table2CSV({
             delivery: 'value'
         });
+      
+      csv_value = csv_value.replace(/±/g,"");
+      
         $("#csv_text").val(csv_value);
+
     }
 
 
