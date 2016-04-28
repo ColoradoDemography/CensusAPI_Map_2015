@@ -841,7 +841,7 @@ var cMap = {};
 
         $.ajax({
             type: "POST",
-            url: "http://104.197.26.248:4003/demogpost",
+            url: "https://gis.dola.colorado.gov/cmap/demogpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&moe=yes",
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -985,7 +985,7 @@ var cMap = {};
 
         $.ajax({
             type: "POST",
-            url: "http://104.197.26.248:4003/demogpost",
+            url: "https://gis.dola.colorado.gov/cmap/demogpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&moe=yes",
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -1467,7 +1467,7 @@ var cMap = {};
             //ajax call to retrieve state or USA average from database
             $.ajax({
                 type: "POST",
-                url: "http://104.197.26.248:4003/chartpost",
+                url: "https://gis.dola.colorado.gov/cmap/chartpost",
                 data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + sendgeonum + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
                 dataType: 'json',
                 jsonpCallback: 'getJson'
@@ -1496,7 +1496,7 @@ var cMap = {};
 
         $.ajax({
             type: "POST",
-            url: "http://104.197.26.248:4003/chartpost",
+            url: "https://gis.dola.colorado.gov/cmap/chartpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
             dataType: 'json',
             jsonpCallback: 'getJson',
@@ -1988,7 +1988,7 @@ var cMap = {};
             //regular data
             $.ajax({
                 type: "GET",
-                url: "http://104.197.26.248:4003/simple?db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "&geonum=" + fp.geonum,
+                url: "https://gis.dola.colorado.gov/cmap/simple?db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "&geonum=" + fp.geonum,
                 dataType: 'json',
                 success: parsephp
             });
@@ -2017,7 +2017,7 @@ var cMap = {};
                     //moe data
                     $.ajax({
                         type: "GET",
-                        url: "http://104.197.26.248:4003/simple?db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "_moe&geonum=" + fp.geonum,
+                        url: "https://gis.dola.colorado.gov/cmap/simple?db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + companiontable + "_moe&geonum=" + fp.geonum,
                         dataType: 'json',
                         success: assigndata
                     });
@@ -2140,7 +2140,7 @@ var cMap = {};
 
         //send paramters found above to advsearch.php, where query will return a list of geonums that fit that qualification
         $.ajax({
-            url: "http://104.197.26.248:4003/advsearch?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
+            url: "https://gis.dola.colorado.gov/cmap/advsearch?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
             dataType: 'json',
             jsonpCallback: 'getJson',
             success: selectgeonums
@@ -2170,7 +2170,7 @@ var cMap = {};
         //we calculate a bounding box equal much larger than the actual visible map.  This preloades shapes that are off the map.  Combined with the center point query, this will allow us to not have to requery the database on every map movement.
         newbounds = (cMap.coord.swlng - diff2) + "," + (cMap.coord.swlat - diff1) + "," + (cMap.coord.nelng + diff2) + "," + (cMap.coord.nelat + diff1);
 
-        cMap.geojsonLayer.refresh("http://104.197.26.248:4002/geojson?db=" + cMap.db + "&schema=" + cMap.schema + "&sumlev=" + cMap.params.s + "&limit=" + cMap.limit + "&table=" + cMap.table + "&bb=" + newbounds + "&zoom=" + cMap.map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
+        cMap.geojsonLayer.refresh("https://gis.dola.colorado.gov/capi/geojson?db=" + cMap.db + "&schema=" + cMap.schema + "&sumlev=" + cMap.params.s + "&limit=" + cMap.limit + "&table=" + cMap.table + "&bb=" + newbounds + "&zoom=" + cMap.map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
 
     }
 
@@ -2354,7 +2354,7 @@ var cMap = {};
 
             //double check discard = maybe related to usezeroasnull
             $.ajax({
-                url: "http://104.197.26.248:4003/getranges?geo=" + geo + "&num=" + stripnum + "&denom=" + stripdenom + "&discard=" + cMap.usezeroasnull,
+                url: "https://gis.dola.colorado.gov/cmap/getranges?geo=" + geo + "&num=" + stripnum + "&denom=" + stripdenom + "&discard=" + cMap.usezeroasnull,
                 dataType: 'json',
                 jsonpCallback: 'getJson',
                 success: jsonstring
