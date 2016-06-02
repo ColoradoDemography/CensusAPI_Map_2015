@@ -43,6 +43,12 @@ var tabletree = {
                     "Formula": "fp.b25077_moe001",
                     "type": "currency",
                     "sum": "none"
+                },
+                {
+                    "FieldName": "CV",
+                    "Formula": "(((fp.b25077_moe001/1.645)/fp.b25077001)*100)",
+                    "type": "percent",
+                    "sum": "none"
                 }
             ]
         },{

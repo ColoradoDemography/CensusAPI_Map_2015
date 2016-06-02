@@ -318,7 +318,7 @@ var cMap = {};
     });
     attributionControl.onAdd = function() {
         var div = L.DomUtil.create("div", "leaflet-control-attribution");
-        div.innerHTML = "<span class='hidden-xs'>Developed by: <a href='https://www.colorado.gov/demography'>Colorado State Demography Office</a></span><span class='spanhide'> | <a href='#' onclick='$(\"#attributionModal\").modal(\"show\"); return false;'>Sources</a></span>";
+        div.innerHTML = "<span class='hidden-xs'>Developed by: <a href='https://demography.dola.colorado.gov'>Colorado State Demography Office</a></span><span class='spanhide'> | <a href='#' onclick='$(\"#attributionModal\").modal(\"show\"); return false;'>Sources</a></span>";
         return div;
     };
     cMap.map.addControl(attributionControl);
