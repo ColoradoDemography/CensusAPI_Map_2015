@@ -1,0 +1,29 @@
+{
+    "extends": "eslint:recommended",
+    "env": {
+      "browser": true,
+      "node": true,
+      "jquery": true,
+      "es6": true
+    },
+    "parser": "babel-eslint",
+    "parserOptions": {
+      "ecmaVersion": 6,
+      "sourceType": "module"
+    },
+    "globals": {
+      "L": false,
+      "mapbox": false,
+      "LZString": false,
+      "google" : false,
+      "d3" : false,
+      "ss": false
+      
+    },
+    "plugins": ["babel","flow-vars"],
+    "rules": {
+      "no-console": 0,
+      "flow-vars/define-flow-type": 1,
+      "flow-vars/use-flow-type": 1
+    }
+}

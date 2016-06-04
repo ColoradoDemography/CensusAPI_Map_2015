@@ -1,4 +1,4 @@
-var demodata = [
+module.exports = [
 {'lat': 61.176894, 'lon':-149.871650, 'place': 'Anchorage, AK' },
 {'lat': 64.836688, 'lon':-147.758336, 'place': 'Fairbanks, AK' },
 {'lat': 33.502225, 'lon':-112.076924, 'place': 'Phoenix, AZ' },

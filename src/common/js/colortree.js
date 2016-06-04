@@ -1,4 +1,4 @@
-var colortree = {
+module.exports = {
     "tree": "acs0913",
     "colorschemes": [
         {

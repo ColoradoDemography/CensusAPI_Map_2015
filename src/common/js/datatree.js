@@ -1,4 +1,4 @@
-var datatree = {
+module.exports = {
     "tree": "acs0913",
     "data": [
       

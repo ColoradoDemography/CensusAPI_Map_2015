@@ -1,4 +1,4 @@
-var tabletree = {
+module.exports = {
     "tree": "acs0913",
     "data": [
         {

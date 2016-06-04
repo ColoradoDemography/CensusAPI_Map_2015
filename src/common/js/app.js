@@ -1,38 +1,29 @@
+    "use strict";
+
+var colortree = require("./colortree.js");
+var datatree = require("./datatree.js");
+var charttree = require("./charttree.js");
+
+var tabletree = require("./tableflavor.js");
+var LZString = require("../../lib/js/lz-string.js");
+var accounting = require("accounting");
+
+
 //cMap holds all global values
 //declared here so accessible by leaflet easy-button.js (which has been slightly modified)
 var cMap = {};
 
 
-(function() {
-    "use strict";
-
-    //demo intervals
-    var r_interval;
-    var s_interval;
 
     //jslint globals to ignore:  L $ google colortree datatree LZString History tabletree d3 ss
     /*jslint browser: true, devel: true, evil: true, nomen: true, regexp: true, unparam: true, sloppy: true, white: true */
 
 
-    //On Application Startup, gets query string, breaks it apart into an object of parameters.  All initial setup options will either use these settings, or, if they dont exist, use a default setting.
-    function parseQueryString() {
-        var newstr, objURL;
-        newstr = String(window.location.search);
-        objURL = {};
-        newstr.replace(
-            new RegExp("([^?=&]+)(=([^&]*))?", "g"),
-            function($0, $1, $2, $3) {
-                objURL[$1] = $3;
-            });
-        return objURL;
-    }
-
     //access token for using mapbox services.  dont copy mine, use your own!
     L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
 
     //the cMap params button gets the initial startup parameters from the address bar
-    cMap.params = parseQueryString();
-
+    cMap.params = require("./parse_query_string.js")();
 
 
     // mbstyle is a mapbox 'style' (that I created as part of the CO Demog Office Mapbox account).
@@ -61,7 +52,7 @@ var cMap = {};
 
     if (!cMap.params.s) {
         cMap.params.s = '50'
-    }; //summary level.  40 state 50 county 140 tract 150 block group 160 place
+    } //summary level.  40 state 50 county 140 tract 150 block group 160 place
 
     cMap.limit = '10000'; //feature retrieval limit
     cMap.db = 'acs1014'; //the database to retrieve data from.  currently set to acs1014
@@ -73,7 +64,7 @@ var cMap = {};
 
     if (!cMap.params.v) {
         cMap.params.v = 'mhi'
-    }; //the variable being mapped.  corresponds to 'varcode' in file datatree.js
+    } //the variable being mapped.  corresponds to 'varcode' in file datatree.js
 
     cMap.ifnulljson = {};
     cMap.ifzerojson = {};
@@ -86,10 +77,10 @@ var cMap = {};
 
     if (!cMap.params.csel) {
         cMap.params.csel = 'red'
-    }; //color of selected geography
+    } //color of selected geography
     if (!cMap.params.cmo) {
         cMap.params.cmo = 'rgb(128,0,127)'
-    }; //color of mouseover geography
+    } //color of mouseover geography
 
     //universal
     cMap.feature = {};
@@ -128,35 +119,35 @@ var cMap = {};
         cMap.params.ga = ''
     } else {
         cMap.params.ga = decodeURIComponent(cMap.params.ga);
-    };
+    }
     if (!cMap.params.gn) {
         cMap.params.gn = 0
-    };
+    }
 
 
     //if no basemap specified, set to default
     if (!cMap.params.bm) {
         cMap.params.bm = 'cb'
-    };
+    }
 
 
 
     //after a major map action, the query search string (address) is updated with the new state of the application
     function updatequerysearchstring() {
 
-        var rc, ch, tr, s, v, sn, cs, cl, dt, d, moe, dstring, compressed, btnstate, urlstr, newurl, ga, gn, bm, csel, cmo;
+        var dstring, compressed, btnstate, urlstr, newurl, ga, gn, bm, csel, cmo;
 
-        ch = ''; //chart
-        tr = ''; //transparency
-        rc = ''; //right click chart
-        s = '&s=' + cMap.params.s; //sumlev
-        v = '&v=' + cMap.params.v; //varcode
-        sn = '&sn=' + cMap.params.sn; //schemename: jenks quantile stddev
-        cs = '&cs=' + cMap.params.cs; //colorscheme
-        cl = '&cl=' + cMap.params.cl; //number of classes
-        dt = ''; //
-        d = '';
-        moe = '';
+        var ch = ''; //chart
+        var tr = ''; //transparency
+        //var rc = ''; //right click chart
+        var s = '&s=' + cMap.params.s; //sumlev
+        var v = '&v=' + cMap.params.v; //varcode
+        var sn = '&sn=' + cMap.params.sn; //schemename: jenks quantile stddev
+        var cs = '&cs=' + cMap.params.cs; //colorscheme
+        var cl = '&cl=' + cMap.params.cl; //number of classes
+        var dt = ''; //
+        var d = '';
+        var moe = '';
         if (cMap.params.ga !== '') {
             ga = '&ga=' + cMap.params.ga;
         } else {
@@ -231,7 +222,7 @@ var cMap = {};
 
     }
 
-
+/*eslint-disable */
     //change selected geography color
     function cselectedchg(newcolor) {
         cMap.params.csel = newcolor;
@@ -247,7 +238,8 @@ var cMap = {};
         updatequerysearchstring(); //update URL string with new value
     }
 
-
+/*eslint-enable */
+ 
     //bootleaf navbar controls
     $("#about-btn").click(function() {
         $("#aboutModal").modal("show");
@@ -362,7 +354,7 @@ var cMap = {};
     }
 
     //google geocoder
-    var searchControl = cMap.map.addControl(new L.Control.Search({
+    cMap.map.addControl(new L.Control.Search({
         callData: googleGeocoding,
         filterJSON: filterJSONCall,
         markerLocation: false,
@@ -373,12 +365,12 @@ var cMap = {};
     }));
 
 
-    var zoomControl = L.control.zoom({
+    L.control.zoom({
         position: "topright"
     }).addTo(cMap.map);
-
+  
     /* GPS enabled geolocation control set to follow the user's location */
-    var locateControl = L.control.locate({
+    L.control.locate({
         position: "topright",
         drawCircle: true,
         follow: true,
@@ -410,7 +402,7 @@ var cMap = {};
     }).addTo(cMap.map);
 
 
-    var fullscreencontrol = new L.Control.Fullscreen({
+    new L.Control.Fullscreen({
         position: 'topright'
     }).addTo(cMap.map);
 
@@ -472,11 +464,11 @@ var cMap = {};
                 if (cMap.type === 'currency') {
                     lowlabel = labels[i];
                     toplabel = labels[i + 1] - cMap.mininc;
-                    lowlabel = '$' + lowlabel.formatMoney(0);
+                    lowlabel = accounting.formatMoney(lowlabel, "$", 0);
                     if (!toplabel) {
                         toplabel = " +";
                     } else {
-                        toplabel = ' to $' + toplabel.formatMoney(0);
+                        toplabel = ' to ' + accounting.formatMoney(toplabel, "$", 0);
                     }
                 }
                 if (cMap.type === 'number') {
@@ -488,21 +480,21 @@ var cMap = {};
                     } else {
                         resprec = resprec.length;
                     }
-                    lowlabel = lowlabel.formatMoney(resprec); //still not correct
+                    lowlabel = lowlabel.toFixed(resprec); //still not correct
                     if (!toplabel) {
                         toplabel = " +";
                     } else {
-                        toplabel = ' to ' + toplabel.formatMoney(resprec);
+                        toplabel = ' to ' + toplabel.toFixed(resprec);
                     }
                 }
                 if (cMap.type === 'percent') {
                     lowlabel = labels[i];
                     toplabel = labels[i + 1] - (cMap.mininc / 100);
-                    lowlabel = (lowlabel * 100).formatMoney(2) + ' %';
+                    lowlabel = (lowlabel * 100).toFixed(2) + ' %';
                     if (!toplabel) {
                         toplabel = " +";
                     } else {
-                        toplabel = ' to ' + (toplabel * 100).formatMoney(2) + ' %';
+                        toplabel = ' to ' + (toplabel * 100).toFixed(2) + ' %';
                     }
                 }
                 if (cMap.type === 'regular') {
@@ -604,16 +596,17 @@ var cMap = {};
             rowstr = '',
             classadd = '',
             plusminus = '',
-            resprec, checkstate, i, fp;
+            resprec, checkstate, i;
+            
+            //var fp='';
 
-        fp = '';
 
         cMap.tblfl = $('#tableoption').val();
 
         //Plain Table
         //if select value is 0, it means plain table is selected
         if (cMap.tblfl === '-1') {
-            $.each(data.data[0], function(k, v) {
+            $.each(data.data[0], function(k) {
 
                 if (k.search("moe") !== -1) {
                     tableclassadd = "moe";
@@ -686,7 +679,7 @@ var cMap = {};
                             }
 
                             if (cMap.type === "currency") {
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(v, 10).formatMoney(0) + '</td>';
+                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + '' + accounting.formatMoney(parseInt(v, 10), "$", 0) + '</td>';
                             }
                             if (cMap.type === "number" || cMap.type === "percent") {
                                 resprec = (String(v)).split(".")[1];
@@ -695,7 +688,7 @@ var cMap = {};
                                 } else {
                                     resprec = resprec.length;
                                 }
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + parseFloat(v).formatMoney(resprec) + '</td>';
+                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + (parseFloat(v)).toFixed(resprec) + '</td>';
                             }
                             if (cMap.type === "regular") {
                                 rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + v + '</td>';
@@ -724,7 +717,7 @@ var cMap = {};
 
 
                     $.each(tabletree.data[cMap.tblfl].Data, function(k, v) {
-                        fp = data.data[i];
+                        //fp = data.data[i];
 
                         if ((tabletree.data[cMap.tblfl].Data[k].Formula).search("moe") !== -1) {
                             classadd = "moe";
@@ -738,7 +731,7 @@ var cMap = {};
                         } //no plusmn on coefficient of variance 
 
                         if (tabletree.data[cMap.tblfl].Data[k].type === "currency") {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + '$' + parseInt(eval(v.Formula), 10).formatMoney(0) + '</td>';
+                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + accounting.formatMoney(parseInt(eval(v.Formula), 10), "$", 0) + '</td>';
                         }
                         if (tabletree.data[cMap.tblfl].Data[k].type === "regular") {
                             rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + eval(v.Formula) + '</td>';
@@ -750,7 +743,7 @@ var cMap = {};
                             } else {
                                 resprec = resprec.length;
                             }
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).formatMoney(resprec) + '</td>';
+                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).toFixed(resprec) + '</td>';
                         }
                         if (tabletree.data[cMap.tblfl].Data[k].type === "percent") {
                             rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)).toFixed(2) + '" class="' + classadd + '">' + plusminus + Number(eval(v.Formula)).toFixed(2) + '%</td>';
@@ -1001,9 +994,10 @@ var cMap = {};
     function dochart(JSONdata, xwidth, xheight, stateorusavg) {
 
 
-        var margin, width, height, x0, x1, y0, y1, xAxis, tformat, yAxis, svg, ageNames, state, zero, errorBarArea, errorBars, lineData, lineFunction, lineGraph;
+        var margin, width, height, x0, x1, y0, y1, xAxis, tformat, yAxis, svg, ageNames, state, zero, errorBarArea, errorBars;
+//       var lineData;
+//       var lineFunction;
 
-        lineGraph = '';
 
         margin = {
             top: 50,
@@ -1094,7 +1088,7 @@ var cMap = {};
             .style("text-anchor", "end")
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
-            .attr("transform", function(d) {
+            .attr("transform", function() {
                 return "rotate(-55)";
             });
 
@@ -1150,10 +1144,10 @@ var cMap = {};
                 return height - y0(d.value);
             })
             .style("fill", '#82bc00')
-            .on("mouseover", function(d) {
+            .on("mouseover", function() {
                 d3.select(this).style("opacity", 1);
             })
-            .on("mouseout", function(d) {
+            .on("mouseout", function() {
                 d3.select(this).style("opacity", 0.5);
             })
             .append("svg:title")
@@ -1196,10 +1190,10 @@ var cMap = {};
                 .attr("stroke", "#f6323e")
                 .style("opacity", 0.5)
                 .attr("stroke-width", 2)
-                .on("mouseover", function(d) {
+                .on("mouseover", function() {
                     d3.select(this).style("opacity", 1);
                 })
-                .on("mouseout", function(d) {
+                .on("mouseout", function() {
                     d3.select(this).style("opacity", 0.5);
                 })
                 .append("svg:title")
@@ -1213,7 +1207,7 @@ var cMap = {};
 
             //The line goes from 0 on the x axis to the svg width
             //the y is constant at the value of the state or us average
-            lineData = [{
+            var lineData = [{
                 "x": 0,
                 "y": stateorusavg[0].result
             }, {
@@ -1222,7 +1216,7 @@ var cMap = {};
             }];
 
 
-            lineFunction = d3.svg.line()
+            var lineFunction = d3.svg.line()
                 .x(function(d) {
                     return d.x;
                 })
@@ -1233,21 +1227,22 @@ var cMap = {};
 
 
             //The line SVG Path we draw
-            lineGraph = svg.append("path")
+            
+            svg.append("path")
                 .attr("d", lineFunction(lineData))
                 .attr("stroke", "#ef7521")
                 .attr("stroke-width", 2)
                 .style("opacity", 0.5)
                 .style("stroke-dasharray", ("5, 2"))
                 .attr("fill", "none")
-                .on("mouseover", function(d) {
+                .on("mouseover", function() {
                     d3.select(this).style("opacity", 1);
                 })
-                .on("mouseout", function(d) {
+                .on("mouseout", function() {
                     d3.select(this).style("opacity", 0.5);
                 })
                 .append("svg:title")
-                .text(function(d) {
+                .text(function() {
                     return stateorusavg[0].State + ": " + zero(stateorusavg[0].result);
                 });
 
@@ -1563,10 +1558,11 @@ var cMap = {};
 
 
 
-        var layer = e.target,
-            fp = e.target.feature.properties,
-            popupresult = eval(cMap.formula),
-            resprec, popup, hed;
+        var layer = e.target;
+      var fp = e.target.feature.properties;
+      var popupresult = eval(cMap.formula);
+      var resprec;
+      var popup;
 
 
         //can turn to off for no mouseover
@@ -1586,7 +1582,7 @@ var cMap = {};
 
 
         if (cMap.type === 'currency') {
-            popupresult = '$ ' + popupresult.formatMoney(0);
+            popupresult = ' ' + accounting.formatMoney(popupresult, "$", 0);
         }
 
         if (cMap.type === 'number') {
@@ -1596,11 +1592,11 @@ var cMap = {};
             } else {
                 resprec = resprec.length;
             }
-            popupresult = popupresult.formatMoney(resprec);
+            popupresult = popupresult.toFixed(resprec);
         }
 
         if (cMap.type === 'percent') {
-            popupresult = (popupresult * 100).formatMoney(2) + ' %';
+            popupresult = (popupresult * 100).toFixed(2) + ' %';
         }
 
         //no formatting for type=regular - think: median year housing unit built (only one)
@@ -1620,13 +1616,15 @@ var cMap = {};
         });
 
         // Insert a headline into that popup
-        hed = $("<div></div>", {
+        var hed = $("<div></div>", {
             text: fp.geoname + ": " + popupresult,
             css: {
                 fontSize: "16px",
                 marginBottom: "3px"
             }
-        }).appendTo(popup);
+        });
+        
+        hed.appendTo(popup);
 
         // Add the popup to the map
         popup.appendTo("#map");
@@ -1643,10 +1641,10 @@ var cMap = {};
             arr, rowstr = '',
             classadd = '',
             plusminus = '',
-            resprec, fp, checkstate, k;
+            resprec, checkstate, k;
 
 
-        fp = e.target.feature.properties;
+        var fp = e.target.feature.properties;
 
         //convert json object to array
         arr = $.map(e.target.feature.properties, function(el) {
@@ -1693,7 +1691,7 @@ var cMap = {};
             //add row to table
             if (cMap.tblfl === '-1') {
                 //plain
-                rowstr = '<tr class="' + e.target.feature.properties.geonum + '">';
+                rowstr = '<tr class="' + fp.geonum + '">';
                 rowstr = rowstr + '<td>' + e.target.feature.properties.geoname + '</td>';
                 rowstr = rowstr + '<td>' + e.target.feature.properties.geonum + '</td>';
                 for (k in e.target.feature.properties) {
@@ -1715,7 +1713,7 @@ var cMap = {};
                                 } else {
                                     resprec = resprec.length;
                                 }
-                                rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + parseFloat(e.target.feature.properties[k]).formatMoney(resprec) + '</td>';
+                                rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + parseFloat(e.target.feature.properties[k]).toFixed(resprec) + '</td>';
                             }
 
                             if (cMap.type === 'currency') {
@@ -1725,7 +1723,7 @@ var cMap = {};
                                 } else {
                                     resprec = resprec.length;
                                 }
-                                rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + '$' + parseFloat(e.target.feature.properties[k]).formatMoney(resprec) + '</td>';
+                                rowstr = rowstr + '<td data-sort-value="' + Number(e.target.feature.properties[k]) + '" class="' + classadd + '">' + plusminus + accounting.formatMoney(parseFloat(e.target.feature.properties[k]), "$", resprec) + '</td>';
                             }
 
                             /* if(cMap.type==='percent'){
@@ -1770,7 +1768,7 @@ var cMap = {};
                     } //no plusmn on coefficient of variance
 
                     if (tabletree.data[cMap.tblfl].Data[k].type === "currency") {
-                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + '$' + parseInt((eval(v.Formula)), 10).formatMoney(0) + '</td>';
+                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + accounting.formatMoney(parseInt((eval(v.Formula)), 10), "$", 0) + '</td>';
                     }
                     if (tabletree.data[cMap.tblfl].Data[k].type === "percent") {
                         rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)).toFixed(2) + '" class="' + classadd + '">' + plusminus + Number(eval(v.Formula)).toFixed(2) + '%</td>';
@@ -1785,7 +1783,7 @@ var cMap = {};
                         } else {
                             resprec = resprec.length;
                         }
-                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).formatMoney(resprec) + '</td>';
+                        rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).toFixed(resprec) + '</td>';
                     }
 
                 });
@@ -1869,10 +1867,10 @@ var cMap = {};
             .attr("fill", "LightBlue ")
             .attr("stroke-width", 1)
             .attr("stroke", "navy")
-            .on("mouseover", function(d) {
+            .on("mouseover", function() {
                 d3.select(this).style("stroke-width", 2).style("fill-opacity", 0.5);
             })
-            .on("mouseout", function(d) {
+            .on("mouseout", function() {
                 d3.select(this).style("stroke-width", 1).style("fill-opacity", 1);
             })
             .append("svg:title")
@@ -1937,14 +1935,14 @@ var cMap = {};
 
 
         var i, j, fp = e.target.feature.properties,
-            newobj = {},
             companiontable = '',
             companionindex, m, valdata = [],
             moedata = [],
             labelset = [],
             temparray = [];
 
-
+//var newobj = {};
+      
         cMap.params.ga = fp.geoname;
         cMap.params.gn = fp.geonum;
 
@@ -2190,7 +2188,7 @@ var cMap = {};
 
             //console.log(thedata);
 
-            var max, mean, median, stddev, jenks5, jenks7, jenks9, quantile5, quantile7, quantile9, quantile11, standard8, standard7;
+            var max, median, stddev, jenks5, jenks7, jenks9, quantile5, quantile7, quantile9, quantile11, standard8, standard7;
 
             max = ss.max(thedata);
 
@@ -2199,7 +2197,7 @@ var cMap = {};
             } //all values in array are 0. (presumably no bg data)  Add a '1' to the array so simplestatistics library doesnt fail computing jenks.
 
 
-            mean = ss.mean(thedata);
+            //var mean = ss.mean(thedata);
 
             median = ss.median(thedata);
 
@@ -2603,107 +2601,12 @@ var cMap = {};
 
 
 
-    //creates a random alphanumeric string for use in uniquely naming exported map
-    function makeid() {
-
-        var text = "",
-            possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-            i;
-
-        for (i = 0; i < 5; i = i + 1) {
-            text = text + possible.charAt(Math.floor(Math.random() * possible.length));
-        }
 
 
-        return text;
-    }
 
     //export  map function called from button.  Needs work.  No notice when fails.
     function download(pictype) {
-
-
-        var newobj = {},
-            tempp;
-
-        newobj.type = pictype;
-        newobj.outname = makeid(); //output file name  ... makeid() is function creates random 5 letter filename	  
-
-
-        tempp = parseQueryString();
-
-        newobj.lat = tempp.lat;
-        newobj.lng = tempp.lng;
-        newobj.z = tempp.z;
-        newobj.s = tempp.s;
-        newobj.v = tempp.v;
-        newobj.sn = tempp.sn;
-        newobj.cs = tempp.cs;
-        newobj.cl = tempp.cl;
-
-        if (tempp.csel !== undefined) {
-            newobj.csel = tempp.csel;
-        }
-
-        if (tempp.ch !== undefined) {
-            newobj.ch = tempp.ch;
-        }
-        if (tempp.dt !== undefined) {
-            newobj.dt = tempp.dt;
-        }
-        if (tempp.rc !== undefined) {
-            newobj.rc = tempp.rc;
-        }
-
-        if (tempp.tr !== undefined) {
-            newobj.tr = tempp.tr;
-        }
-        if (tempp.d !== undefined) {
-            newobj.d = tempp.d;
-        }
-        if (tempp.bm !== undefined) {
-            newobj.bm = tempp.bm;
-        }
-
-        cMap.map.spin(true);
-
-        //see below... the progress bar is not based on anything having to do with real progress... just time
-        setTimeout(function() {
-            console.log('5 seconds');
-            $("#progressbar").css('width', '20%').stop();
-            $("#progressbar").html('20%');
-        }, 5000);
-
-        setTimeout(function() {
-            $("#progressbar").css('width', '40%').stop();
-            $("#progressbar").html('40%');
-            console.log('10 seconds');
-        }, 10000);
-
-        setTimeout(function() {
-            $("#progressbar").css('width', '60%').stop();
-            $("#progressbar").html('60%');
-            console.log('15 seconds');
-        }, 15000);
-
-        setTimeout(function() {
-            $("#progressbar").css('width', '80%').stop();
-            $("#progressbar").html('80%');
-            console.log('20 seconds');
-        }, 20000);
-
-        setTimeout(function() {
-            cMap.map.spin(false);
-            $("#progressbar").css('width', '100%').stop();
-            $("#progressbar").html('100%');
-            console.log('25 seconds');
-        }, 25000);
-
-
-        $.get("do.php", newobj, function() {
-            console.log("https://" + window.location.hostname + "/CensusAPI_Map/dump/" + newobj.outname + "." + pictype);
-            window.open("https://" + window.location.hostname + "/CensusAPI_Map/dump/" + newobj.outname + "." + pictype);
-        });
-
+      require("./download_image.js")(cMap, pictype);
     }
 
     //kinda a hacky slider. Revisit.
@@ -2731,89 +2634,7 @@ var cMap = {};
         });
 
 
-        function changedemo() {
-            loopcount = loopcount + 1;
 
-            var rnd = Math.floor((Math.random() * demodata.length) + 1);
-            cMap.map.panTo(L.latLng(demodata[rnd].lat, demodata[rnd].lon));
-
-        }
-
-        function changesettings() {
-
-            if (cMap.params.tr !== .5) {
-                cMap.map.removeLayer(cMap.mbsat);
-                cMap.map.addLayer(cMap.mbstyle);
-                cMap.params.bm = 'cb';
-                cMap.params.tr = .5;
-                cMap.feature.fillOpacity = .5;
-                trslider.slider('setValue', 50);
-                cMap.geojsonLayer.setStyle({
-                    fillOpacity: cMap.feature.fillOpacity
-                });
-
-
-
-                if (loopcount == 40) {
-                    $('input[name="optionsRadios"][value="rented"]').prop('checked', true);
-                    cMap.params.v = 'rented';
-                    changeall('yes', '1');
-                }
-
-                if (loopcount == 80) {
-                    $('input[name="optionsRadios"][value="myb"]').prop('checked', true);
-                    cMap.params.v = 'myb';
-                    changeall('yes', '1');
-                }
-
-                if (loopcount == 120) {
-                    $('input[name="optionsRadios"][value="inpoverty"]').prop('checked', true);
-                    cMap.params.v = 'inpoverty';
-                    changeall('yes', '1');
-                }
-
-                if (loopcount == 160) {
-                    $('input[name="optionsRadios"][value="mhv"]').prop('checked', true);
-                    cMap.params.v = 'mhv';
-                    changeall('yes', '1');
-                }
-
-                if (loopcount == 200) {
-                    $('input[name="optionsRadios"][value="bachlhghr"]').prop('checked', true);
-                    cMap.params.v = 'bachlhghr';
-                    changeall('yes', '1');
-                }
-
-                if (loopcount == 240) {
-                    $('input[name="optionsRadios"][value="mhi"]').prop('checked', true);
-                    cMap.params.v = 'mhi';
-                    changeall('yes', '1');
-                }
-
-                if (loopcount == 280) {
-                    clearInterval(r_interval);
-                    clearInterval(s_interval);
-
-                }
-
-                updatequerysearchstring();
-            } else {
-                cMap.map.removeLayer(cMap.mbstyle);
-                cMap.map.addLayer(cMap.mbsat);
-                cMap.params.bm = "sat";
-                cMap.params.tr = 0;
-                cMap.feature.fillOpacity = 0;
-                trslider.slider('setValue', 0);
-                cMap.geojsonLayer.setStyle({
-                    fillOpacity: cMap.feature.fillOpacity
-                });
-
-                //legend.addTo(cMap.map);
-                updatequerysearchstring();
-            }
-
-
-        }
 
 
         //depending on sumlev, changes minZoom, adds the correct string to the advanced query tool i.e (select all 'tracts')
@@ -3003,65 +2824,10 @@ var cMap = {};
         //initialize stupid table plugin on our data table
         $("#table").stupidtable();
 
-        //Create Easy Buttons (Top-Left)
-
-
-        //Dont Bother creating easy buttons if in print mode
-
-        if (cMap.params.print !== "yes") {
-            //theme modal & button
-            $('#homeModal').modal({
-                show: false
-            });
-            L.easyButton('fa fa-bars fa-lg', function() {
-                $('#homeModal').modal('toggle');
-            }, 'Change Data Theme').addTo(cMap.map);
-
-            //geo modal & button
-            $('#geoModal').modal({
-                show: false
-            });
-            L.easyButton('fa fa-compass fa-lg', function() {
-                $('#geoModal').modal('toggle');
-            }, 'Change Geography Level').addTo(cMap.map);;
-
-            //table button
-            L.easyButton('fa fa-table fa-lg', function() {
-                $('#resizediv').toggle();
-                updatequerysearchstring();
-            }, 'View Table').addTo(cMap.map);;
-
-            //chart modal & button
-            $('#chartModal').modal({
-                show: false
-            });
-            L.easyButton('fa fa-line-chart fa-lg', function() {
-                $('#chartModal').modal('toggle');
-                $('#chartdiv').empty();
-                addchart();
-                setTimeout(function() {
-                    updatequerysearchstring();
-                }, 1000);
-            }, 'View Chart').addTo(cMap.map);;
-
-            //print modal & button
-            $('#dataModal').modal({
-                show: false
-            });
-            L.easyButton('fa fa-floppy-o fa-lg', function() {
-                $('#dataModal').modal('toggle');
-            }, 'Print Map').addTo(cMap.map);;
-
-            //clear selected (eraser) button
-            L.easyButton('fa fa-eraser fa-lg', function() {
-                clearsel();
-                updatequerysearchstring();
-            }, 'Clear Selection').addTo(cMap.map);;
-
-        }
-
-
-        //if a transparency value is set in the querystring, change the slider to that value
+      
+      require("./easy_buttons.js")(cMap, updatequerysearchstring, addchart, clearsel);
+      
+           //if a transparency value is set in the querystring, change the slider to that value
         if (cMap.params.tr !== undefined) {
             cMap.feature.fillOpacity = cMap.params.tr;
             trslider.slider('setValue', parseInt((cMap.feature.fillOpacity * 100), 10));
@@ -3124,265 +2890,23 @@ var cMap = {};
 
 
 
-        //START ALL FUNCTIONS- DO THEY NEED TO BE WITHIN DOCUMENT READY?
-
-        //change data theme
-        $('input[name=optionsRadios]:radio').change(function() {
-            cMap.params.v = this.value;
-            updatequerysearchstring();
-            cMap.createnewtable = 0;
-            changeall('yes', '1');
-        });
-
-        //change colorscheme
-        $('input[name=schemeRadios]:radio').change(function() {
-            cMap.params.cs = this.value;
-            updatequerysearchstring();
-            changeall('no', '0');
-        });
-
-        //change geo //change advanced dialog text, change minZoom level
-        $('input[name=geoRadios]:radio').change(function() {
-
-            cMap.params.s = $('input:radio[name ="geoRadios"]:checked').val();
-
-            if (cMap.params.s === '50') {
-                cMap.map.options.minZoom = 4;
-                $('#advgeo').text('counties');
-            }
-            if (cMap.params.s === '40') {
-                cMap.map.options.minZoom = 4;
-                $('#advgeo').text('states');
-            }
-            if (cMap.params.s === '140') {
-                cMap.map.options.minZoom = 9;
-                $('#advgeo').text('tracts');
-            }
-            if (cMap.params.s === '150') {
-                cMap.map.options.minZoom = 9;
-                $('#advgeo').text('block groups');
-            }
-            if (cMap.params.s === '160') {
-                cMap.map.options.minZoom = 9;
-                $('#advgeo').text('places');
-            }
-
-
-            updatequerysearchstring();
-            changeall('yes', '0');
-        });
-
-
-
-        //change in classes dropdown
-        $('#classes').change(function() {
-            cMap.params.cl = parseInt(this.value, 10);
-            updatequerysearchstring();
-            filtercolorschemes();
-        });
-
-
-        //keep track of time.  when stopped moving for two seconds, redraw
-        cMap.map.on('movestart', function() {
-            var d = new Date();
-            cMap.globalbusy = d.getTime();
-        });
-
-        cMap.map.on('moveend', function() {
-
-            updatequerysearchstring();
-
-            var d = new Date();
-            cMap.globalbusy = d.getTime();
-
-
-            setTimeout(function() {
-                var e, curtime, c, clat, clng;
-
-                e = new Date();
-                curtime = e.getTime();
-                if (curtime >= (cMap.globalbusy + 1000)) {
-
-                    //get center of map point
-                    c = cMap.map.getCenter();
-                    clat = c.lat;
-                    clng = c.lng;
-
-                    //if center point is still within the current map bounds, then dont do anything.  otherwise, run query again
-                    if (clat < cMap.coord.nelat && clat > cMap.coord.swlat && clng < cMap.coord.nelng && clng > cMap.coord.swlng) {
-
-                        if (cMap.map.getZoom() !== cMap.lastzoom) {
-                            ajaxcall();
-                        }
-
-                    } else {
-                        ajaxcall();
-                    }
-
-
-
-                }
-            }, 1000);
-
-
-        }); // end 'on moveend'
-
-        cMap.map.on('zoomstart', function() {
-            var d = new Date();
-            cMap.globalbusy = d.getTime();
-        });
-
-        //when map is zoomed in or out
-        cMap.map.on('zoomend', function() {
-            var d, e, curtime, curzoom;
-
-            updatequerysearchstring();
-
-            d = new Date();
-            cMap.globalbusy = d.getTime();
-
-            setTimeout(function() {
-                e = new Date();
-                curtime = e.getTime();
-
-                if (curtime >= (cMap.globalbusy + 1000)) {
-
-                    if (cMap.map.getZoom() !== cMap.lastzoom) {
-                        ajaxcall();
-                    }
-
-                }
-            }, 1000);
-
-            //grey radio buttons for geography levels if zoomed out too far
-            curzoom = cMap.map.getZoom();
-            if (curzoom < 9) {
-                $("#rbplace").hide();
-                $("#rbtract").hide();
-                $("#rbbg").hide();
-            } else {
-                $("#rbplace").show();
-                $("#rbtract").show();
-                $("#rbbg").show();
-            }
-            //rbplace
-
-        });
-
-
-
-
-        //demo mode
-        if (cMap.params.demo === 'yes') {
-
-
-
-            var loopcount = 0;
-            console.log('demo');
-
-
-            r_interval = setInterval(function() {
-                changedemo();
-            }, 12000);
-            s_interval = setInterval(function() {
-                changesettings();
-            }, 6000);
-
-        }
-
+       require("./change_options")(cMap, updatequerysearchstring, changeall, filtercolorschemes);
+       require("./map_move")(cMap, updatequerysearchstring, ajaxcall);
+       require("./demo_mode")(cMap, trslider, changeall, updatequerysearchstring);
+      
 
 
     }); //end document on ready
 
 
 
-
-
-
-
+//TODO: back button is broken
     //for jquery history plugin
     History.Adapter.bind(window, 'statechange', function() { // Note: We are using statechange instead of popstate
-        var State = History.getState(); // Note: We are using History.getState() instead of event.state
-
-
+//         var State = History.getState(); // Note: We are using History.getState() instead of event.state
+//       console.log(State);
+// window.location=State.url;
     });
 
 
-    //format number - may want to replace all references to this with the D3 format function instead, which is more flexible
-    //i did not write this, found it online
-    Number.prototype.formatMoney = function(c, d, t) {
-        var n = this,
-            c = isNaN(c = Math.abs(c)) ? 2 : c,
-            d = d == undefined ? "." : d,
-            t = t == undefined ? "," : t,
-            s = n < 0 ? "-" : "",
-            i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "",
-            j = (j = i.length) > 3 ? j % 3 : 0;
-        return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
-    };
-
-
-
-    var TrelloClipboard = new((function() {
-        //Trello Clipboard allows the map user to Ctrl-C at any time to add a map link to their clipboard  
-        function _Class() {
-            this.value = function() {
-                return window.location.href;
-            };
-            $(document).keydown((function(_this) {
-                return function(e) {
-                    var _ref, _ref1;
-                    if (!_this.value || !(e.ctrlKey || e.metaKey)) {
-                        return;
-                    }
-                    if ($(e.target).is("input:visible,textarea:visible")) {
-                        return;
-                    }
-                    if (typeof window.getSelection === "function" ? (_ref = window.getSelection()) != null ? _ref.toString() : void 0 : void 0) {
-                        return;
-                    }
-                    if ((_ref1 = document.selection) != null ? _ref1.createRange().text : void 0) {
-                        return;
-                    }
-                    return $.Deferred(function() {
-                        var $clipboardContainer;
-                        $clipboardContainer = $("#clipboard-container");
-                        $clipboardContainer.empty().show();
-                        return $("<textarea id='clipboard'></textarea>").val(_this.value).appendTo($clipboardContainer).focus().select();
-                    });
-                };
-            })(this));
-            $(document).keyup(function(e) {
-                if ($(e.target).is("#clipboard")) {
-                    return $("#clipboard-container").empty().hide();
-                }
-            });
-        }
-
-        _Class.prototype.set = function(value) {
-            this.value = value;
-        };
-
-        return _Class;
-
-    })());
-
-
-    //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
-    if (cMap.params.print === 'yes') {
-        console.log('printing');
-        $('.leaflet-control-search').hide();
-        $('.leaflet-control-zoom').hide();
-        $('.leaflet-control-locate').hide();
-        $('.leaflet-control-layers').hide();
-        $('.leaflet-bar').hide();
-        $('.navbar-nav').hide();
-        $('#popup').hide();
-        $('.spanhide').hide();
-    }
-
-
-
-
-
-})();
+require("./print_mode.js")(cMap.params.print);
