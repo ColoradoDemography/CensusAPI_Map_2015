@@ -1,858 +1,45 @@
     "use strict";
 
-var colortree = require("./colortree.js");
-var datatree = require("./datatree.js");
-var charttree = require("./charttree.js");
+    var colortree = require("./colortree.js");
+    var datatree = require("./datatree.js");
+    var charttree = require("./charttree.js");
+    var tabletree = require("./tableflavor.js");
+    var LZString = require("../../lib/js/lz-string.js");
+    var accounting = require("accounting");
+    var ss = require("../../lib/js/simple_statistics.js");
+
+    //utility functions
+    var updatequerysearchstring = require("./update_query_string.js");
+    var filtercolorschemes = require("./filter_color_schemes.js");
+    var addRows = require("./add_rows.js");
+    var redrawTable = require("./redraw_table.js");
+
+
+
+    //cMap holds all global values
+    var cMap = require("./initialize_cMap.js")();
+
+    //Bootleaf Template Setup
+    require("./setup_bootleaf.js")();
+
+    //Leaflet Controls
+    require("./attribution_control.js")(cMap);
+    require("./geocode_control.js")(cMap);
+    require("./zoom_control.js")(cMap);
+    require("./locate_control.js")(cMap);
+    require("./fullscreen_control.js")(cMap);
+    require("./layer_control.js")(cMap);
+    var legend = require("./legend_control")(cMap);
 
-var tabletree = require("./tableflavor.js");
-var LZString = require("../../lib/js/lz-string.js");
-var accounting = require("accounting");
-
-
-//cMap holds all global values
-//declared here so accessible by leaflet easy-button.js (which has been slightly modified)
-var cMap = {};
-
-
-
-    //jslint globals to ignore:  L $ google colortree datatree LZString History tabletree d3 ss
-    /*jslint browser: true, devel: true, evil: true, nomen: true, regexp: true, unparam: true, sloppy: true, white: true */
-
-
-    //access token for using mapbox services.  dont copy mine, use your own!
-    L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
-
-    //the cMap params button gets the initial startup parameters from the address bar
-    cMap.params = require("./parse_query_string.js")();
-
-
-    // mbstyle is a mapbox 'style' (that I created as part of the CO Demog Office Mapbox account).
-    cMap.mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
-        'zIndex': 1
-    });
-    //mbsat is a mapbox 'project' (that I created as part of the CO Demog Office Mapbox account).
-    cMap.mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
-
-
-    cMap.stopafterheader = 0; //?
-    cMap.createnewtable = 0; //cMap.createnewtable is the flag to redraw the data table.  Set to 0 means redraw, set to 1 means don't redraw
-    cMap.favtable = 'Median Household Income';
-
-    cMap.globalbusy = 0;
-    cMap.tblfl = '-1'; //tableflavor default to plain
-    cMap.map = ''; //holds map object
-    cMap.current_desc = ""; //name of the current census variable being mapped
-
-    cMap.numerator = '';
-    cMap.denominator = '';
-    cMap.formula = '';
-    cMap.moenumerator = '';
-    cMap.moedenominator = '';
-    cMap.moeformula = '';
-
-    if (!cMap.params.s) {
-        cMap.params.s = '50'
-    } //summary level.  40 state 50 county 140 tract 150 block group 160 place
-
-    cMap.limit = '10000'; //feature retrieval limit
-    cMap.db = 'acs1014'; //the database to retrieve data from.  currently set to acs1014
-    cMap.schema = 'data'; //the database schema that the data is located in.  more data on this is available at my CensusAPI_DB repository: https://github.com/royhobbstn/CensusAPI_DB
-    cMap.table = 'b19013'; //actual ACS table data is being drawn from
-
-    cMap.usezeroasnull = 'yes';
-    cMap.breaks = [];
-
-    if (!cMap.params.v) {
-        cMap.params.v = 'mhi'
-    } //the variable being mapped.  corresponds to 'varcode' in file datatree.js
-
-    cMap.ifnulljson = {};
-    cMap.ifzerojson = {};
-    cMap.symbolcolors = [];
-
-    cMap.type = "";
-    cMap.mininc = 0;
-    cMap.minval = 0;
-    cMap.geojsonLayer = ''; //this will hold retrieved geojson from leafletajax library
-
-    if (!cMap.params.csel) {
-        cMap.params.csel = 'red'
-    } //color of selected geography
-    if (!cMap.params.cmo) {
-        cMap.params.cmo = 'rgb(128,0,127)'
-    } //color of mouseover geography
-
-    //universal
-    cMap.feature = {};
-    cMap.feature.linecolor = "Gray";
-    cMap.feature.lineweight = 0;
-    cMap.feature.lineopacity = 0.2; //transparency control
-    cMap.feature.fillOpacity = 0.5; //transparency control
-
-    //symbology
-    if (!cMap.params.cs) {
-        cMap.params.cs = "mh1";
-    } //colorscheme corresponds to a scheme as defined in file colortree.js
-    if (!cMap.params.cl) {
-        cMap.params.cl = 7;
-    } else {
-        cMap.params.cl = parseInt(cMap.params.cl, 10);
-    } //number of classes should always be INT.  Starts off as String if from address bar text
-    if (!cMap.params.sn) {
-        cMap.params.sn = "jenks";
-    } //schemename: either jenks, quantile, or standard deviation
-
-    //data table ??empty??
-    cMap.dataset = []; //selected geographies
-
-    //map bounds the last time the data was loaded
-    cMap.coord = {};
-    cMap.coord.nelat = '';
-    cMap.coord.nelng = '';
-    cMap.coord.swlat = '';
-    cMap.coord.swlng = '';
-
-    cMap.lastzoom = 8;
-
-    //??
-    if (!cMap.params.ga) {
-        cMap.params.ga = ''
-    } else {
-        cMap.params.ga = decodeURIComponent(cMap.params.ga);
-    }
-    if (!cMap.params.gn) {
-        cMap.params.gn = 0
-    }
-
-
-    //if no basemap specified, set to default
-    if (!cMap.params.bm) {
-        cMap.params.bm = 'cb'
-    }
-
-
-
-    //after a major map action, the query search string (address) is updated with the new state of the application
-    function updatequerysearchstring() {
-
-        var dstring, compressed, btnstate, urlstr, newurl, ga, gn, bm, csel, cmo;
-
-        var ch = ''; //chart
-        var tr = ''; //transparency
-        //var rc = ''; //right click chart
-        var s = '&s=' + cMap.params.s; //sumlev
-        var v = '&v=' + cMap.params.v; //varcode
-        var sn = '&sn=' + cMap.params.sn; //schemename: jenks quantile stddev
-        var cs = '&cs=' + cMap.params.cs; //colorscheme
-        var cl = '&cl=' + cMap.params.cl; //number of classes
-        var dt = ''; //
-        var d = '';
-        var moe = '';
-        if (cMap.params.ga !== '') {
-            ga = '&ga=' + cMap.params.ga;
-        } else {
-            ga = '';
-        } //last right click feature
-        if (cMap.params.gn !== 0) {
-            gn = '&gn=' + cMap.params.gn;
-        } else {
-            gn = '';
-        }
-        if (cMap.params.bm !== 'cb') {
-            bm = '&bm=' + cMap.params.bm;
-        } else {
-            bm = '';
-        } //basemap
-
-        if (cMap.params.csel !== 'red') {
-            csel = '&csel=' + cMap.params.csel;
-        } else {
-            csel = '';
-        } //selected geography color
-        if (cMap.params.cmo !== 'rgb(128,0,127)') {
-            cmo = '&cmo=' + cMap.params.cmo;
-        } else {
-            cmo = '';
-        } //mouseover geography color
-
-        //takes array of selected geographies.  converts to string.  compress string to URI hash
-        if (cMap.dataset.length !== 0) {
-            dstring = cMap.dataset.join();
-            compressed = LZString.compressToEncodedURIComponent(dstring);
-            d = '&d=' + compressed;
-        }
-
-        if ($('#resizediv').is(':visible')) {
-            btnstate = $('#closebtn').css('top');
-            if (btnstate === '3px') {
-                dt = '&dt=yes';
-            } else {
-                dt = '&dt=max';
-            }
-        }
-
-        if (!$("[name='my-checkbox']").is(':checked')) {
-            moe = '&moe=no';
-        }
-
-        //only adding these to URL string if they differ from the defaults
-        if ($('#chartModal').hasClass('in')) {
-            ch = "&ch=yes";
-        }
-
-        //only adding these to URL string if they differ from the defaults
-        if ($('#rclickModal').hasClass('in')) {
-            ch = "&rc=yes";
-        }
-
-        //default transparency is 0.5, anything else and it is added to URL string
-        if (cMap.feature.fillOpacity !== 0.5) {
-            tr = "&tr=" + cMap.feature.fillOpacity;
-        }
-
-
-        //create a URL string with all variables not at a default value
-        urlstr = '?' + 'lat=' + cMap.map.getCenter().lat + '&lng=' + cMap.map.getCenter().lng + '&z=' + cMap.map.getZoom() + ch + tr + s + v + sn + cs + cl + dt + ga + gn + bm + moe + csel + cmo + d;
-        newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + urlstr;
-        //make browser remember for back button compatibility
-        History.pushState({
-            path: newurl
-        }, '', newurl);
-
-
-    }
-
-/*eslint-disable */
-    //change selected geography color
-    function cselectedchg(newcolor) {
-        cMap.params.csel = newcolor;
-        updatequerysearchstring(); //update URL string with new value
-
-        //change all previously selected elements
-        cMap.geojsonLayer.setStyle(feat1);
-    }
-
-    //change mouseover color
-    function cmouseoverchg(newcolor) {
-        cMap.params.cmo = newcolor;
-        updatequerysearchstring(); //update URL string with new value
-    }
-
-/*eslint-enable */
- 
-    //bootleaf navbar controls
-    $("#about-btn").click(function() {
-        $("#aboutModal").modal("show");
-        $(".navbar-collapse.in").collapse("hide");
-        return false;
-    });
-    $("#advanced-btn").click(function() {
-        $("#symbologyModal").modal("show");
-        $(".navbar-collapse.in").collapse("hide");
-        return false;
-    });
-    $("#nav-btn").click(function() {
-        $(".navbar-collapse").collapse("toggle");
-        return false;
-    });
-
-
-    //function returns basemap (as layer in array)
-    //default basemap is high contrast.  It is the default when cMap.params.bm===''.
-    function setbasemap() {
-        var initialbasemap = cMap.mbstyle;
-        if (cMap.params.bm === 'sat') {
-            initialbasemap = cMap.mbsat;
-        }
-        return [initialbasemap];
-    }
-
-    //initialize map with lat/lng from address bar string, or default at 39,-104.8
-    cMap.map = L.map("map", {
-        zoom: cMap.params.z || 9,
-        center: [cMap.params.lat || 39, cMap.params.lng || -104.8],
-        minZoom: 4,
-        layers: setbasemap(),
-        zoomControl: false,
-        attributionControl: false
-    });
-
-
-
-    //define labels layer
-    var mblabels = L.mapbox.tileLayer('statecodemog.798453f5', {
-        'clickable': 'false',
-        'zIndex': 1000
-    });
-
-
-    //create map sandwich
-    var topPane = cMap.map._createPane('leaflet-top-pane', cMap.map.getPanes().mapPane);
-    var topLayer = mblabels.addTo(cMap.map);
-    topPane.appendChild(topLayer.getContainer());
-
-
-    var baseLayers = {
-        "Mapbox: Satellite": cMap.mbsat,
-        "Mapbox: Contrast Base": cMap.mbstyle
-    };
-
-    //in the future ill figure out how to toggle labels on and off (and still have it appear on top)
-    var groupedOverlays = {
-        //  "Labels and Borders": mblabels
-    };
-
-
-
-    /* Attribution control */ //bootleaf
-    var attributionControl = L.control({
-        position: "bottomright"
-    });
-    attributionControl.onAdd = function() {
-        var div = L.DomUtil.create("div", "leaflet-control-attribution");
-        div.innerHTML = "<span class='hidden-xs'>Developed by: <a href='https://demography.dola.colorado.gov'>Colorado State Demography Office</a></span><span class='spanhide'> | <a href='#' onclick='$(\"#attributionModal\").modal(\"show\"); return false;'>Sources</a></span>";
-        return div;
-    };
-    cMap.map.addControl(attributionControl);
-
-    //MapBox and OpenStreet Map Required Attribution
-    var attributionControl2 = L.control({
-        position: "bottomright"
-    });
-    attributionControl2.onAdd = function() {
-        var div = L.DomUtil.create("div", "leaflet-control-attribution");
-        div.innerHTML = "<a href='https://www.mapbox.com/about/maps/' target='_blank'>Maps &copy; Mapbox &copy; OpenStreetMap</a><span class='spanhide'>&nbsp;&nbsp;&nbsp;<a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve This Map</a></span>";
-        return div;
-    };
-    cMap.map.addControl(attributionControl2);
-
-    //geocoder is from Google.
-    var geocoder = new google.maps.Geocoder();
-
-    //google geocoder
-    function googleGeocoding(text, callResponse) {
-        geocoder.geocode({
-            address: text
-        }, callResponse);
-    }
-
-    //google geocoder function
-    function filterJSONCall(rawjson) {
-        var i, json = {},
-            key, loc;
-
-        for (i in rawjson) {
-            if (rawjson.hasOwnProperty(i)) {
-                key = rawjson[i].formatted_address;
-                loc = L.latLng(rawjson[i].geometry.location.lat(), rawjson[i].geometry.location.lng());
-                json[key] = loc; //key,value format
-            }
-        }
-
-
-        return json;
-    }
-
-    //google geocoder
-    cMap.map.addControl(new L.Control.Search({
-        callData: googleGeocoding,
-        filterJSON: filterJSONCall,
-        markerLocation: false,
-        autoType: true,
-        autoCollapse: false,
-        minLength: 4,
-        position: 'topright'
-    }));
-
-
-    L.control.zoom({
-        position: "topright"
-    }).addTo(cMap.map);
-  
-    /* GPS enabled geolocation control set to follow the user's location */
-    L.control.locate({
-        position: "topright",
-        drawCircle: true,
-        follow: true,
-        setView: true,
-        keepCurrentZoomLevel: true,
-        markerStyle: {
-            weight: 1,
-            opacity: 0.8,
-            fillOpacity: 0.8
-        },
-        circleStyle: {
-            weight: 1,
-            clickable: false
-        },
-        icon: "icon-direction",
-        metric: false,
-        strings: {
-            title: "My location",
-            popup: "You are within {distance} {unit} from this point",
-            outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
-        },
-        locateOptions: {
-            maxZoom: 18,
-            watch: true,
-            enableHighAccuracy: true,
-            maximumAge: 10000,
-            timeout: 10000
-        }
-    }).addTo(cMap.map);
-
-
-    new L.Control.Fullscreen({
-        position: 'topright'
-    }).addTo(cMap.map);
-
-    //ugly patch to hide buttons that wont work
-    //revisit
-    cMap.map.on('fullscreenchange', function() {
-        if (cMap.map.isFullscreen()) {
-            console.log('entered fullscreen');
-            $('.leaflet-left').hide();
-
-        } else {
-            console.log('exited fullscreen');
-            $('.leaflet-left').show();
-        }
-    });
-
-    //add layer control
-    L.control.layers(baseLayers, groupedOverlays, {
-        'autoZIndex': false
-    }).addTo(cMap.map);
-
-    //legend control
-    var legend = L.control({
-        position: 'bottomright'
-    });
-
-    //create or recreate legend
-    legend.onAdd = function() {
-
-        var i, j, labels = [],
-            color = [],
-            div, lowlabel, toplabel, resprec;
-
-        //retrieve individual colors depending on colorscheme and number of classes - puts those colors into color array
-        for (j = 0; j < colortree.colorschemes.length; j = j + 1) {
-
-            if (colortree.colorschemes[j].schemename === cMap.params.cs) {
-                if (colortree.colorschemes[j].count === cMap.params.cl) {
-                    color = colortree.colorschemes[j].colors;
-                }
-            }
-        }
-
-        //legend title
-        div = L.DomUtil.create('div', 'info legend');
-        div.innerHTML = "<h4 style='color: black;'><b>" + cMap.current_desc + "</b></h4>";
-
-        //retrieve breaks
-        for (i = (cMap.breaks.length - 1); i > -1; i = i - 1) {
-            labels.push(cMap.breaks[i]);
-        }
-
-        //format legend labels depending on number type: currency, number, regular, percent
-        if (cMap.params.sn !== "stddev") {
-            for (i = 0; i < labels.length; i = i + 1) {
-                if (i === 0) {
-                    lowlabel = cMap.minval;
-                }
-                if (cMap.type === 'currency') {
-                    lowlabel = labels[i];
-                    toplabel = labels[i + 1] - cMap.mininc;
-                    lowlabel = accounting.formatMoney(lowlabel, "$", 0);
-                    if (!toplabel) {
-                        toplabel = " +";
-                    } else {
-                        toplabel = ' to ' + accounting.formatMoney(toplabel, "$", 0);
-                    }
-                }
-                if (cMap.type === 'number') {
-                    lowlabel = labels[i];
-                    toplabel = labels[i + 1] - cMap.mininc;
-                    resprec = (String(cMap.mininc)).split(".")[1];
-                    if (!resprec) {
-                        resprec = 0;
-                    } else {
-                        resprec = resprec.length;
-                    }
-                    lowlabel = lowlabel.toFixed(resprec); //still not correct
-                    if (!toplabel) {
-                        toplabel = " +";
-                    } else {
-                        toplabel = ' to ' + toplabel.toFixed(resprec);
-                    }
-                }
-                if (cMap.type === 'percent') {
-                    lowlabel = labels[i];
-                    toplabel = labels[i + 1] - (cMap.mininc / 100);
-                    lowlabel = (lowlabel * 100).toFixed(2) + ' %';
-                    if (!toplabel) {
-                        toplabel = " +";
-                    } else {
-                        toplabel = ' to ' + (toplabel * 100).toFixed(2) + ' %';
-                    }
-                }
-                if (cMap.type === 'regular') {
-                    lowlabel = labels[i];
-                    toplabel = labels[i + 1] - cMap.mininc;
-                    if (!toplabel) {
-                        toplabel = " +";
-                    } else {
-                        toplabel = ' to ' + toplabel;
-                    }
-
-                }
-
-                //if there is a negative anywhere in 'toplabel' dont display (causes havoc with quantile )
-                if (toplabel.search('-') === -1) {
-                    div.innerHTML += '<i style="background:' + color[i] + ';opacity: ' + cMap.feature.fillOpacity + ';"></i> ' + '&nbsp;&nbsp;&nbsp;' + lowlabel + toplabel + '<br />';
-                }
-
-
-            }
-        } else {
-
-            //labels for standard deviation are treated differently and dont depend on number type
-            if (cMap.params.cl === 7) {
-                labels = ['< -2.5 Std. Dev.', '-1.5 to -2.5 Std. Dev', '-0.5 to -1.5 Std. Dev.', '0.5 to -0.5 Std. Dev.', '0.5 to 1.5 Std. Dev.', '1.5 to 2.5 Std. Dev.', '> 2.5 Std. Dev.'];
-            }
-            if (cMap.params.cl === 8) {
-                labels = ['< -1.5 Std. Dev.', '-1 to -1.5 Std. Dev', '-0.5 to -1 Std. Dev.', '0 to -0.5 Std. Dev.', '0 to 0.5 Std. Dev.', '0.5 to 1 Std. Dev.', '1 to 1.5 Std. Dev.', '> 1.5 Std. Dev.'];
-            }
-
-            for (i = 0; i < labels.length; i = i + 1) {
-
-                div.innerHTML += '<i style="background:' + color[i] + ';opacity: ' + cMap.feature.fillOpacity + ';"></i> ' + '&nbsp;&nbsp;&nbsp;' + labels[i] + '<br />';
-
-            }
-
-
-        }
-        return div;
-    };
-
-
-
-    //calling this function means its time to refilter colorschemes based on classification scheme and number of classes
-    function filtercolorschemes() {
-
-
-        $('.allradio').show();
-
-        if (cMap.params.cl == 5) {
-            $('.c7').hide();
-            $('.c8').hide();
-            $('.c9').hide();
-            $('.c11').hide();
-        }
-        if (cMap.params.cl == 7) {
-            $('.c5').hide();
-            $('.c8').hide();
-            $('.c9').hide();
-            $('.c11').hide();
-        }
-        if (cMap.params.cl == 8) {
-            $('.c5').hide();
-            $('.c7').hide();
-            $('.c9').hide();
-            $('.c11').hide();
-        }
-        if (cMap.params.cl == 9) {
-            $('.c5').hide();
-            $('.c7').hide();
-            $('.c8').hide();
-            $('.c11').hide();
-        }
-        if (cMap.params.cl == 11) {
-            $('.c5').hide();
-            $('.c7').hide();
-            $('.c8').hide();
-            $('.c9').hide();
-        }
-
-        if (cMap.params.sn === "jenks") {
-            $('.quantile').hide();
-        }
-        if (cMap.params.sn === "quantile" || cMap.params.sn === "stddev") {
-            $('.jenks').hide();
-        }
-
-    }
-
-
-
-    function addRows(data) {
-
-
-        //create column headers
-        var tblstr = '',
-            datatype = 'float',
-            tableclassadd = '',
-            rowstr = '',
-            classadd = '',
-            plusminus = '',
-            resprec, checkstate, i;
-            
-            //var fp='';
-
-
-        cMap.tblfl = $('#tableoption').val();
-
-        //Plain Table
-        //if select value is 0, it means plain table is selected
-        if (cMap.tblfl === '-1') {
-            $.each(data.data[0], function(k) {
-
-                if (k.search("moe") !== -1) {
-                    tableclassadd = "moe";
-                } else {
-                    tableclassadd = "";
-                }
-                if (k !== 'state' && k !== 'county' && k !== 'place' && k !== 'tract' && k !== 'bg') {
-
-                    if (k === 'geoname') {
-                        datatype = "string";
-                    } else {
-                        datatype = "float";
-                    }
-                    tblstr = tblstr + '<th data-sort="' + datatype + '" class="' + tableclassadd + '">' + k + '</th>';
-                }
-            });
-        } else {
-
-            //Table Flavor
-            //if select value >0 that means a table flavor is selected        
-
-            //First Two Columns Are Always Geoname and Geonum
-            tblstr = tblstr + '<th data-sort="string">Name</th>';
-            tblstr = tblstr + '<th data-sort="int">ID</th>';
-
-            for (i = 0; i < tabletree.data[cMap.tblfl].Data.length; i = i + 1) {
-
-                //console.log(tabletree.data[cMap.tblfl].Data[i].Formula);
-                if ((tabletree.data[cMap.tblfl].Data[i].Formula).search("moe") !== -1) {
-                    tableclassadd = "moe";
-                } else {
-                    tableclassadd = "";
-                }
-
-                tblstr = tblstr + '<th data-sort="' + datatype + '" class="' + tableclassadd + '">' + tabletree.data[cMap.tblfl].Data[i].FieldName + '</th>';
-
-            }
-
-
-        }
-
-
-        //Both Plain and Table Favor Append tblstr
-        $('#tableheader').append(tblstr);
-
-
-
-        if (cMap.stopafterheader === 0) {
-            //add rows
-
-            if (cMap.tblfl === '-1') {
-                //Plain
-                for (i = 0; i < (data.data).length; i = i + 1) {
-
-                    //add matched records to table
-                    rowstr = '<tr class="' + data.data[i].geonum + '">';
-
-                    $.each(data.data[i], function(k, v) {
-                        if (k === 'geoname' || k === 'geonum') {
-                            rowstr = rowstr + '<td>' + v + '</td>';
-                        }
-                        if (k !== 'state' && k !== 'county' && k !== 'place' && k !== 'tract' && k !== 'bg' && k !== 'geoname' && k !== 'geonum') {
-
-                            if (k.search("moe") !== -1) {
-                                classadd = "moe";
-                                plusminus = '&plusmn; ';
-                            } else {
-                                classadd = "";
-                                plusminus = '';
-                            }
-
-                            if (cMap.type === "currency") {
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + '' + accounting.formatMoney(parseInt(v, 10), "$", 0) + '</td>';
-                            }
-                            if (cMap.type === "number" || cMap.type === "percent") {
-                                resprec = (String(v)).split(".")[1];
-                                if (!resprec) {
-                                    resprec = 0;
-                                } else {
-                                    resprec = resprec.length;
-                                }
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + (parseFloat(v)).toFixed(resprec) + '</td>';
-                            }
-                            if (cMap.type === "regular") {
-                                rowstr = rowstr + '<td data-sort-value="' + Number(v) + '" class="' + classadd + '">' + plusminus + v + '</td>';
-                            }
-
-
-                        }
-                    });
-
-                    rowstr = rowstr + '</tr>';
-
-                    //Both Plain and Table Flavor Append Rows Here
-                    $('#tablebody').append(rowstr);
-                }
-
-
-            } else {
-
-                //Table Flavor
-                for (i = 0; i < (data.data).length; i = i + 1) {
-                    //console.log(i);
-                    //add matched records to table
-                    rowstr = '<tr class="' + data.data[i].geonum + '">';
-                    rowstr = rowstr + '<td>' + data.data[i].geoname + '</td>';
-                    rowstr = rowstr + '<td>' + data.data[i].geonum + '</td>';
-
-
-                    $.each(tabletree.data[cMap.tblfl].Data, function(k, v) {
-                        //fp = data.data[i];
-
-                        if ((tabletree.data[cMap.tblfl].Data[k].Formula).search("moe") !== -1) {
-                            classadd = "moe";
-                            plusminus = '&plusmn; ';
-                        } else {
-                            classadd = "";
-                            plusminus = '';
-                        }
-                        if ((tabletree.data[cMap.tblfl].Data[k].FieldName) === "CV") {
-                            plusminus = '';
-                        } //no plusmn on coefficient of variance 
-
-                        if (tabletree.data[cMap.tblfl].Data[k].type === "currency") {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + accounting.formatMoney(parseInt(eval(v.Formula), 10), "$", 0) + '</td>';
-                        }
-                        if (tabletree.data[cMap.tblfl].Data[k].type === "regular") {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + eval(v.Formula) + '</td>';
-                        }
-                        if (tabletree.data[cMap.tblfl].Data[k].type === "number") {
-                            resprec = (String(eval(v.Formula))).split(".")[1];
-                            if (!resprec) {
-                                resprec = 0;
-                            } else {
-                                resprec = resprec.length;
-                            }
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)) + '" class="' + classadd + '">' + plusminus + parseFloat(eval(v.Formula)).toFixed(resprec) + '</td>';
-                        }
-                        if (tabletree.data[cMap.tblfl].Data[k].type === "percent") {
-                            rowstr = rowstr + '<td data-sort-value="' + Number(eval(v.Formula)).toFixed(2) + '" class="' + classadd + '">' + plusminus + Number(eval(v.Formula)).toFixed(2) + '%</td>';
-                        }
-                        //rowstr=rowstr+'<td>'+eval(v.Formula)+'</td>';        
-
-                    });
-                    rowstr = rowstr + '</tr>';
-
-                    //Both Plain and Table Flavor Append Rows Here
-                    $('#tablebody').append(rowstr);
-                }
-
-            }
-
-
-            //hide (or not) if class=moe
-            checkstate = $('input[name="my-checkbox"]').bootstrapSwitch('state');
-            if (checkstate) {
-                $('.moe').show();
-            } else {
-                $('.moe').hide();
-            }
-
-
-            // writeFooter();  //todo
-
-
-        } //stop after header
-    } //end addRows
-
-
-    function redrawTable() {
-
-
-        var str = '',
-            parsehtml, seltext = '',
-            geonums, i;
-
-        if (cMap.tblfl === '-1') {
-            seltext = 'selected';
-        } else {
-            seltext = '';
-        }
-
-        $('#tableoption').empty();
-        $('#tableoption').append($.parseHTML("<option value='-1' " + seltext + ">Plain Table</option>"));
-
-        //get table id, search for table id in tabletree (tableflavor.js) to populate select box 'tableoption'
-
-        for (i = 0; i < tabletree.data.length; i = i + 1) {
-
-            //setting value=array index for tabletree
-            if (tabletree.data[i].ActualTable === cMap.table) {
-                if (tabletree.data[i].TableAlias === cMap.favtable) {
-                    cMap.tblfl = String(i);
-                }
-                if (String(i) === cMap.tblfl) {
-                    seltext = 'selected';
-                } else {
-                    seltext = '';
-                }
-                str = "<option value='" + i + "' " + seltext + ">" + tabletree.data[i].TableAlias + "</option>";
-                parsehtml = $.parseHTML(str);
-                $('#tableoption').append(parsehtml);
-            }
-        }
-
-        cMap.stopafterheader = 0;
-        geonums = '';
-
-
-        //turn dataset into a comma delimited string and call it geoids
-        geonums = cMap.dataset.join(",");
-
-
-        $('#tablebody').empty();
-        $('#tableheader').empty();
-        $('#tablefooter').empty();
-        $('#tablefooter').hide();
-        //ajax call to load selected features
-
-        if (cMap.dataset.length === 0) {
-            cMap.stopafterheader = 1;
-            geonums = '108079';
-        } //if nothing selected, we still need to query database to get header info.  We give the query a dummy goenum to chew on.  It won't add that row due to the stopafterhearder variable.
-
-
-        $.ajax({
-            type: "POST",
-            url: "https://gis.dola.colorado.gov/cmap/demogpost",
-            data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&moe=yes",
-            dataType: 'json',
-            jsonpCallback: 'getJson',
-            success: addRows
-        });
-
-
-
-    }
 
 
     //symbolize everything right here!!!  Every geography feature in the view is iterated over
     function feat1(feature) {
 
 
-        var fp = feature.properties,
-            mapvar = eval(cMap.formula),
-            geonum = fp.geonum,
+        var fp = feature.properties;
+        var mapvar = eval(cMap.formula),
+            geonum = feature.properties.geonum,
             newlinecolor = cMap.feature.linecolor,
             newlineweight, newlineopacity, newlinecap, getreverse, i, j;
 
@@ -863,7 +50,7 @@ var cMap = {};
 
         //cMap.createnewtable is the flag to redraw the data table.  Set to 0 means redraw, set to 1 means don't redraw
         if (cMap.createnewtable === 0) {
-            redrawTable();
+            redrawTable(cMap, addRows);
         }
         cMap.createnewtable = 1;
 
@@ -981,8 +168,9 @@ var cMap = {};
             url: "https://gis.dola.colorado.gov/cmap/demogpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&moe=yes",
             dataType: 'json',
-            jsonpCallback: 'getJson',
-            success: addRows
+            success: function(data) {
+                addRows(data, cMap);
+            }
         });
 
 
@@ -995,8 +183,8 @@ var cMap = {};
 
 
         var margin, width, height, x0, x1, y0, y1, xAxis, tformat, yAxis, svg, ageNames, state, zero, errorBarArea, errorBars;
-//       var lineData;
-//       var lineFunction;
+        //       var lineData;
+        //       var lineFunction;
 
 
         margin = {
@@ -1227,7 +415,7 @@ var cMap = {};
 
 
             //The line SVG Path we draw
-            
+
             svg.append("path")
                 .attr("d", lineFunction(lineData))
                 .attr("stroke", "#ef7521")
@@ -1464,8 +652,7 @@ var cMap = {};
                 type: "POST",
                 url: "https://gis.dola.colorado.gov/cmap/chartpost",
                 data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + sendgeonum + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
-                dataType: 'json',
-                jsonpCallback: 'getJson'
+                dataType: 'json'
             }).done(function(data) {
                 //upon success, call the main chart creation routine - data is a json object containing the state/USA average data
                 dochart(JSONdata, xwidth, xheight, data);
@@ -1494,7 +681,6 @@ var cMap = {};
             url: "https://gis.dola.colorado.gov/cmap/chartpost",
             data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
             dataType: 'json',
-            jsonpCallback: 'getJson',
             success: figurechart
         });
 
@@ -1506,7 +692,7 @@ var cMap = {};
 
 
         cMap.dataset = [];
-        redrawTable();
+        redrawTable(cMap, addRows);
 
         //change selected symbology back to unselected
         cMap.map.eachLayer(function(layer) {
@@ -1559,10 +745,10 @@ var cMap = {};
 
 
         var layer = e.target;
-      var fp = e.target.feature.properties;
-      var popupresult = eval(cMap.formula);
-      var resprec;
-      var popup;
+        var fp = e.target.feature.properties;
+        var popupresult = eval(cMap.formula);
+        var resprec;
+        var popup;
 
 
         //can turn to off for no mouseover
@@ -1623,7 +809,7 @@ var cMap = {};
                 marginBottom: "3px"
             }
         });
-        
+
         hed.appendTo(popup);
 
         // Add the popup to the map
@@ -1806,7 +992,7 @@ var cMap = {};
             cMap.dataset.push(arr[1]);
         }
 
-        updatequerysearchstring();
+        updatequerysearchstring(cMap);
 
         // writeFooter();
 
@@ -1941,20 +1127,20 @@ var cMap = {};
             labelset = [],
             temparray = [];
 
-//var newobj = {};
-      
+        //var newobj = {};
+
         cMap.params.ga = fp.geoname;
         cMap.params.gn = fp.geonum;
 
 
         function assigndata(data) {
 
-          data=data[0];
+            data = data[0];
 
             function parsephp(c) {
                 //upon successfull return from chart data gathering, create chart
 
-              c=c[0];
+                c = c[0];
                 //convert all values in return object to number
                 for (var key in c) {
                     c[key] = Number(c[key]);
@@ -1969,7 +1155,7 @@ var cMap = {};
                 chartmaker(valdata, labelset, moedata, charttree.data[companionindex].ChartAlias + ": " + fp.geoname);
 
                 setTimeout(function() {
-                    updatequerysearchstring();
+                    updatequerysearchstring(cMap);
                 }, 1000);
 
             } //end parsephp
@@ -2051,7 +1237,7 @@ var cMap = {};
     //hide table - from button
     function mintable() {
         $('#resizediv').hide();
-        updatequerysearchstring();
+        updatequerysearchstring(cMap);
     }
 
     //min or max table - from button
@@ -2077,7 +1263,7 @@ var cMap = {};
             $("#minmaxbtn2").removeClass("glyphicon-minus-sign").addClass("glyphicon-plus-sign"); //change icon
         }
 
-        updatequerysearchstring();
+        updatequerysearchstring(cMap);
     }
 
 
@@ -2107,7 +1293,7 @@ var cMap = {};
 
         cMap.createnewtable = 0; //set flag to redraw table - which will be called in the styling function
         cMap.geojsonLayer.setStyle(feat1); //restyle entire layer (restyle function includes highlighting selected features)
-        updatequerysearchstring();
+        updatequerysearchstring(cMap);
 
     }
 
@@ -2140,7 +1326,6 @@ var cMap = {};
         $.ajax({
             url: "https://gis.dola.colorado.gov/cmap/advsearch?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
             dataType: 'json',
-            jsonpCallback: 'getJson',
             success: selectgeonums
         });
 
@@ -2297,7 +1482,7 @@ var cMap = {};
                     $('#classes').val(cMap.params.cl);
                     $('#' + cMap.params.cs + cMap.params.cl).prop('checked', true);
 
-                    filtercolorschemes();
+                    filtercolorschemes(cMap);
                 }
             }
 
@@ -2354,7 +1539,6 @@ var cMap = {};
             $.ajax({
                 url: "https://gis.dola.colorado.gov/cmap/getranges?geo=" + geo + "&num=" + stripnum + "&denom=" + stripdenom + "&discard=" + cMap.usezeroasnull,
                 dataType: 'json',
-                jsonpCallback: 'getJson',
                 success: jsonstring
             });
 
@@ -2364,7 +1548,7 @@ var cMap = {};
 
         //console.log('after eval');
 
-        updatequerysearchstring();
+        updatequerysearchstring(cMap);
 
     }
 
@@ -2427,7 +1611,7 @@ var cMap = {};
                 $('#chartdiv').empty();
                 addchart();
                 setTimeout(function() {
-                    updatequerysearchstring();
+                    updatequerysearchstring(cMap);
                 }, 1000);
             }
 
@@ -2452,7 +1636,7 @@ var cMap = {};
 
                 rightclick(e);
                 setTimeout(function() {
-                    updatequerysearchstring();
+                    updatequerysearchstring(cMap);
                 }, 1000);
 
             }
@@ -2574,11 +1758,11 @@ var cMap = {};
 
         }
 
-        filtercolorschemes();
+        filtercolorschemes(cMap);
 
         //if colorscheme info is in querystring, use it.  otherwise, use default
         $('#' + cMap.params.cs + cMap.params.cl).prop('checked', true);
-        updatequerysearchstring();
+        updatequerysearchstring(cMap);
 
 
     }
@@ -2592,9 +1776,9 @@ var cMap = {};
         var csv_value = $('#table').table2CSV({
             delivery: 'value'
         });
-      
-      csv_value = csv_value.replace(/±/g,"");
-      
+
+        csv_value = csv_value.replace(/±/g, "");
+
         $("#csv_text").val(csv_value);
 
     }
@@ -2604,10 +1788,6 @@ var cMap = {};
 
 
 
-    //export  map function called from button.  Needs work.  No notice when fails.
-    function download(pictype) {
-      require("./download_image.js")(cMap, pictype);
-    }
 
     //kinda a hacky slider. Revisit.
     function resetslider() {
@@ -2667,7 +1847,7 @@ var cMap = {};
             cMap.params.ga = '';
             cMap.params.gn = 0;
             setTimeout(function() {
-                updatequerysearchstring();
+                updatequerysearchstring(cMap);
             }, 1000);
         });
 
@@ -2683,7 +1863,7 @@ var cMap = {};
                 console.log('here');
                 cMap.params.bm = 'sat';
             }
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
         });
 
         $('#mintableclick').click(function() {
@@ -2707,7 +1887,8 @@ var cMap = {};
         });
 
         $('#printbtn').click(function() {
-            download('png');
+            //export  map function called from button.  Needs work.  No notice when fails.
+            require("./download_image.js")(cMap, 'png');
         });
 
         $('#resetslider').click(function() {
@@ -2729,7 +1910,7 @@ var cMap = {};
         $("#cmouseover").val(cMap.params.cmo).change();
 
 
-        updatequerysearchstring();
+        updatequerysearchstring(cMap);
 
         //change classification dropdown has been triggered
         $('#classification').change(function() {
@@ -2758,8 +1939,8 @@ var cMap = {};
 
             $('#classes').val(cMap.params.cl); //select the proper option in number of classes dropdown
 
-            filtercolorschemes(); //filter out colorschemes that are not valid with this combination of schemename / number of classes
-            updatequerysearchstring(); //update address bar text - (just in case we had to change the number of classes to the default)    
+            filtercolorschemes(cMap); //filter out colorschemes that are not valid with this combination of schemename / number of classes
+            updatequerysearchstring(cMap); //update address bar text - (just in case we had to change the number of classes to the default)    
 
 
         });
@@ -2782,7 +1963,7 @@ var cMap = {};
             $('.' + classname).remove();
             //recalc footer
             // writeFooter();  //do add this back in later
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
             //change color back to black //insane
             cMap.geojsonLayer.setStyle(feat1);
 
@@ -2803,7 +1984,7 @@ var cMap = {};
             } else {
                 $('.moe').hide();
             }
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
         });
 
         //default is for MOE to be on (yes) - if querystring says 'no' turn it off
@@ -2812,27 +1993,27 @@ var cMap = {};
                 $('input[name="my-checkbox"]').bootstrapSwitch('state', false);
             }
 
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
         }
 
         //looks for table dropdown change - changes table flavor
         $('#tableoption').on('change', function() {
             chgtblfl();
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
         });
 
         //initialize stupid table plugin on our data table
         $("#table").stupidtable();
 
-      
-      require("./easy_buttons.js")(cMap, updatequerysearchstring, addchart, clearsel);
-      
-           //if a transparency value is set in the querystring, change the slider to that value
+
+        require("./easy_buttons.js")(cMap, updatequerysearchstring, addchart, clearsel);
+
+        //if a transparency value is set in the querystring, change the slider to that value
         if (cMap.params.tr !== undefined) {
             cMap.feature.fillOpacity = cMap.params.tr;
             trslider.slider('setValue', parseInt((cMap.feature.fillOpacity * 100), 10));
 
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
         }
 
         //when user stops moving transparency slider, change transparency of geojson layer
@@ -2847,7 +2028,7 @@ var cMap = {};
                 fillOpacity: cMap.feature.fillOpacity
             });
             legend.addTo(cMap.map);
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
         });
 
 
@@ -2870,7 +2051,7 @@ var cMap = {};
 
             //change selection color
             cMap.params.csel = this.value;
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
 
             //change all previously selected elements
             cMap.geojsonLayer.setStyle(feat1);
@@ -2878,7 +2059,7 @@ var cMap = {};
 
         $('#cmouseover').change(function() {
             cMap.params.cmo = this.value;
-            updatequerysearchstring();
+            updatequerysearchstring(cMap);
         });
 
 
@@ -2890,23 +2071,23 @@ var cMap = {};
 
 
 
-       require("./change_options")(cMap, updatequerysearchstring, changeall, filtercolorschemes);
-       require("./map_move")(cMap, updatequerysearchstring, ajaxcall);
-       require("./demo_mode")(cMap, trslider, changeall, updatequerysearchstring);
-      
+        require("./change_options")(cMap, updatequerysearchstring, changeall, filtercolorschemes);
+        require("./map_move")(cMap, updatequerysearchstring, ajaxcall);
+        require("./demo_mode")(cMap, trslider, changeall, updatequerysearchstring);
+
 
 
     }); //end document on ready
 
 
 
-//TODO: back button is broken
+    //TODO: back button is broken
     //for jquery history plugin
     History.Adapter.bind(window, 'statechange', function() { // Note: We are using statechange instead of popstate
-//         var State = History.getState(); // Note: We are using History.getState() instead of event.state
-//       console.log(State);
-// window.location=State.url;
+        //         var State = History.getState(); // Note: We are using History.getState() instead of event.state
+        //       console.log(State);
+        // window.location=State.url;
     });
 
 
-require("./print_mode.js")(cMap.params.print);
+    require("./print_mode.js")(cMap.params.print);

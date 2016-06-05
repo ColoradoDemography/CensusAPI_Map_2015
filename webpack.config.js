@@ -7,7 +7,7 @@ var FlowStatusWebpackPlugin = require('flow-status-webpack-plugin');
 module.exports = {
     entry:  {
       app: './src/common/js/app.js',
-      vendor: ['./src/lib/js/easy-button.js','./src/lib/js/la.test.js','./src/lib/js/bootstrap-slider.js','./src/lib/js/leaflet-search.js','./src/lib/js/leaflet-spin.js','./src/lib/js/stupidtable.js','./src/lib/js/table2CSV.js','./src/lib/js/bootstrap-switch.js','./src/lib/js/jquery.history.js','./src/lib/js/simple_statistics.js']
+      vendor: ['./src/lib/js/easy-button.js','./src/lib/js/la.test.js','./src/lib/js/bootstrap-slider.js','./src/lib/js/leaflet-search.js','./src/lib/js/leaflet-spin.js','./src/lib/js/stupidtable.js','./src/lib/js/table2CSV.js','./src/lib/js/bootstrap-switch.js','./src/lib/js/jquery.history.js']
     },
     output: {
         path:     'dest',

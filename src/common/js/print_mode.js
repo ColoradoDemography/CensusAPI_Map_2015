@@ -1,6 +1,6 @@
-module.exports = function(print){
-  
-      //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
+module.exports = function(print) {
+
+    //this will only be accessed when phantomjs opens the app - hides elements for exporting clean image without map controls
     if (print === 'yes') {
         console.log('printing or demo mode');
         $('.leaflet-control-search').hide();
@@ -12,5 +12,5 @@ module.exports = function(print){
         $('#popup').hide();
         $('.spanhide').hide();
     }
-  
+
 }
