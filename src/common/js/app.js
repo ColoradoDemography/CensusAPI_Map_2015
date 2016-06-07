@@ -13,8 +13,10 @@
     var filtercolorschemes = require("./filter_color_schemes.js");
     var addRows = require("./add_rows.js");
     var redrawTable = require("./redraw_table.js");
+    var symbolize = require("./symbolize.js");
+    var chgtblfl = require("./change_table_flavor.js");
 
-
+    var addchart = require("./addchart.js");
 
     //cMap holds all global values
     var cMap = require("./initialize_cMap.js")();
@@ -33,658 +35,8 @@
 
 
 
-    //symbolize everything right here!!!  Every geography feature in the view is iterated over
-    function feat1(feature) {
 
 
-        var fp = feature.properties;
-        var mapvar = eval(cMap.formula),
-            geonum = feature.properties.geonum,
-            newlinecolor = cMap.feature.linecolor,
-            newlineweight, newlineopacity, newlinecap, getreverse, i, j;
-
-
-        //mapvar: the actual computed value of the theme variable
-        //geonum: the id of the geography
-        //newlinecolor: get default lincolor, lineweight, and lineopacity values
-
-        //cMap.createnewtable is the flag to redraw the data table.  Set to 0 means redraw, set to 1 means don't redraw
-        if (cMap.createnewtable === 0) {
-            redrawTable(cMap, addRows);
-        }
-        cMap.createnewtable = 1;
-
-
-        if (cMap.params.s === '40') {
-            cMap.feature.lineweight = 0;
-        }
-        if (cMap.params.s === '50') {
-            cMap.feature.lineweight = 0;
-        }
-        if (cMap.params.s === '140') {
-            cMap.feature.lineweight = 1;
-        }
-        if (cMap.params.s === '150') {
-            cMap.feature.lineweight = 1;
-        }
-        if (cMap.params.s === '160') {
-            cMap.feature.lineweight = 1;
-        }
-
-        newlineweight = cMap.feature.lineweight;
-        newlineopacity = cMap.feature.lineopacity;
-        newlinecap = 'round';
-
-        //here's the wrinkle - we dont really care about the linecap property.  However, we need a way to differentiate between a selected features properties, and a non-selected features properties.  We cant just go by color=red, because when you mouseover a selected geography, the color will no longer be red.  So we  set the linecap property to either 'butt' (selected) or 'round' - or anything else (not selected)
-
-        //when drawing feature, if in selected set, override default linecolor and lineweight with selected values 'red'
-        for (i = 0; i < cMap.dataset.length; i = i + 1) {
-            if (cMap.dataset[i] === geonum) {
-                newlinecolor = cMap.params.csel;
-                newlineweight = 2;
-                newlineopacity = 1;
-                newlinecap = 'butt';
-            }
-        }
-
-        //if the mapvariable = 0 for a paricular variable, and the usezeroasnull flag is set, symbolize the geography with the null symbology
-        if (mapvar === 0 && cMap.usezeroasnull === 'yes') {
-            return {
-                fillColor: cMap.ifzerojson,
-                color: newlinecolor,
-                weight: newlineweight,
-                opacity: newlineopacity,
-                fillOpacity: cMap.feature.fillOpacity,
-                linecap: newlinecap
-            };
-        }
-
-        //trickiness with 0==false;  if the mapvariable is equal to null (but not zero), symbolize the geography with the null symbology
-        if (!mapvar && mapvar !== 0) {
-            return {
-                fillColor: cMap.ifnulljson,
-                color: newlinecolor,
-                weight: newlineweight,
-                opacity: newlineopacity,
-                fillOpacity: cMap.feature.fillOpacity,
-                linecap: newlinecap
-            };
-        }
-
-        //get number of colors in color ramp
-        getreverse = cMap.symbolcolors.length;
-
-        //loop through color set
-        for (j = 0; j < getreverse; j = j + 1) {
-            //loop through breaks; symbolize features accordingly
-            if (mapvar >= cMap.breaks[j]) {
-                return {
-                    fillColor: cMap.symbolcolors[(getreverse - 1) - j],
-                    color: newlinecolor,
-                    weight: newlineweight,
-                    opacity: newlineopacity,
-                    fillOpacity: cMap.feature.fillOpacity,
-                    linecap: newlinecap
-                };
-            }
-        }
-    } //end feat1
-
-
-
-
-    //change table flavor
-    function chgtblfl() {
-
-
-        cMap.tblfl = $('#tableoption').val();
-
-        if (cMap.tblfl === '-1') {
-            cMap.favtable = "Plain";
-        } else {
-            cMap.favtable = tabletree.data[cMap.tblfl].TableAlias;
-        }
-
-        cMap.stopafterheader = 0;
-        var geonums = '';
-
-        //turn dataset into a comma delimited string and call it geoids
-        geonums = cMap.dataset.join(",");
-
-        $('#tablebody').empty();
-        $('#tableheader').empty();
-        $('#tablefooter').empty();
-
-        //ajax call to load selected features
-
-        if (cMap.dataset.length === 0) {
-            cMap.stopafterheader = 1;
-            geonums = '108079';
-        } //if nothing selected, we still need to query database to get header info.  We give the query a dummy goenum to chew on.  It won't add that row due to the stopafterhearder variable.
-
-
-        $.ajax({
-            type: "POST",
-            url: "https://gis.dola.colorado.gov/cmap/demogpost",
-            data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&moe=yes",
-            dataType: 'json',
-            success: function(data) {
-                addRows(data, cMap);
-            }
-        });
-
-
-    }
-
-    //the main chart creation routine
-    //input parameters are JSONdata (from chartpost.php), xwidth & xheight to control the SVG size, and stateorusavg (State/USA average from an additional ajax call to chartpost.php)
-    //most of this code found in various D3 examples around the web (thus not familiar in depth with how it works) - I've made cosmetic changes only
-    function dochart(JSONdata, xwidth, xheight, stateorusavg) {
-
-
-        var margin, width, height, x0, x1, y0, y1, xAxis, tformat, yAxis, svg, ageNames, state, zero, errorBarArea, errorBars;
-        //       var lineData;
-        //       var lineFunction;
-
-
-        margin = {
-            top: 50,
-            right: 10,
-            bottom: 120,
-            left: 40
-        };
-        width = xwidth - margin.left - margin.right;
-        height = xheight - margin.top - margin.bottom;
-
-        x0 = d3.scale.ordinal()
-            .rangeRoundBands([0, width], 0.1);
-
-        x1 = d3.scale.ordinal();
-
-        y0 = d3.scale.linear()
-            .range([height, 0]);
-
-        y1 = d3.scale.linear()
-            .range([height, 0]);
-
-        xAxis = d3.svg.axis()
-            .scale(x0)
-            .orient("bottom");
-
-        //number formatted depending on 'type' (as defined in datatree.js)
-        tformat = "s";
-        if (cMap.type === 'regular') {
-            tformat = "g";
-        }
-        if (cMap.type === 'currency') {
-            tformat = "$s";
-        }
-        if (cMap.type === 'percent') {
-            tformat = "%";
-        }
-
-        yAxis = d3.svg.axis()
-            .scale(y0)
-            .orient("left")
-            .tickFormat(d3.format(tformat));
-
-        svg = d3.select("#chartdiv").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .attr("id", "svgchart")
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-        ageNames = d3.keys(JSONdata[0]).filter(function(key) {
-            return key !== "State" && key !== "moe";
-        });
-
-        JSONdata.forEach(function(d) {
-            d.moe = +d.moe
-            d.ages = ageNames.map(function(name) {
-                return {
-                    state: d.State, //added geography name so it could be accessed
-                    name: name,
-                    value: +d[name],
-                    moe: d.moe
-                        //add the margin of error to each individual
-                        //data object
-                };
-            });
-        });
-
-        x0.domain(JSONdata.map(function(d) {
-            return d.State;
-        }));
-        x1.domain(ageNames).rangeRoundBands([0, x0.rangeBand()]);
-        y0.domain([cMap.minval, d3.max(JSONdata, function(d) {
-            return d3.max(d.ages, function(d) {
-                return d.value + d.moe;
-            });
-        })]);
-        y1.domain([cMap.minval, d3.max(JSONdata, function(d) {
-            return d3.max(d.ages, function(d) {
-                return d.value + d.moe;
-            });
-        })]);
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis)
-            .selectAll("text")
-            .style("text-anchor", "end")
-            .attr("dx", "-.8em")
-            .attr("dy", ".15em")
-            .attr("transform", function() {
-                return "rotate(-55)";
-            });
-
-        //Line text by Axis
-        svg.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-            .append("text")
-            .attr("y", 6)
-            .attr("id", "titletext")
-            .attr("dy", ".71em")
-            .attr("transform", "translate(0,-45)")
-            .style("text-anchor", "left")
-            .text(cMap.current_desc);
-
-        state = svg.selectAll(".state")
-            .data(JSONdata)
-            .enter().append("g")
-            .attr("class", "g")
-            .attr("transform", function(d) {
-                return "translate(" + x0(d.State) + ",0)";
-            });
-
-
-        //function to format numbers
-        tformat = ",g";
-        if (cMap.type === 'regular') {
-            tformat = "g";
-        }
-        if (cMap.type === 'currency') {
-            tformat = "$,";
-        }
-        if (cMap.type === 'percent') {
-            tformat = ".2%";
-        }
-
-        zero = d3.format(tformat);
-
-        state.selectAll("rect")
-            .data(function(d) {
-                return d.ages;
-            })
-            .enter().append("rect")
-            .attr("width", x1.rangeBand())
-            .style("opacity", 0.5)
-            .attr("x", function(d) {
-                return x1(d.name);
-            })
-            .attr("y", function(d) {
-                return y0(d.value);
-            })
-            .attr("height", function(d) {
-                return height - y0(d.value);
-            })
-            .style("fill", '#82bc00')
-            .on("mouseover", function() {
-                d3.select(this).style("opacity", 1);
-            })
-            .on("mouseout", function() {
-                d3.select(this).style("opacity", 0.5);
-            })
-            .append("svg:title")
-            .text(function(d) {
-                return d.state +
-                    "\n --------------------" +
-                    "\n" + cMap.current_desc + ":\n" + zero(d.value) +
-                    "\n --------------------" +
-                    "\n90% Confidence Interval: " +
-                    "\n" + zero(d.value - d.moe) + " to " +
-                    zero(d.value + d.moe);
-            });
-
-        //only draw error bars if MOE is on
-        if ($('#moecheck').is(":checked")) {
-            errorBarArea = d3.svg.area()
-                .x(function(d) {
-                    return x1(d.name) + x1.rangeBand() / 2;
-                })
-                .y0(function(d) {
-                    return y0(d.value - +d.moe);
-                })
-                .y1(function(d) {
-                    return y0(d.value + +d.moe);
-                });
-
-
-            errorBars = state.selectAll("path.errorBar")
-                .data(function(d) {
-                    return d.ages; //one error line for each data bar
-                });
-
-            errorBars.enter().append("path").attr("class", "errorBar");
-
-            errorBars.attr("d", function(d) {
-                    return errorBarArea([d]);
-                    //turn the data into a one-element array 
-                    //and pass it to the area function
-                })
-                .attr("stroke", "#f6323e")
-                .style("opacity", 0.5)
-                .attr("stroke-width", 2)
-                .on("mouseover", function() {
-                    d3.select(this).style("opacity", 1);
-                })
-                .on("mouseout", function() {
-                    d3.select(this).style("opacity", 0.5);
-                })
-                .append("svg:title")
-                .text(function(d) {
-                    return "MOE: ± " + zero(d.moe);
-                });
-        }
-
-        //if stateorusavg is not null (it was a parameter passed in) then we draw average line, otherwise we dont
-        if (stateorusavg) {
-
-            //The line goes from 0 on the x axis to the svg width
-            //the y is constant at the value of the state or us average
-            var lineData = [{
-                "x": 0,
-                "y": stateorusavg[0].result
-            }, {
-                "x": width,
-                "y": stateorusavg[0].result
-            }];
-
-
-            var lineFunction = d3.svg.line()
-                .x(function(d) {
-                    return d.x;
-                })
-                .y(function(d) {
-                    return y1(d.y); //the state or us average has to be scaled to the svg height
-                })
-                .interpolate("linear");
-
-
-            //The line SVG Path we draw
-
-            svg.append("path")
-                .attr("d", lineFunction(lineData))
-                .attr("stroke", "#ef7521")
-                .attr("stroke-width", 2)
-                .style("opacity", 0.5)
-                .style("stroke-dasharray", ("5, 2"))
-                .attr("fill", "none")
-                .on("mouseover", function() {
-                    d3.select(this).style("opacity", 1);
-                })
-                .on("mouseout", function() {
-                    d3.select(this).style("opacity", 0.5);
-                })
-                .append("svg:title")
-                .text(function() {
-                    return stateorusavg[0].State + ": " + zero(stateorusavg[0].result);
-                });
-
-        }
-
-
-    } //end dochart
-
-
-
-    //function receives data from addchart() - but passes it through.  
-    //function responsible for determining screen size of chart by counting number of elements received from the database
-    //function then retrieves percent or median data at the State level (if result set is from only one state) or national level (if result set contains geographies from multiple states)
-    //that data is then passed into the chart creation routine
-    function figurechart(JSONdata) {
-
-
-        var resultlength, xwidth, xheight, statearray, uniqueStates, sendgeonum, i;
-
-        //calculates the number of data items in the chart results array that was received from the database
-        resultlength = JSONdata.length;
-
-        //sets 3 separate possible chart sizes based on number of elements in JSONdata
-        xwidth = 300;
-        xheight = 380;
-
-        if (resultlength > 6) {
-            xwidth = 565;
-            xheight = 380;
-        }
-        if (resultlength > 25) {
-            xwidth = 865;
-            xheight = 420;
-        }
-
-        //blank array that will store State information from each geography in the result set
-        statearray = [];
-
-        //loop through result set, add each state abbreviation (last two characters) into state array
-        for (i = 0; i < resultlength; i = i + 1) {
-            statearray.push(JSONdata[i].State.slice(-2));
-        }
-
-        //now, remove all duplicates from statearray[]
-        uniqueStates = [];
-        $.each(statearray, function(i, el) {
-            if ($.inArray(el, uniqueStates) === -1) {
-                uniqueStates.push(el);
-            }
-        });
-
-        //geonum to send in next ajax call; to retrieve median or percent data at state or national level
-        sendgeonum = "";
-
-        //if current data theme is a median or percent type, retrieve data with another ajax call, otherwise dont try to retrieve state/usa average data
-        if (cMap.type !== 'number') {
-            //if multiple states are represented in the result set, get USA average instead of an individual state's data
-            if (uniqueStates.length > 1) {
-                sendgeonum = "30"; // '30' is the geonum for the USA.  FYI, this is only available by using search.data_exp in the database.
-            } else {
-                //else if only one state is in the result set, find the state involved, and set sendgeonum equal to that
-                if (uniqueStates[0] === "AK") {
-                    sendgeonum = "102";
-                }
-                if (uniqueStates[0] === "AL") {
-                    sendgeonum = "101";
-                }
-                if (uniqueStates[0] === "AR") {
-                    sendgeonum = "105";
-                }
-                if (uniqueStates[0] === "AZ") {
-                    sendgeonum = "104";
-                }
-                if (uniqueStates[0] === "CA") {
-                    sendgeonum = "106";
-                }
-                if (uniqueStates[0] === "CO") {
-                    sendgeonum = "108";
-                }
-                if (uniqueStates[0] === "CT") {
-                    sendgeonum = "109";
-                }
-                if (uniqueStates[0] === "DC") {
-                    sendgeonum = "111";
-                }
-                if (uniqueStates[0] === "DE") {
-                    sendgeonum = "110";
-                }
-                if (uniqueStates[0] === "FL") {
-                    sendgeonum = "112";
-                }
-                if (uniqueStates[0] === "GA") {
-                    sendgeonum = "113";
-                }
-                if (uniqueStates[0] === "HI") {
-                    sendgeonum = "115";
-                }
-                if (uniqueStates[0] === "IA") {
-                    sendgeonum = "119";
-                }
-                if (uniqueStates[0] === "ID") {
-                    sendgeonum = "116";
-                }
-                if (uniqueStates[0] === "IL") {
-                    sendgeonum = "117";
-                }
-                if (uniqueStates[0] === "IN") {
-                    sendgeonum = "118";
-                }
-                if (uniqueStates[0] === "KS") {
-                    sendgeonum = "120";
-                }
-                if (uniqueStates[0] === "KY") {
-                    sendgeonum = "121";
-                }
-                if (uniqueStates[0] === "LA") {
-                    sendgeonum = "122";
-                }
-                if (uniqueStates[0] === "MA") {
-                    sendgeonum = "125";
-                }
-                if (uniqueStates[0] === "MD") {
-                    sendgeonum = "124";
-                }
-                if (uniqueStates[0] === "ME") {
-                    sendgeonum = "123";
-                }
-                if (uniqueStates[0] === "MI") {
-                    sendgeonum = "126";
-                }
-                if (uniqueStates[0] === "MN") {
-                    sendgeonum = "127";
-                }
-                if (uniqueStates[0] === "MO") {
-                    sendgeonum = "129";
-                }
-                if (uniqueStates[0] === "MS") {
-                    sendgeonum = "128";
-                }
-                if (uniqueStates[0] === "MT") {
-                    sendgeonum = "130";
-                }
-                if (uniqueStates[0] === "NC") {
-                    sendgeonum = "137";
-                }
-                if (uniqueStates[0] === "ND") {
-                    sendgeonum = "138";
-                }
-                if (uniqueStates[0] === "NE") {
-                    sendgeonum = "131";
-                }
-                if (uniqueStates[0] === "NH") {
-                    sendgeonum = "133";
-                }
-                if (uniqueStates[0] === "NJ") {
-                    sendgeonum = "134";
-                }
-                if (uniqueStates[0] === "NM") {
-                    sendgeonum = "135";
-                }
-                if (uniqueStates[0] === "NV") {
-                    sendgeonum = "132";
-                }
-                if (uniqueStates[0] === "NY") {
-                    sendgeonum = "136";
-                }
-                if (uniqueStates[0] === "OH") {
-                    sendgeonum = "139";
-                }
-                if (uniqueStates[0] === "OK") {
-                    sendgeonum = "140";
-                }
-                if (uniqueStates[0] === "OR") {
-                    sendgeonum = "141";
-                }
-                if (uniqueStates[0] === "PA") {
-                    sendgeonum = "142";
-                }
-                if (uniqueStates[0] === "RI") {
-                    sendgeonum = "144";
-                }
-                if (uniqueStates[0] === "SC") {
-                    sendgeonum = "145";
-                }
-                if (uniqueStates[0] === "SD") {
-                    sendgeonum = "146";
-                }
-                if (uniqueStates[0] === "TN") {
-                    sendgeonum = "147";
-                }
-                if (uniqueStates[0] === "TX") {
-                    sendgeonum = "148";
-                }
-                if (uniqueStates[0] === "UT") {
-                    sendgeonum = "149";
-                }
-                if (uniqueStates[0] === "VA") {
-                    sendgeonum = "151";
-                }
-                if (uniqueStates[0] === "VT") {
-                    sendgeonum = "150";
-                }
-                if (uniqueStates[0] === "WA") {
-                    sendgeonum = "153";
-                }
-                if (uniqueStates[0] === "WI") {
-                    sendgeonum = "155";
-                }
-                if (uniqueStates[0] === "WV") {
-                    sendgeonum = "154";
-                }
-                if (uniqueStates[0] === "WY") {
-                    sendgeonum = "156";
-                }
-
-            }
-            //ajax call to retrieve state or USA average from database
-            $.ajax({
-                type: "POST",
-                url: "https://gis.dola.colorado.gov/cmap/chartpost",
-                data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + sendgeonum + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
-                dataType: 'json'
-            }).done(function(data) {
-                //upon success, call the main chart creation routine - data is a json object containing the state/USA average data
-                dochart(JSONdata, xwidth, xheight, data);
-
-            });
-
-        } else {
-            //if the current data them is not a regular, percent, or currency type - then don't worry about finding an average
-            //call the main chart creation routine, but send null for the state/USA average line
-            dochart(JSONdata, xwidth, xheight, null);
-        }
-
-    } //end figurechart()
-
-
-    //called from pressing chart button (only)
-    //the addchart() function gets data from the database, then funnels it to figurechart()
-    function addchart() {
-
-
-        //take array of geonums and turn it into a comma delimited string
-        var geonums = cMap.dataset.join(",");
-
-        $.ajax({
-            type: "POST",
-            url: "https://gis.dola.colorado.gov/cmap/chartpost",
-            data: "db=" + cMap.db + "&schema=" + cMap.schema + "&table=" + cMap.table + "&geonum=" + geonums + "&numerator=" + encodeURIComponent(cMap.numerator) + "&denominator=" + encodeURIComponent(cMap.denominator),
-            dataType: 'json',
-            success: figurechart
-        });
-
-    } //end addchart
 
 
     //clear selection button in table modal
@@ -1292,7 +644,9 @@
         }
 
         cMap.createnewtable = 0; //set flag to redraw table - which will be called in the styling function
-        cMap.geojsonLayer.setStyle(feat1); //restyle entire layer (restyle function includes highlighting selected features)
+        cMap.geojsonLayer.setStyle(function(feature) {
+            symbolize(feature, cMap);
+        }); //restyle entire layer (restyle function includes highlighting selected features)
         updatequerysearchstring(cMap);
 
     }
@@ -1439,7 +793,9 @@
             if (redraw === "yes") {
                 ajaxcall();
             } else {
-                cMap.geojsonLayer.setStyle(feat1);
+                cMap.geojsonLayer.setStyle(function(feature) {
+                    symbolize(feature, cMap);
+                });
             }
 
             //console.log('end func');
@@ -1525,7 +881,9 @@
             if (redraw === "yes") {
                 ajaxcall();
             } else {
-                cMap.geojsonLayer.setStyle(feat1);
+                cMap.geojsonLayer.setStyle(function(feature) {
+                    symbolize(feature, cMap);
+                });
             }
 
 
@@ -1562,7 +920,9 @@
         cMap.geojsonLayer.clearLayers(); //(mostly) eliminates double-draw (should be technically unneccessary if you look at the code of leaflet-ajax...but still seems to help)
         cMap.geojsonLayer.addData(data);
 
-        cMap.geojsonLayer.setStyle(feat1);
+        cMap.geojsonLayer.setStyle(function(feature) {
+            symbolize(feature, cMap);
+        });
         cMap.map.addLayer(cMap.geojsonLayer);
         cMap.map.spin(false);
 
@@ -1609,7 +969,7 @@
             if (cMap.params.ch === 'yes') {
                 $('#chartModal').modal('toggle');
                 $('#chartdiv').empty();
-                addchart();
+                addchart(cMap);
                 setTimeout(function() {
                     updatequerysearchstring(cMap);
                 }, 1000);
@@ -1965,7 +1325,9 @@
             // writeFooter();  //do add this back in later
             updatequerysearchstring(cMap);
             //change color back to black //insane
-            cMap.geojsonLayer.setStyle(feat1);
+            cMap.geojsonLayer.setStyle(function(feature) {
+                symbolize(feature, cMap);
+            });
 
         });
 
@@ -1998,7 +1360,7 @@
 
         //looks for table dropdown change - changes table flavor
         $('#tableoption').on('change', function() {
-            chgtblfl();
+            chgtblfl(cMap);
             updatequerysearchstring(cMap);
         });
 
@@ -2054,7 +1416,9 @@
             updatequerysearchstring(cMap);
 
             //change all previously selected elements
-            cMap.geojsonLayer.setStyle(feat1);
+            cMap.geojsonLayer.setStyle(function(feature) {
+                symbolize(feature, cMap);
+            });
         });
 
         $('#cmouseover').change(function() {
