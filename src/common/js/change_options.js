@@ -7,14 +7,14 @@ module.exports = function(cMap, updatequerysearchstring, changeall, filtercolors
         cMap.params.v = this.value;
         updatequerysearchstring(cMap);
         cMap.createnewtable = 0;
-        changeall('yes', '1');
+        changeall(cMap, 'yes', '1');
     });
 
     //change colorscheme
     $('input[name=schemeRadios]:radio').change(function() {
         cMap.params.cs = this.value;
         updatequerysearchstring(cMap);
-        changeall('no', '0');
+        changeall(cMap, 'no', '0');
     });
 
     //change geo //change advanced dialog text, change minZoom level
@@ -45,7 +45,7 @@ module.exports = function(cMap, updatequerysearchstring, changeall, filtercolors
 
 
         updatequerysearchstring(cMap);
-        changeall('yes', '0');
+        changeall(cMap, 'yes', '0');
     });
 
 

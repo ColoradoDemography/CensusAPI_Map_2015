@@ -4,7 +4,6 @@
     var datatree = require("./datatree.js");
     var LZString = require("../../lib/js/lz-string.js");
 
-    var ss = require("../../lib/js/simple_statistics.js");
 
     //utility functions
     var updatequerysearchstring = require("./update_query_string.js");
@@ -29,22 +28,15 @@
     require("./locate_control.js")(cMap);
     require("./fullscreen_control.js")(cMap);
     require("./layer_control.js")(cMap);
-    var legend = require("./legend_control")(cMap);
+    cMap.legend = require("./legend_control")(cMap);
 
 
-var right_click = require("./right_click.js");
-
-      function rightclick(e) {
-      right_click(e, cMap, updatequerysearchstring);
-    } //end rightclick function
 
 
 var on_each_feature = require("./oneachfeature.js");
 
 function onEachFeature(feature, layer){
-  
   on_each_feature(feature, layer, cMap);
-  
 }
 
 
@@ -52,366 +44,16 @@ var mintable = require("./mintable.js");
 var minmaxtable = require("./minmaxtable.js");
 var advenable = require("./advenable.js");
 
-var selectgeonums = require("./selectgeonums.js");
+var querygeonums = require("./querygeonums.js");
+var ajaxcall = require("./ajaxcall.js");
 
 
+var changeall = require("./changeall.js");
 
+var getJson = require("./getjson.js");
 
 
-    //called from index.html when select button is pressed in advanced tools
-    function querygeonums() {
 
-
-        var advstate, advattribute, advsign, advtext, advtable, advnumerator, advdenominator, i;
-
-        advstate = $("#advstate").val(); //state selected
-        advattribute = $("#advattribute").val(); //criteria (median household income, etc)
-        advsign = $("#advsign").val(); //sign; greater than, less than, etc
-        advtext = $("#advtext").val(); //value (as in: median household income is greater than VALUE)
-
-        advtext = advtext.replace(/[^0-9\.]+/g, ''); //strip non numeric from VALUE text
-
-
-        //loop through datatree (where data themes are defined), find varcode that matches the CRITERIA and assigns table, numerator, and denominator variables
-        for (i = 0; i < datatree.data.length; i = i + 1) {
-            if (advattribute === datatree.data[i].varcode) {
-                advtable = datatree.data[i].table;
-                advnumerator = datatree.data[i].numerator;
-                advdenominator = datatree.data[i].denominator;
-            }
-        }
-
-        //send paramters found above to advsearch.php, where query will return a list of geonums that fit that qualification
-        $.ajax({
-            url: "https://gis.dola.colorado.gov/cmap/advsearch?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
-            dataType: 'json',
-            success: function(data){selectgeonums(cMap, data);}
-        });
-
-    }
-
-
-
-    function ajaxcall() {
-
-
-        var r, diff1, diff2, newbounds;
-
-        cMap.geojsonLayer.clearLayers();
-
-        cMap.lastzoom = cMap.map.getZoom();
-        r = cMap.map.getBounds();
-        cMap.coord.nelat = (r._northEast.lat);
-        cMap.coord.nelng = (r._northEast.lng);
-        cMap.coord.swlat = (r._southWest.lat);
-        cMap.coord.swlng = (r._southWest.lng);
-
-        diff1 = (cMap.coord.nelat - cMap.coord.swlat) / 2;
-        diff2 = (cMap.coord.nelng - cMap.coord.swlng) / 2;
-
-        //we calculate a bounding box equal much larger than the actual visible map.  This preloades shapes that are off the map.  Combined with the center point query, this will allow us to not have to requery the database on every map movement.
-        newbounds = (cMap.coord.swlng - diff2) + "," + (cMap.coord.swlat - diff1) + "," + (cMap.coord.nelng + diff2) + "," + (cMap.coord.nelat + diff1);
-
-        cMap.geojsonLayer.refresh("https://gis.dola.colorado.gov/capi/geojson?db=" + cMap.db + "&schema=" + cMap.schema + "&sumlev=" + cMap.params.s + "&limit=" + cMap.limit + "&table=" + cMap.table + "&bb=" + newbounds + "&zoom=" + cMap.map.getZoom() + "&moe=yes"); //add a new layer replacing whatever is there
-
-    }
-
-
-
-
-    //get all datatheme data from datatree.js , breaks from breakstree.js and colortree.js for sybolizing
-    function changeall(redraw, override) {
-
-        //override??
-
-        var i, k, manageradio, symbarray, geo, stripnum, stripdenom;
-
-
-
-        function jsonstring(thedata) { //after successfull ajax call, data is sent here
-
-            //console.log(thedata);
-
-            var max, median, stddev, jenks5, jenks7, jenks9, quantile5, quantile7, quantile9, quantile11, standard8, standard7;
-
-            max = ss.max(thedata);
-
-            if (max === 0) {
-                thedata = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
-            } //all values in array are 0. (presumably no bg data)  Add a '1' to the array so simplestatistics library doesnt fail computing jenks.
-
-
-            //var mean = ss.mean(thedata);
-
-            median = ss.median(thedata);
-
-            stddev = ss.standard_deviation(thedata);
-
-
-            jenks5 = ss.jenks(thedata, 5);
-            jenks5[0] = cMap.minval;
-            jenks5.pop();
-            jenks7 = ss.jenks(thedata, 7);
-            jenks7[0] = cMap.minval;
-            jenks7.pop();
-            jenks9 = ss.jenks(thedata, 9);
-            jenks9[0] = cMap.minval;
-            jenks9.pop();
-
-            quantile5 = [ss.quantile(thedata, 0.8), ss.quantile(thedata, 0.6), ss.quantile(thedata, 0.4), ss.quantile(thedata, 0.2), cMap.minval];
-            quantile7 = [ss.quantile(thedata, 0.857143), ss.quantile(thedata, 0.714286), ss.quantile(thedata, 0.57143), ss.quantile(thedata, 0.42857), ss.quantile(thedata, 0.28571), ss.quantile(thedata, 0.14286), cMap.minval];
-            quantile9 = [ss.quantile(thedata, 0.88888), ss.quantile(thedata, 0.77777), ss.quantile(thedata, 0.66666), ss.quantile(thedata, 0.55555), ss.quantile(thedata, 0.44444), ss.quantile(thedata, 0.33333), ss.quantile(thedata, 0.22222), ss.quantile(thedata, 0.11111), cMap.minval];
-            quantile11 = [ss.quantile(thedata, 0.90909), ss.quantile(thedata, 0.81818), ss.quantile(thedata, 0.72727), ss.quantile(thedata, 0.63636), ss.quantile(thedata, 0.54545), ss.quantile(thedata, 0.45454), ss.quantile(thedata, 0.36364), ss.quantile(thedata, 0.27273), ss.quantile(thedata, 0.18182), ss.quantile(thedata, 0.09091), cMap.minval];
-
-
-            //half stddev breaks (8)
-            standard8 = [median + (stddev * 1.5), median + stddev, median + (stddev * 0.5), median, median - (stddev * 0.5), median - stddev, median - (stddev * 1.5), cMap.minval];
-            //wide stddev breaks (7)
-            standard7 = [median + (stddev * 2.5), median + (stddev * 1.5), median + (stddev * 0.5), median - (stddev * 0.5), median - (stddev * 1.5), median - (stddev * 2.5), cMap.minval];
-
-            //console.log(standard8);
-            //console.log(standard7);
-
-
-
-            eval("localStorage." + cMap.params.v + "_" + geo + "_jenks_5 = '" + JSON.stringify(jenks5.reverse()) + "'");
-            eval("localStorage." + cMap.params.v + "_" + geo + "_jenks_7 = '" + JSON.stringify(jenks7.reverse()) + "'");
-            eval("localStorage." + cMap.params.v + "_" + geo + "_jenks_9 = '" + JSON.stringify(jenks9.reverse()) + "'");
-
-            eval("localStorage." + cMap.params.v + "_" + geo + "_quantile_5 = '" + JSON.stringify(quantile5) + "'");
-            eval("localStorage." + cMap.params.v + "_" + geo + "_quantile_7 = '" + JSON.stringify(quantile7) + "'");
-            eval("localStorage." + cMap.params.v + "_" + geo + "_quantile_9 = '" + JSON.stringify(quantile9) + "'");
-            eval("localStorage." + cMap.params.v + "_" + geo + "_quantile_11 = '" + JSON.stringify(quantile11) + "'");
-
-            eval("localStorage." + cMap.params.v + "_" + geo + "_stddev_7 = '" + JSON.stringify(standard7) + "'");
-            eval("localStorage." + cMap.params.v + "_" + geo + "_stddev_8 = '" + JSON.stringify(standard8) + "'");
-
-            //console.log('after eval local storage');
-            cMap.breaks = JSON.parse(eval("localStorage." + cMap.params.v + "_" + geo + "_" + cMap.params.sn + "_" + cMap.params.cl));
-
-            //console.log('after breaks');
-
-            legend.addTo(cMap.map);
-
-            //console.log('added legend');
-
-            if (redraw === "yes") {
-                ajaxcall();
-            } else {
-                cMap.geojsonLayer.setStyle(function(feature) {
-                    symbolize(feature, cMap);
-                });
-            }
-
-            //console.log('end func');
-
-        }
-
-
-        //console.log('beforeremovelegend');
-        legend.removeFrom(cMap.map);
-        //console.log('beforemanageradio');
-        manageradio = $('input:radio[name ="optionsRadios"]:checked').val();
-        //console.log('aftermanageradio');
-
-        for (i = 0; i < datatree.data.length; i = i + 1) {
-
-            if (manageradio === datatree.data[i].varcode) {
-                cMap.current_desc = datatree.data[i].verbose;
-                cMap.table = datatree.data[i].table;
-                cMap.type = datatree.data[i].type;
-                cMap.mininc = datatree.data[i].mininc;
-                cMap.minval = Number(datatree.data[i].minval);
-                cMap.numerator = datatree.data[i].numerator;
-                cMap.denominator = datatree.data[i].denominator;
-                cMap.moenumerator = datatree.data[i].moenumerator;
-                cMap.moedenominator = datatree.data[i].moedenominator;
-                cMap.moeformula = "(" + cMap.moenumerator + ")" + "/" + "(" + cMap.moedenominator + ")";
-                cMap.formula = "(" + cMap.numerator + ")" + "/" + "(" + cMap.denominator + ")";
-                cMap.favtable = datatree.data[i].favtable;
-                cMap.params.v = datatree.data[i].varcode;
-                cMap.usezeroasnull = datatree.data[i].usezeroasnull;
-                symbarray = (datatree.data[i].favstyle).split(',');
-                if (override === '1') {
-                    cMap.params.sn = symbarray[0];
-                    cMap.params.cl = parseInt(symbarray[1], 10);
-                    cMap.params.cs = symbarray[2];
-                    console.log('override');
-
-                    //change value in dropdowns
-                    $('#classification').val(cMap.params.sn);
-                    $('#classes').val(cMap.params.cl);
-                    $('#' + cMap.params.cs + cMap.params.cl).prop('checked', true);
-
-                    filtercolorschemes(cMap);
-                }
-            }
-
-        }
-        //console.log('for i loop');
-        //loop through colorschemes only - we have breaks info and colorscheme    
-
-        for (k = 0; k < colortree.colorschemes.length; k = k + 1) {
-            if (colortree.colorschemes[k].schemename === cMap.params.cs && colortree.colorschemes[k].count === cMap.params.cl) {
-                cMap.ifnulljson = colortree.colorschemes[k].ifnull;
-                cMap.ifzerojson = colortree.colorschemes[k].ifzero;
-                cMap.symbolcolors = colortree.colorschemes[k].colors;
-            }
-        }
-
-        //localStorage.setItem("mhi_county_jenks_7", JSON.stringify([79183,64205,54206,46817,40204,33445,1]));
-        if (cMap.params.s === '40') {
-            geo = 'state';
-        }
-        if (cMap.params.s === '50') {
-            geo = 'county';
-        }
-        if (cMap.params.s === '140') {
-            geo = 'tract';
-        }
-        if (cMap.params.s === '150') {
-            geo = 'bg';
-        }
-        if (cMap.params.s === '160') {
-            geo = 'place';
-        }
-
-
-        if (eval("localStorage." + cMap.params.v + "_" + geo + "_" + cMap.params.sn + "_" + cMap.params.cl)) {
-            cMap.breaks = JSON.parse(eval("localStorage." + cMap.params.v + "_" + geo + "_" + cMap.params.sn + "_" + cMap.params.cl));
-
-
-            legend.addTo(cMap.map);
-
-            if (redraw === "yes") {
-                ajaxcall();
-            } else {
-                cMap.geojsonLayer.setStyle(function(feature) {
-                    symbolize(feature, cMap);
-                });
-            }
-
-
-        } else {
-
-            stripnum = cMap.numerator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g, ',');
-            stripdenom = cMap.denominator.replace(/Number/g, "").replace(/\(|\)/g, "").replace(/fp./g, "").replace(/\+/g, ',');
-
-
-            //double check discard = maybe related to usezeroasnull
-            $.ajax({
-                url: "https://gis.dola.colorado.gov/cmap/getranges?geo=" + geo + "&num=" + stripnum + "&denom=" + stripdenom + "&discard=" + cMap.usezeroasnull,
-                dataType: 'json',
-                success: jsonstring
-            });
-
-
-
-        }
-
-        //console.log('after eval');
-
-        updatequerysearchstring(cMap);
-
-    }
-
-
-
-    //after successfull ajax call, data is sent here
-    function getJson(data) {
-
-        $("#popup").remove();
-
-        cMap.geojsonLayer.clearLayers(); //(mostly) eliminates double-draw (should be technically unneccessary if you look at the code of leaflet-ajax...but still seems to help)
-        cMap.geojsonLayer.addData(data);
-
-        cMap.geojsonLayer.setStyle(function(feature) {
-            symbolize(feature, cMap);
-        });
-        cMap.map.addLayer(cMap.geojsonLayer);
-        cMap.map.spin(false);
-
-        //OMG OMG, I Figured out how to bring selected features to the front
-        cMap.map.eachLayer(function(layer) {
-            if (layer.options) {
-                if (layer.options.color) {
-                    if (layer.options.linecap === 'butt') {
-                        //bring feature to front - unfortunately a bug in IE and Opera prevent this from being fully cross-browser
-                        if (!L.Browser.ie && !L.Browser.opera) {
-                            layer.bringToFront();
-                        }
-                    }
-                }
-
-            }
-        });
-
-
-        //if data table flag is set, then open data table to appropriate size on startup
-        if (cMap.params.dt !== undefined) {
-
-            if (cMap.params.dt === 'yes') {
-                $('#resizediv').toggle();
-            }
-
-            if (cMap.params.dt === 'max') {
-                $('#resizediv').toggle();
-                $('#resizediv').css('max-height', '100%');
-                $('#resizediv').css('height', '100%');
-                $('#resizediv').css('padding-top', '50px');
-                $('#closebtn').css('top', '53px');
-                $('#minmaxbtn').css('top', '53px');
-                $("#minmaxbtn2").removeClass("glyphicon-plus-sign").addClass("glyphicon-minus-sign");
-            }
-
-            delete cMap.params.dt;
-        }
-
-
-        //if chart flag is set, then open chart on startup
-        if (cMap.params.ch !== undefined) {
-
-            if (cMap.params.ch === 'yes') {
-                $('#chartModal').modal('toggle');
-                $('#chartdiv').empty();
-                addchart(cMap);
-                setTimeout(function() {
-                    updatequerysearchstring(cMap);
-                }, 1000);
-            }
-
-            delete cMap.params.ch;
-        }
-
-
-        //if right click chart flag is set, then open chart on startup to appropriate feature
-        if (cMap.params.rc !== undefined) {
-
-            if (cMap.params.rc === 'yes') {
-
-                $('#rclickModal').modal('toggle');
-                $('#rclick').empty();
-
-                var e = {};
-                e.target = {};
-                e.target.feature = {};
-                e.target.feature.properties = {};
-                e.target.feature.properties.geonum = cMap.params.gn;
-                e.target.feature.properties.geoname = cMap.params.ga;
-
-                rightclick(e);
-                setTimeout(function() {
-                    updatequerysearchstring(cMap);
-                }, 1000);
-
-            }
-
-            delete cMap.params.rc;
-        }
-
-
-
-    }
 
     function populate() {
 
@@ -644,7 +286,7 @@ var selectgeonums = require("./selectgeonums.js");
         });
 
         $('#querygeonums').click(function() {
-            querygeonums();
+            querygeonums(cMap);
         });
 
         $('#advattribute').change(function() {
@@ -789,12 +431,12 @@ var selectgeonums = require("./selectgeonums.js");
             cMap.feature.fillOpacity = slideEvt.value / 100;
 
             //transparency needs to be reflected in the legend
-            legend.removeFrom(cMap.map);
+            cMap.legend.removeFrom(cMap.map);
             cMap.geojsonLayer.setStyle({
                 //opacity: cMap.feature.lineopacity,
                 fillOpacity: cMap.feature.fillOpacity
             });
-            legend.addTo(cMap.map);
+            cMap.legend.addTo(cMap.map);
             updatequerysearchstring(cMap);
         });
 
@@ -807,7 +449,7 @@ var selectgeonums = require("./selectgeonums.js");
                 cMap.map.spin(true);
             },
             middleware: function(data) {
-                getJson(data);
+                getJson(data, cMap);
             },
             onEachFeature: onEachFeature
         });
@@ -835,8 +477,8 @@ var selectgeonums = require("./selectgeonums.js");
 
         populate(); //populate them modal from datatree
         drawcolorschemes(); //populate symbology portion of advanced dialog
-        legend.addTo(cMap.map);
-        changeall('yes', '0'); //draw 
+        cMap.legend.addTo(cMap.map);
+        changeall(cMap, 'yes', '0'); //draw 
 
 
 

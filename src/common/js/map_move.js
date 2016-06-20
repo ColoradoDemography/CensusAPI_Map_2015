@@ -33,11 +33,11 @@ module.exports = function(cMap, updatequerysearchstring, ajaxcall) {
                 if (clat < cMap.coord.nelat && clat > cMap.coord.swlat && clng < cMap.coord.nelng && clng > cMap.coord.swlng) {
 
                     if (cMap.map.getZoom() !== cMap.lastzoom) {
-                        ajaxcall();
+                        ajaxcall(cMap);
                     }
 
                 } else {
-                    ajaxcall();
+                    ajaxcall(cMap);
                 }
 
 
@@ -69,7 +69,7 @@ module.exports = function(cMap, updatequerysearchstring, ajaxcall) {
             if (curtime >= (cMap.globalbusy + 1000)) {
 
                 if (cMap.map.getZoom() !== cMap.lastzoom) {
-                    ajaxcall();
+                    ajaxcall(cMap);
                 }
 
             }

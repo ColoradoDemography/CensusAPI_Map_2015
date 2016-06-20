@@ -51,37 +51,37 @@ module.exports = function(cMap, trslider, changeall, updatequerysearchstring) {
             if (loopcount == 40) {
                 $('input[name="optionsRadios"][value="rented"]').prop('checked', true);
                 cMap.params.v = 'rented';
-                changeall('yes', '1');
+                changeall(cMap, 'yes', '1');
             }
 
             if (loopcount == 80) {
                 $('input[name="optionsRadios"][value="myb"]').prop('checked', true);
                 cMap.params.v = 'myb';
-                changeall('yes', '1');
+                changeall(cMap, 'yes', '1');
             }
 
             if (loopcount == 120) {
                 $('input[name="optionsRadios"][value="inpoverty"]').prop('checked', true);
                 cMap.params.v = 'inpoverty';
-                changeall('yes', '1');
+                changeall(cMap, 'yes', '1');
             }
 
             if (loopcount == 160) {
                 $('input[name="optionsRadios"][value="mhv"]').prop('checked', true);
                 cMap.params.v = 'mhv';
-                changeall('yes', '1');
+                changeall(cMap, 'yes', '1');
             }
 
             if (loopcount == 200) {
                 $('input[name="optionsRadios"][value="bachlhghr"]').prop('checked', true);
                 cMap.params.v = 'bachlhghr';
-                changeall('yes', '1');
+                changeall(cMap, 'yes', '1');
             }
 
             if (loopcount == 240) {
                 $('input[name="optionsRadios"][value="mhi"]').prop('checked', true);
                 cMap.params.v = 'mhi';
-                changeall('yes', '1');
+                changeall(cMap, 'yes', '1');
             }
 
             if (loopcount == 280) {
@@ -102,7 +102,7 @@ module.exports = function(cMap, trslider, changeall, updatequerysearchstring) {
                 fillOpacity: cMap.feature.fillOpacity
             });
 
-            //legend.addTo(cMap.map);
+            //cMap.legend.addTo(cMap.map);
             updatequerysearchstring(cMap);
         }
 
