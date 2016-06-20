@@ -32,8 +32,6 @@
     var legend = require("./legend_control")(cMap);
 
 
-
-
 var right_click = require("./right_click.js");
 
       function rightclick(e) {
@@ -50,70 +48,13 @@ function onEachFeature(feature, layer){
 }
 
 
-    //hide table - from button
-    function mintable() {
-        $('#resizediv').hide();
-        updatequerysearchstring(cMap);
-    }
+var mintable = require("./mintable.js");
+var minmaxtable = require("./minmaxtable.js");
+var advenable = require("./advenable.js");
 
-    //min or max table - from button
-    function minmaxtable() {
+var selectgeonums = require("./selectgeonums.js");
 
 
-        //check the top attribute of the closebtn to figure if table needs to be minimized or maximized
-        var btnstate = $('#closebtn').css('top');
-
-        if (btnstate === '3px') {
-            $('#resizediv').css('max-height', '100%');
-            $('#resizediv').css('height', '100%');
-            $('#resizediv').css('padding-top', '50px');
-            $('#closebtn').css('top', '53px');
-            $('#minmaxbtn').css('top', '53px');
-            $("#minmaxbtn2").removeClass("glyphicon-plus-sign").addClass("glyphicon-minus-sign"); //change icon
-        } else {
-            $('#resizediv').css('max-height', '40%');
-            $('#resizediv').css('height', 'auto');
-            $('#resizediv').css('padding-top', '0px');
-            $('#closebtn').css('top', '3px');
-            $('#minmaxbtn').css('top', '3px');
-            $("#minmaxbtn2").removeClass("glyphicon-minus-sign").addClass("glyphicon-plus-sign"); //change icon
-        }
-
-        updatequerysearchstring(cMap);
-    }
-
-
-
-    //called from index.html.  Determines whether to show or hide form controls based on whether the value of the select by attribute dropdown is equal to 'None'
-    function advenable(curval) {
-
-        if (curval === 'none') {
-            $("#advsign").prop("disabled", true);
-            $("#advtext").prop("disabled", true);
-        } else {
-            $("#advsign").prop("disabled", false);
-            $("#advtext").prop("disabled", false);
-        }
-    } //end advenable
-
-
-    //function selects all matching geographies, highlights them, puts them into/draws table
-    function selectgeonums(data) {
-
-        var i;
-
-        cMap.dataset = []; //clear existing selection (may want to think about option to add to existing selection set)
-        for (i = 0; i < data.length; i = i + 1) {
-            cMap.dataset.push(data[i]); //add each new geonum into dataset[]
-        }
-
-        cMap.createnewtable = 0; //set flag to redraw table - which will be called in the styling function
-        cMap.geojsonLayer.setStyle(function(feature) {
-            symbolize(feature, cMap);
-        }); //restyle entire layer (restyle function includes highlighting selected features)
-        updatequerysearchstring(cMap);
-
-    }
 
 
 
@@ -144,7 +85,7 @@ function onEachFeature(feature, layer){
         $.ajax({
             url: "https://gis.dola.colorado.gov/cmap/advsearch?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
             dataType: 'json',
-            success: selectgeonums
+            success: function(data){selectgeonums(cMap, data);}
         });
 
     }
@@ -691,11 +632,11 @@ function onEachFeature(feature, layer){
         });
 
         $('#mintableclick').click(function() {
-            mintable();
+            mintable(cMap);
         });
 
         $('#minmaxclick').click(function() {
-            minmaxtable();
+            minmaxtable(cMap);
         });
 
         $('#getcsvdata').click(function() {
