@@ -25,7 +25,7 @@
             updatequerysearchstring(cMap);
             //change color back to black //insane
             cMap.geojsonLayer.setStyle(function(feature) {
-                symbolize(feature, cMap);
+                return symbolize(feature, cMap);
             });
 
         });

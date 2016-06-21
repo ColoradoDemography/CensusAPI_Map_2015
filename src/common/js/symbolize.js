@@ -7,6 +7,7 @@ module.exports = function(feature, cMap) {
 
     var fp = feature.properties;
     var mapvar = eval(cMap.formula);
+
     var geonum = fp.geonum;
     var newlinecolor = cMap.feature.linecolor;
     var newlineweight, newlineopacity, newlinecap, getreverse, i, j;
@@ -81,11 +82,12 @@ module.exports = function(feature, cMap) {
 
     //get number of colors in color ramp
     getreverse = cMap.symbolcolors.length;
-
+  
     //loop through color set
     for (j = 0; j < getreverse; j = j + 1) {
         //loop through breaks; symbolize features accordingly
         if (mapvar >= cMap.breaks[j]) {
+
             return {
                 fillColor: cMap.symbolcolors[(getreverse - 1) - j],
                 color: newlinecolor,

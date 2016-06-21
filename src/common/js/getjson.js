@@ -21,7 +21,7 @@ module.exports = function(data, cMap) {
     cMap.geojsonLayer.addData(data);
 
     cMap.geojsonLayer.setStyle(function(feature) {
-        symbolize(feature, cMap);
+        return symbolize(feature, cMap);
     });
     cMap.map.addLayer(cMap.geojsonLayer);
     cMap.map.spin(false);

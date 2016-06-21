@@ -15,7 +15,7 @@ module.exports = function(cMap, data) {
     cMap.createnewtable = 0; //set flag to redraw table - which will be called in the styling function
 
     cMap.geojsonLayer.setStyle(function(feature) {
-        symbolize(feature, cMap);
+        return symbolize(feature, cMap);
     }); //restyle entire layer (restyle function includes highlighting selected features)
 
     updatequerysearchstring(cMap);

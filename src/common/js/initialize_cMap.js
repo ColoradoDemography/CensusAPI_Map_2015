@@ -1,13 +1,13 @@
 module.exports = function() {
 
+
+    //access token for using mapbox services.  dont copy mine, use your own!
+    L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
+
     var cMap = {};
 
     //the cMap params gets the initial startup parameters from the address bar
     cMap.params = require("./parse_query_string.js")();
-
-
-    //access token for using mapbox services.  dont copy mine, use your own!
-    L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
 
 
     // mbstyle is a mapbox 'style' (that I created as part of the CO Demog Office Mapbox account).

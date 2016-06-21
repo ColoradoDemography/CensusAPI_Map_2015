@@ -8,7 +8,7 @@
      require("./close_modals.js")(cMap);
      require("./reg_basemap_chg.js")(cMap);
      require("./advanced_search.js")(cMap);
-     require("./save_pring.js")(cMap);
+     require("./save_print.js")(cMap);
      require("./classification.js")(cMap);
      require("./ops_data_table.js")(cMap);
      require("./moe_button.js")(cMap);

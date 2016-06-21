@@ -11,7 +11,7 @@
 
             //change all previously selected elements
             cMap.geojsonLayer.setStyle(function(feature) {
-                symbolize(feature, cMap);
+                return symbolize(feature, cMap);
             });
         });
 
