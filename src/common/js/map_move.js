@@ -1,7 +1,8 @@
-module.exports = function(cMap, updatequerysearchstring, ajaxcall) {
+var updatequerysearchstring = require("./update_query_string.js");
+var ajaxcall = require("./ajaxcall.js");
 
 
-
+module.exports = function(cMap) {
 
     //keep track of time.  when stopped moving for two seconds, redraw
     cMap.map.on('movestart', function() {

@@ -3,9 +3,6 @@ var highlight_feature = require("./highlight_feature.js");
 var feature_select = require("./feature_select.js");
 var right_click = require("./right_click.js");
 
-var updatequerysearchstring = require("./update_query_string.js");
-
-
 
 //every geojson feature will have a mouseover, mouseout, and click event.
 
@@ -21,11 +18,11 @@ module.exports = function(feature, layer, cMap) {
     }
 
     function featureSelect(e) {
-        feature_select(e, cMap, updatequerysearchstring);
+        feature_select(e, cMap);
     }
 
     function rightclick(e) {
-        right_click(e, cMap, updatequerysearchstring);
+        right_click(e, cMap);
     } //end rightclick function
 
 

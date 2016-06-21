@@ -1,8 +1,9 @@
 var charttree = require("./charttree.js");
 var chartmaker = require("./chartmaker.js");
+var updatequerysearchstring = require("./update_query_string.js");
 
 
-module.exports = function(e, cMap, updatequerysearchstring) {
+module.exports = function(e, cMap) {
 
 
     var i, j, fp = e.target.feature.properties,

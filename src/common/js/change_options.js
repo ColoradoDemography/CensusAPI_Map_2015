@@ -1,4 +1,10 @@
-module.exports = function(cMap, updatequerysearchstring, changeall, filtercolorschemes) {
+var updatequerysearchstring = require("./update_query_string.js");
+var changeall = require("./changeall.js");
+var filtercolorschemes = require("./filter_color_schemes.js");
+
+
+
+module.exports = function(cMap) {
 
     //START ALL FUNCTIONS- DO THEY NEED TO BE WITHIN DOCUMENT READY?
 

@@ -10,7 +10,7 @@ var right_click = require("./right_click.js");
 module.exports = function(data, cMap) {
 
     function rightclick(e) {
-        right_click(e, cMap, updatequerysearchstring);
+        right_click(e, cMap);
     } //end rightclick function
 
 

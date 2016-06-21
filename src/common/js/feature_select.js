@@ -1,8 +1,9 @@
 var accounting = require("accounting");
-
 var tabletree = require("./tableflavor.js");
+var updatequerysearchstring = require("./update_query_string.js");
 
-module.exports = function(e, cMap, updatequerysearchstring) {
+
+module.exports = function(e, cMap) {
 
 
     var i, layer = e.target,

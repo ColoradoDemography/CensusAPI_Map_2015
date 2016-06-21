@@ -1,6 +1,10 @@
 var clearsel = require("./clearsel.js");
+var updatequerysearchstring = require("./update_query_string.js");
+var addchart = require("./addchart.js");
 
-module.exports = function(cMap, updatequerysearchstring, addchart, addRows, redrawTable) {
+
+
+module.exports = function(cMap) {
 
     //Create Easy Buttons (Top-Left)
 
@@ -53,7 +57,7 @@ module.exports = function(cMap, updatequerysearchstring, addchart, addRows, redr
 
         //clear selected (eraser) button
         L.easyButton('fa fa-eraser fa-lg', function() {
-            clearsel(cMap, addRows, redrawTable);
+            clearsel(cMap);
             updatequerysearchstring(cMap);
         }, 'Clear Selection').addTo(cMap.map);
 

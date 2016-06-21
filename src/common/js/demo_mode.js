@@ -1,6 +1,9 @@
 var demodata = require("./demodata.js");
+var changeall = require("./changeall.js");
+var updatequerysearchstring = require("./update_query_string.js");
 
-module.exports = function(cMap, trslider, changeall, updatequerysearchstring) {
+
+module.exports = function(cMap) {
 
     //demo intervals
     var r_interval;
@@ -41,7 +44,7 @@ module.exports = function(cMap, trslider, changeall, updatequerysearchstring) {
             cMap.params.bm = 'cb';
             cMap.params.tr = .5;
             cMap.feature.fillOpacity = .5;
-            trslider.slider('setValue', 50);
+            cMap.trslider.slider('setValue', 50);
             cMap.geojsonLayer.setStyle({
                 fillOpacity: cMap.feature.fillOpacity
             });
@@ -97,7 +100,7 @@ module.exports = function(cMap, trslider, changeall, updatequerysearchstring) {
             cMap.params.bm = "sat";
             cMap.params.tr = 0;
             cMap.feature.fillOpacity = 0;
-            trslider.slider('setValue', 0);
+            cMap.trslider.slider('setValue', 0);
             cMap.geojsonLayer.setStyle({
                 fillOpacity: cMap.feature.fillOpacity
             });

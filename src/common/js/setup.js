@@ -5,11 +5,7 @@
     var advenable = require("./advenable.js");
     var querygeonums = require("./querygeonums.js");
     var chgtblfl = require("./change_table_flavor.js");
-    var addchart = require("./addchart.js");
-    var addRows = require("./add_rows.js");
-    var redrawTable = require("./redraw_table.js");
     var symbolize = require("./symbolize.js");
-    var ajaxcall = require("./ajaxcall.js");
     var changeall = require("./changeall.js");
     var getJson = require("./getjson.js");
     var getCSVData = require("./getcsvdata.js");
@@ -34,7 +30,7 @@
         }
 
         //Initialize transparency slider
-        var trslider = $('#ex1').slider({
+        cMap.trslider = $('#ex1').slider({
             formatter: function(value) {
                 return value + '%';
             }
@@ -235,12 +231,12 @@
         $("#table").stupidtable();
 
 
-        require("./easy_buttons.js")(cMap, updatequerysearchstring, addchart, addRows, redrawTable);
+        require("./easy_buttons.js")(cMap);
 
         //if a transparency value is set in the querystring, change the slider to that value
         if (cMap.params.tr !== undefined) {
             cMap.feature.fillOpacity = cMap.params.tr;
-            trslider.slider('setValue', parseInt((cMap.feature.fillOpacity * 100), 10));
+            cMap.trslider.slider('setValue', parseInt((cMap.feature.fillOpacity * 100), 10));
 
             updatequerysearchstring(cMap);
         }
@@ -302,9 +298,9 @@
 
 
 
-        require("./change_options")(cMap, updatequerysearchstring, changeall, filtercolorschemes);
-        require("./map_move")(cMap, updatequerysearchstring, ajaxcall);
-        require("./demo_mode")(cMap, trslider, changeall, updatequerysearchstring);
+        require("./change_options")(cMap);
+        require("./map_move")(cMap);
+        require("./demo_mode")(cMap);
 
 
 

@@ -1,10 +1,13 @@
+var redrawTable = require("./redraw_table.js");
+
+
 //clear selection button in table modal
 
-module.exports = function(cMap, addRows, redrawTable) {
+module.exports = function(cMap) {
 
 
     cMap.dataset = [];
-    redrawTable(cMap, addRows);
+    redrawTable(cMap);
 
     //change selected symbology back to unselected
     cMap.map.eachLayer(function(layer) {

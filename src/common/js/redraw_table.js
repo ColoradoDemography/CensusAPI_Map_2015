@@ -1,6 +1,9 @@
 var tabletree = require("./tableflavor.js");
+var addRows = require("./add_rows.js");
 
-module.exports = function(cMap, addRows) {
+
+
+module.exports = function(cMap) {
 
 
     var str = '',
