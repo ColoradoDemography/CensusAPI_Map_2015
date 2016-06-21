@@ -3,6 +3,8 @@ var LZString = require("../../lib/js/lz-string.js");
 //after a major map action, the query search string (address) is updated with the new state of the application
 module.exports = function(cMap) {
 
+
+
     var dstring, compressed, btnstate, urlstr, newurl, ga, gn, bm, csel, cmo;
 
     var ch = ''; //chart
@@ -42,6 +44,11 @@ module.exports = function(cMap) {
     } else {
         cmo = '';
     } //mouseover geography color
+
+    //get list of selected geographies (d) - store them in global variable (dataset)
+    if (cMap.params.d !== undefined) {
+        cMap.dataset = LZString.decompressFromEncodedURIComponent(cMap.params.d).split(',');
+    }
 
     //takes array of selected geographies.  converts to string.  compress string to URI hash
     if (cMap.dataset.length !== 0) {

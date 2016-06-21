@@ -12,6 +12,9 @@ module.exports = function(cMap) {
     //Dont Bother creating easy buttons if in print mode
 
     if (cMap.params.print !== "yes") {
+
+
+
         //theme modal & button
         $('#homeModal').modal({
             show: false
@@ -19,6 +22,9 @@ module.exports = function(cMap) {
         L.easyButton('fa fa-bars fa-lg', function() {
             $('#homeModal').modal('toggle');
         }, 'Change Data Theme').addTo(cMap.map);
+
+
+
 
         //geo modal & button
         $('#geoModal').modal({
@@ -28,11 +34,17 @@ module.exports = function(cMap) {
             $('#geoModal').modal('toggle');
         }, 'Change Geography Level').addTo(cMap.map);
 
+
+
+
         //table button
         L.easyButton('fa fa-table fa-lg', function() {
             $('#resizediv').toggle();
             updatequerysearchstring(cMap);
         }, 'View Table').addTo(cMap.map);
+
+
+
 
         //chart modal & button
         $('#chartModal').modal({
@@ -47,6 +59,8 @@ module.exports = function(cMap) {
             }, 1000);
         }, 'View Chart').addTo(cMap.map);
 
+
+
         //print modal & button
         $('#dataModal').modal({
             show: false
@@ -55,11 +69,15 @@ module.exports = function(cMap) {
             $('#dataModal').modal('toggle');
         }, 'Print Map').addTo(cMap.map);
 
+
+
         //clear selected (eraser) button
         L.easyButton('fa fa-eraser fa-lg', function() {
             clearsel(cMap);
             updatequerysearchstring(cMap);
         }, 'Clear Selection').addTo(cMap.map);
+
+
 
     }
 

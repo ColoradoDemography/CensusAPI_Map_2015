@@ -401,3 +401,13 @@ table tfoot td, table tfoot th, table tfoot tr {text-align: center; font: 120%  
     
 .red-tooltip + .tooltip > .tooltip-inner {background-color: #800000; opacity: 1;}
     
+
+    svg{
+      shape-rendering: crispEdges;
+      text-rendering: optimizeLegibility;
+    }
+    
+    .easy-button-button{
+      padding: 0px;
+    }
+

@@ -18,7 +18,6 @@ module.exports = {
         "leaflet": "L",
         "google": "google",
         "jquery": "jQuery",
-        "LZString": "LZString",
         "d3": "d3",
         "ss": "ss"
     },

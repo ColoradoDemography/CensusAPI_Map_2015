@@ -5,9 +5,6 @@ module.exports = function() {
     //the cMap params gets the initial startup parameters from the address bar
     cMap.params = require("./parse_query_string.js")();
 
-    //jslint globals to ignore:  L $ google colortree datatree LZString History tabletree d3 ss
-    /*jslint browser: true, devel: true, evil: true, nomen: true, regexp: true, unparam: true, sloppy: true, white: true */
-
 
     //access token for using mapbox services.  dont copy mine, use your own!
     L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
