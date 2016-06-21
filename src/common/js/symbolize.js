@@ -82,7 +82,7 @@ module.exports = function(feature, cMap) {
 
     //get number of colors in color ramp
     getreverse = cMap.symbolcolors.length;
-  
+
     //loop through color set
     for (j = 0; j < getreverse; j = j + 1) {
         //loop through breaks; symbolize features accordingly

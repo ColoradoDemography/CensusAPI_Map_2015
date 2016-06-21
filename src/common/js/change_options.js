@@ -5,7 +5,6 @@ var filtercolorschemes = require("./filter_color_schemes.js");
 
 
 module.exports = function(cMap) {
-
     //START ALL FUNCTIONS- DO THEY NEED TO BE WITHIN DOCUMENT READY?
 
     //change data theme

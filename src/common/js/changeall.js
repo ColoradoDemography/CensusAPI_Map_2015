@@ -88,7 +88,7 @@ module.exports = function(cMap, redraw, override) {
             ajaxcall(cMap);
         } else {
             cMap.geojsonLayer.setStyle(function(feature) {
-              return symbolize(feature, cMap);
+                return symbolize(feature, cMap);
             });
         }
 
@@ -176,7 +176,7 @@ module.exports = function(cMap, redraw, override) {
             ajaxcall(cMap);
         } else {
             cMap.geojsonLayer.setStyle(function(feature) {
-              return symbolize(feature, cMap);
+                return symbolize(feature, cMap);
             });
         }
 

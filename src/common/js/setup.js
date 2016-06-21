@@ -14,12 +14,14 @@
      require("./moe_button.js")(cMap);
      require("./selection_mouseover.js")(cMap);
      require("./easy_buttons.js")(cMap);
-     require("./change_options")(cMap);
      require("./map_move")(cMap);
      require("./demo_mode")(cMap);
      require("./print_mode.js")(cMap.params.print);
      require("./populate.js")(cMap); //populate the modal from datatree
      require("./drawcolorschemes.js")(cMap); //populate symbology portion of advanced dialog
+
+     require("./change_options")(cMap);
+
 
      cMap.legend.addTo(cMap.map);
 
