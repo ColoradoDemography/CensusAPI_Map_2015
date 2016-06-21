@@ -1,12 +1,11 @@
+var updatequerysearchstring = require("./update_query_string.js");
 
-    var updatequerysearchstring = require("./update_query_string.js");
 
+//hide table - from button
 
-    //hide table - from button
+module.exports = function(cMap) {
 
-module.exports = function(cMap){
-  
-          $('#resizediv').hide();
-        updatequerysearchstring(cMap);
-  
+    $('#resizediv').hide();
+    updatequerysearchstring(cMap);
+
 }

@@ -1,11 +1,10 @@
-    
-var accounting = require("accounting");
+    var accounting = require("accounting");
 
 
     //mouseover highlight
-module.exports = function(e, cMap){
-  
-  
+    module.exports = function(e, cMap) {
+
+
         var layer = e.target;
         var fp = e.target.feature.properties;
         var popupresult = eval(cMap.formula);
@@ -77,5 +76,5 @@ module.exports = function(e, cMap){
         // Add the popup to the map
         popup.appendTo("#map");
 
-  
-}
+
+    }

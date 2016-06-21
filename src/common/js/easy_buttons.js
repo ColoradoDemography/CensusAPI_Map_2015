@@ -1,4 +1,3 @@
-
 var clearsel = require("./clearsel.js");
 
 module.exports = function(cMap, updatequerysearchstring, addchart, addRows, redrawTable) {

@@ -1,11 +1,11 @@
     var datatree = require("./datatree.js");
-var selectgeonums = require("./selectgeonums.js");
+    var selectgeonums = require("./selectgeonums.js");
 
     //called from index.html when select button is pressed in advanced tools
 
-module.exports = function(cMap){
-  
-  
+    module.exports = function(cMap) {
+
+
         var advstate, advattribute, advsign, advtext, advtable, advnumerator, advdenominator, i;
 
         advstate = $("#advstate").val(); //state selected
@@ -29,7 +29,9 @@ module.exports = function(cMap){
         $.ajax({
             url: "https://gis.dola.colorado.gov/cmap/advsearch?advsumlev=" + cMap.params.s + "&advstate=" + advstate + "&advsign=" + advsign + "&advtext=" + advtext + "&advtable=" + advtable + "&advnumerator=" + encodeURIComponent(advnumerator) + "&advdenominator=" + encodeURIComponent(advdenominator),
             dataType: 'json',
-            success: function(data){selectgeonums(cMap, data);}
+            success: function(data) {
+                selectgeonums(cMap, data);
+            }
         });
-  
-}
+
+    }
