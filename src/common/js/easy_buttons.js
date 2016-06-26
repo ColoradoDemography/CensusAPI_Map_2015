@@ -69,7 +69,7 @@ module.exports = function(cMap) {
           downloadhref = encodeURIComponent(downloadhref+"&print=yes");
           var link = document.createElement('a');
           
-          link.href = 'http://red-meteor-147235.nitrousapp.com:4567/screenshot?website=' + downloadhref + '&filename=acsmap&timer=6000';
+          link.href = 'https://gis.dola.colorado.gov/phantom/screenshot?website=' + downloadhref + '&filename=acsmap&timer=6000';
           document.body.appendChild(link);
           link.click();
           setTimeout(function(){cMap.map.spin(false);}, 9000);  //overshoot 6 sec timer
