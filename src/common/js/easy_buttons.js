@@ -61,12 +61,19 @@ module.exports = function(cMap) {
 
 
 
-        //print modal & button
-        $('#dataModal').modal({
-            show: false
-        });
+        //print button
         L.easyButton('fa fa-floppy-o fa-lg', function() {
-            $('#dataModal').modal('toggle');
+          cMap.map.spin(true);
+          
+          var downloadhref = window.location.href;
+          downloadhref = encodeURIComponent(downloadhref+"&print=yes");
+          var link = document.createElement('a');
+          
+          link.href = 'http://red-meteor-147235.nitrousapp.com:4567/screenshot?website=' + downloadhref + '&filename=acsmap&timer=6000';
+          document.body.appendChild(link);
+          link.click();
+          setTimeout(function(){cMap.map.spin(false);}, 9000);  //overshoot 6 sec timer
+          
         }, 'Print Map').addTo(cMap.map);
 
 

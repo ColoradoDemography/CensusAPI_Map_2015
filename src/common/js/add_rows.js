@@ -12,10 +12,8 @@ module.exports = function(data, cMap) {
             classadd = '',
             plusminus = '',
             resprec, checkstate, i;
-
-        //var fp='';
-
-
+  
+  
         cMap.tblfl = $('#tableoption').val();
 
         //Plain Table
