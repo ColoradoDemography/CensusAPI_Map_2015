@@ -6,7 +6,7 @@ module.exports = function(cMap) {
 
 
     //take array of geonums and turn it into a comma delimited string
-    var geonums = cMap.dataset.join(",");
+    var geonums = (cMap.dataset).join(",");
 
     $.ajax({
         type: "POST",

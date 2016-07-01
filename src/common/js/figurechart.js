@@ -7,7 +7,6 @@ var dochart = require("./dochart.js");
 //that data is then passed into the chart creation routine
 module.exports = function(cMap, JSONdata) {
 
-
     var resultlength, xwidth, xheight, statearray, uniqueStates, sendgeonum, i;
 
     //calculates the number of data items in the chart results array that was received from the database

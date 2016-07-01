@@ -53,7 +53,7 @@ module.exports = function(cMap) {
         L.easyButton('fa fa-line-chart fa-lg', function() {
             $('#chartModal').modal('toggle');
             $('#chartdiv').empty();
-            addchart();
+            addchart(cMap);
             setTimeout(function() {
                 updatequerysearchstring(cMap);
             }, 1000);
@@ -63,17 +63,19 @@ module.exports = function(cMap) {
 
         //print button
         L.easyButton('fa fa-floppy-o fa-lg', function() {
-          cMap.map.spin(true);
-          
-          var downloadhref = window.location.href;
-          downloadhref = encodeURIComponent(downloadhref+"&print=yes");
-          var link = document.createElement('a');
-          
-          link.href = 'https://gis.dola.colorado.gov/phantom/screenshot?website=' + downloadhref + '&filename=acsmap&timer=6000';
-          document.body.appendChild(link);
-          link.click();
-          setTimeout(function(){cMap.map.spin(false);}, 9000);  //overshoot 6 sec timer
-          
+            cMap.map.spin(true);
+
+            var downloadhref = window.location.href;
+            downloadhref = encodeURIComponent(downloadhref + "&print=yes");
+            var link = document.createElement('a');
+
+            link.href = 'https://gis.dola.colorado.gov/phantom/screenshot?website=' + downloadhref + '&filename=acsmap&timer=6000';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(function() {
+                cMap.map.spin(false);
+            }, 9000); //overshoot 6 sec timer
+
         }, 'Print Map').addTo(cMap.map);
 
 
