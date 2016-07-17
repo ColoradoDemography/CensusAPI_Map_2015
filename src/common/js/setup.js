@@ -17,6 +17,7 @@
      require("./demo_mode")(cMap);
      require("./print_mode.js")(cMap.params.print);
      require("./populate.js")(cMap); //populate the modal from datatree
+     require("./populate_acsdb.js")(cMap); //populate acs database choices
      require("./drawcolorschemes.js")(cMap); //populate symbology portion of advanced dialog
 
      require("./change_options")(cMap);
