@@ -6,13 +6,13 @@ module.exports = function() {
         $(".navbar-collapse.in").collapse("hide");
         return false;
     });
-  
+
     $("#dataset-btn").click(function() {
         $("#datasetModal").modal("show");
         $(".navbar-collapse.in").collapse("hide");
         return false;
     });
-  
+
     $("#advanced-btn").click(function() {
         $("#symbologyModal").modal("show");
         $(".navbar-collapse.in").collapse("hide");
