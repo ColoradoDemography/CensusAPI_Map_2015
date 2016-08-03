@@ -1187,16 +1187,16 @@ module.exports = {
         },
         {
             "varcode": "cbhm",
-            "verbose": "Cost Burdened Households with a Mortgage",
+            "verbose": "Cost Burdened Households (with a Mortgage)",
             "section": "Housing",
             "table": "b25101",
             "numerator": "Number(fp.b25101006)+Number(fp.b25101010)+Number(fp.b25101014)+Number(fp.b25101020)+Number(fp.b25101022)",
             "denominator": "Number(fp.25101002)",
             "type": "percent",
-            "minval": "1",
-            "mininc": "1",
+            "minval": "0",
+            "mininc": ".01",
             "usezeroasnull": "no",
-            "favtable": "Cost Burdened Households with a Mortgage",
+            "favtable": "Cost Burdened Households (with a Mortgage)",
             "favstyle": "jenks,7,cbhm",
             "bg": "yes"
         }
