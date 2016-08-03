@@ -29,7 +29,6 @@
     #img_gif{
       outline: 1px solid grey;
     }
-
     #img_text{
       outline: 1px solid grey;
     }
@@ -69,7 +68,7 @@
   
     <br /><br /><br />
   <div id="result">
-  <img id="img_gif" src='https://s3-us-west-2.amazonaws.com/censusapimap/changetopic.gif'>
+  <img id="img_gif" src='https://storage.googleapis.com/censusmap-how-to/changetopic.gif'>
   <p id='img_text'>Use the button in the top left corner of the screen to open the Data Theme dialog box.  Select a category, and then click on a radio button to choose an individual topic to map.</p>
   </div>
   
@@ -84,77 +83,76 @@
       var img_text=document.getElementById('img_text');
       
       if(code==='zoom'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/zoom_inout.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/zoom_inout.gif';
         img_text.innerHTML='Use the mouse wheel  OR  the buttons in the upper right corner of the screen to zoom in or out.  To zoom in to a specific area, hold down the shift key and draw a rectangle around the area of interest.';
       }
-
       if(code==='var'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/changetopic.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/changetopic.gif';
         img_text.innerHTML='Use the button in the top left corner of the screen to open the Data Theme dialog box.  Select a category, and then click on a radio button to choose an individual topic to map.';
       }      
       
       if(code==='geo'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/changegeo.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/changegeo.gif';
         img_text.innerHTML='Use the compass button in the upper left corner of the screen to open the Geography dialog box.  Select the specific geography level you would like to map by.  Be aware that not all geographies are available at all zoom levels  (You may need to zoom in to be able to map by smaller geographies such as Block Groups).';
       }     
       
       if(code==='table'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/showtable.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/showtable.gif';
         img_text.innerHTML='Select areas of interest by clicking on them.  Use the table icon in the upper left corner of the screen to display information about the selected areas.';
       }     
       
       if(code==='clear'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/clearall.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/clearall.gif';
         img_text.innerHTML='To clear all selected areas, click on the clear tool (the last button on the left side of the screen).';
       }     
       
       if(code==='chart'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/chart.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/chart.gif';
         img_text.innerHTML='To create a bar chart based upon the selected areas, click on the charting tool on the left side of the screen.';
       }     
       
       if(code==='rchart'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/right_click.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/right_click.gif';
         img_text.innerHTML='To create a detailed bar chart of a specific area, right-click on that area.';
       }     
       
       if(code==='sym'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/classification.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/classification.gif';
         img_text.innerHTML="Open the 'Advanced Options' dialog using the button at the top of the screen.  Make sure you are in the 'Symbology' tab.  In order, select a Classification Scheme, choose the Number of Classes, then click on a Colorscheme.";
       }     
       
       if(code==='tr'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/transparency.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/transparency.gif';
         img_text.innerHTML="Open the 'Advanced Options' dialog using the button at the top of the screen.  Make sure you are in the 'Symbology' tab.  Locate the Transparency Slider, near the bottom of the dialog.  Slide it to the desired transparency level.";
       }     
       
       if(code==='sel'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/selection_color.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/selection_color.gif';
         img_text.innerHTML="Open the 'Advanced Options' dialog using the button at the top of the screen.  Make sure you are in the 'Settings' tab.  Use the drop-down menus to choose new selection or mouseover colors.";
       }     
       
       if(code==='locate'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/geolocation.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/geolocation.gif';
         img_text.innerHTML='Click on the geolocation tool on the right side of the screen (just below the zoom buttons).  The browser may ask for your permission to find your location.  If you allow, you will be taken to your approximate current location.';
       }     
       
       if(code==='search'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/search.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/search.gif';
         img_text.innerHTML='Use the search box in the upper right corner of the screen.  Type in a place or address, then click on one of the choices that appear in the list below the search box.  You will be taken to that location.';
       }     
       
       if(code==='moe'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/toggle_moe.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/toggle_moe.gif';
         img_text.innerHTML="Open the 'Advanced Options' dialog using the button at the top of the screen.  Make sure you are in the 'Settings' tab.  Click on the MOE switchbox control to turn Margin of Error information on or off.";
       }    
       
       if(code==='url'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/copy_url.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/copy_url.gif';
         img_text.innerHTML='Click anywhere on the map (preferably the title bar) to bring the map into focus.  Then, using your keyboard, press Ctrl-C to copy the web address of the page to your clipboard.  You can then paste the address anywhere. (ex: into an email).  The link will be an exact replica of the current map that you are looking at (including selected areas, if a chart was opened or closed, etc).';
       }    
       
       if(code==='adv'){
-        img_gif.src='https://s3-us-west-2.amazonaws.com/censusapimap/advanced2.gif';
+        img_gif.src='https://storage.googleapis.com/censusmap-how-to/advanced2.gif';
         img_text.innerHTML="Open the 'Advanced Options' dialog using the button at the top of the screen.  Make sure you are in the 'Advanced Search' tab.  Select a State of interest (or leave it at the default option of 'All', choose a topic of interest, and then enter a custom value (without formatting such as $ or commas).  Clicking search will create a new selection with features that match your criteria.  (Any features you had previously selected will be discarded)";
       }          
       
