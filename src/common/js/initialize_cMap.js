@@ -39,7 +39,7 @@ module.exports = function() {
     } //summary level.  40 state 50 county 140 tract 150 block group 160 place
 
     cMap.limit = '10000'; //feature retrieval limit
-    cMap.db = 'acs1014'; //the database to retrieve data from.  currently set to acs1014
+    cMap.db = 'acs1115'; //the database to retrieve data from.  currently set to acs1014
     cMap.schema = 'data'; //the database schema that the data is located in.  more data on this is available at my CensusAPI_DB repository: https://github.com/royhobbstn/CensusAPI_DB
     cMap.table = 'b19013'; //actual ACS table data is being drawn from
 
