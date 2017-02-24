@@ -1,5 +1,5 @@
 module.exports = {
-    "tree": "acs0913",
+    "tree": "acs1115",
     "data": [{
             "ActualTable": "b19013",
             "TableAlias": "Median Household Income",
@@ -1066,6 +1066,48 @@ module.exports = {
             }, {
                 "FieldName": "Percent Households w Children < 18",
                 "Formula": "((Number(fp.b11005002)/Number(fp.b11005001))*100).toFixed(2)",
+                "type": "percent",
+                "sum": "none"
+            }]
+        }, {
+            "ActualTable": "b06007",
+            "TableAlias": "Place of Birth by Language Spoken at Home and Ability to Speak English",
+            "Summable": "no",
+            "Type": "percent",
+            "Data": [{
+                "FieldName": "Population 5 Years and Over",
+                "Formula": "Number(fp.b06007001)",
+                "type": "number",
+                "sum": "total"
+            }, {
+                "FieldName": "Speak Spanish",
+                "Formula": "((Number(fp.b06007003)/Number(fp.b06007001))*100).toFixed(2)",
+                "type": "percent",
+                "sum": "none"
+            }, {
+                "FieldName": "Speak English less than very well",
+                "Formula": "(((Number(fp.b06007008)+Number(fp.b06007005))/Number(fp.b06007001))*100).toFixed(2)",
+                "type": "percent",
+                "sum": "none"
+            }]
+        }, {
+            "ActualTable": "b25101",
+            "TableAlias": "Mortgage Status by Monthly Housing Costs as a Percentage of Household Income",
+            "Summable": "no",
+            "Type": "percent",
+            "Data": [{
+                "FieldName": "Owner Occupied Households",
+                "Formula": "Number(fp.b25101001)",
+                "type": "number",
+                "sum": "total"
+            }, {
+                "FieldName": "With a Mortgage",
+                "Formula": "Number(fp.b25101002)",
+                "type": "number",
+                "sum": "total"
+            }, {
+                "FieldName": "Cost Burdened",
+                "Formula": "(((Number(fp.b25101006)+Number(fp.b25101010)+Number(fp.b25101014)+Number(fp.b25101020)+Number(fp.b25101022))/Number(fp.b25101002))*100).toFixed(2)",
                 "type": "percent",
                 "sum": "none"
             }]

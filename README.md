@@ -26,3 +26,5 @@ You can send a link of any map view to a friend.  They will see the map EXACTLY 
 ***
 ##Contributing
 There are a lot of technical details that need to be explained about how this program is organized.  See [Technical Notes](TechnicalNotes.md) for more information.
+
+To add more categories, add the necessary json records to the datatree and tableflavor js files

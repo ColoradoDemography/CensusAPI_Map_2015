@@ -1,5 +1,5 @@
 module.exports = {
-    "tree": "acs0913",
+    "tree": "acs1115",
     "data": [
 
         {
@@ -1191,17 +1191,45 @@ module.exports = {
             "section": "Housing",
             "table": "b25101",
             "numerator": "Number(fp.b25101006)+Number(fp.b25101010)+Number(fp.b25101014)+Number(fp.b25101020)+Number(fp.b25101022)",
-            "denominator": "Number(fp.25101002)",
+            "denominator": "Number(fp.b25101002)",
             "type": "percent",
             "minval": "0",
             "mininc": ".01",
             "usezeroasnull": "no",
             "favtable": "Cost Burdened Households (with a Mortgage)",
-            "favstyle": "jenks,7,cbhm",
+            "favstyle": "jenks,7,mh10",
             "bg": "yes"
+        },
+        {
+            "varcode": "elvw",
+            "verbose": "Population 5 and Over That Speaks English Less Than Very Well",
+            "section": "Language",
+            "table": "b06007",
+            "numerator": "Number(fp.b06007008)+Number(fp.b06007005)",
+            "denominator": "Number(fp.b06007001)",
+            "type": "percent",
+            "minval": "0",
+            "mininc": ".01",
+            "usezeroasnull": "no",
+            "favtable": "Place of Birth by Language Spoken at Home and Ability to Speak English",
+            "favstyle": "jenks,7,mh10",
+            "bg": "no"
+        },
+        {
+            "varcode": "p5ss",
+            "verbose": "Population 5 and Over That Speaks Spanish",
+            "section": "Language",
+            "table": "b06007",
+            "numerator": "Number(fp.b06007003)",
+            "denominator": "Number(fp.b06007001)",
+            "type": "percent",
+            "minval": "0",
+            "mininc": ".01",
+            "usezeroasnull": "no",
+            "favtable": "Place of Birth by Language Spoken at Home and Ability to Speak English",
+            "favstyle": "jenks,7,mh10",
+            "bg": "no"
         }
-
-
 
 
 
