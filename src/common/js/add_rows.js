@@ -64,7 +64,7 @@ module.exports = function(data, cMap) {
 
         //Both Plain and Table Favor Append tblstr
         $('#tableheader').append(tblstr);
-
+        console.log(tblstr);
 
 
         if (cMap.stopafterheader === 0) {
