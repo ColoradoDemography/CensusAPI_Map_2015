@@ -5,17 +5,17 @@ module.exports = function() {
     L.mapbox.accessToken = 'pk.eyJ1Ijoic3RhdGVjb2RlbW9nIiwiYSI6Ikp0Sk1tSmsifQ.hl44-VjKTJNEP5pgDFcFPg';
 
     var cMap = {};
+    var mbAttr = 'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ';
+    var mbUrl = 'https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png';
 
     //the cMap params gets the initial startup parameters from the address bar
     cMap.params = require("./parse_query_string.js")();
 
 
     // mbstyle is a mapbox 'style' (that I created as part of the CO Demog Office Mapbox account).
-    cMap.mbstyle = L.mapbox.tileLayer('statecodemog.aa380654', {
-        'zIndex': 1
-    });
+    cMap.mbstyle = L.tileLayer(mbUrl, {id: 'statecodemog.map-i4mhpeb3', attribution: mbAttr});
     //mbsat is a mapbox 'project' (that I created as part of the CO Demog Office Mapbox account).
-    cMap.mbsat = L.mapbox.tileLayer('statecodemog.km7i3g01');
+    cMap.mbsat = L.tileLayer(mbUrl, {id: 'statecodemog.map-392qgzze', attribution: mbAttr});
 
 
     cMap.stopafterheader = 0; //?
