@@ -14,8 +14,8 @@ module.exports = function(cMap) {
 
 
     var baseLayers = {
-        "Mapbox: Satellite": cMap.mbsat,
-        "Mapbox: Contrast Base": cMap.mbstyle
+        "Mapbox: Contrast": cMap.mbsat,
+        "ESRI Streets": cMap.mbstyle
     };
 
     //in the future ill figure out how to toggle labels on and off (and still have it appear on top)
