@@ -1107,7 +1107,7 @@ module.exports = {
                 "sum": "total"
             }, {
                 "FieldName": "Cost Burdened",
-                "Formula": "(((Number(fp.b25101006)+Number(fp.b25101010)+Number(fp.b25101014)+Number(fp.b25101020)+Number(fp.b25101022))/Number(fp.b25101002))*100).toFixed(2)",
+                "Formula": "(((Number(fp.b25101006)+Number(fp.b25101010)+Number(fp.b25101014)+Number(fp.b25101018)+Number(fp.b25101022))/Number(fp.b25101002))*100).toFixed(2)",
                 "type": "percent",
                 "sum": "none"
             }]
